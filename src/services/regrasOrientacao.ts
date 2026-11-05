@@ -23,6 +23,11 @@ const simOuNaoSei = (r: Respostas, c: string) => r[c] === "SIM" || r[c] === "NAO
 const num = (r: Respostas, c: string): number | null => (typeof r[c] === "number" ? (r[c] as number) : null);
 const entre = (v: number | null, min: number, max: number) => v !== null && v >= min && v <= max;
 
+function precisaInstabilidade(queixa: CodigoQueixa, r: Respostas): boolean {
+  return (queixa === "GRIPAL" && sim(r, "P5")) ||
+    (queixa === "DIARREIA" && (["D1", "D2", "D3b"].some((c) => sim(r, c)) || entre(num(r, "DOR"), 8, 10)));
+}
+
 function sinal(codigo: string): string {
   const p = perguntas.find((x) => x.codigo === codigo);
   return p?.dsSinal ?? p?.dsPergunta ?? codigo;
@@ -39,18 +44,26 @@ export function calcularOrientacao(queixa: CodigoQueixa, respostas: Respostas): 
     return marcados.length > 0;
   };
   const fim = (dsCor: Cor): ResultadoOrientacao => ({ dsCor, dsDestino: DESTINO_POR_COR[dsCor], sinaisMarcados: sinais });
+  const comInstabilidade = (): ResultadoOrientacao => {
+    if (simOuNaoSei(r, "INST")) {
+      sinais.push(sinal("INST"));
+      return fim("VERMELHO");
+    }
+    return fim("LARANJA");
+  };
 
   switch (queixa) {
     case "GRIPAL": {
-      if (marcar(["P1", "P2", "P3", "P4", "P5"], (c) => sim(r, c))) return fim("VERMELHO");
+      if (marcar(["P1", "P2", "P3", "P4"], (c) => sim(r, c))) return fim("VERMELHO");
+      if (marcar(["P5"], (c) => sim(r, c))) return comInstabilidade();
       if (marcar(["P6", "P7", "P8", "P8a", "P8b"], (c) => simOuNaoSei(r, c))) return fim("AMARELO");
       if (idade >= 60 || sim(r, "PF3")) return fim("VERDE");
       if (simOuNaoSei(r, "P9")) return fim("VERDE");
       return fim(sim(r, "P10") ? "VERDE" : "AZUL");
     }
     case "GARGANTA": {
-      if (marcar(["G1", "G2"], (c) => sim(r, c))) return fim("VERMELHO");
-      if (marcar(["G3", "G4", "G5"], (c) => sim(r, c))) return fim("LARANJA");
+      if (marcar(["G1"], (c) => sim(r, c))) return fim("VERMELHO");
+      if (marcar(["G2", "G3", "G4", "G5"], (c) => sim(r, c))) return fim("LARANJA");
       // Exceção: "Não sei" no G5 leva a AMARELO, não a LARANJA.
       const g5NaoSei = marcar(["G5"], (c) => r[c] === "NAO_SEI");
       const g6 = marcar(["G6"], (c) => simOuNaoSei(r, c));
@@ -58,9 +71,10 @@ export function calcularOrientacao(queixa: CodigoQueixa, respostas: Respostas): 
       return fim(sim(r, "G7") ? "VERDE" : "AZUL");
     }
     case "DIARREIA": {
-      const alarme = marcar(["D1", "D2", "D3", "D5"], (c) => sim(r, c));
+      if (marcar(["D3a", "D5"], (c) => sim(r, c))) return fim("VERMELHO");
+      const laranja = marcar(["D1", "D2", "D3b"], (c) => sim(r, c));
       if (entre(dor, 8, 10)) sinais.push(`Dor muito forte (nota ${dor})`);
-      if (alarme || entre(dor, 8, 10)) return fim("VERMELHO");
+      if (laranja || entre(dor, 8, 10)) return comInstabilidade();
       const urg = marcar(["D6", "D7", "D8", "D10", "D11a"], (c) => simOuNaoSei(r, c));
       if (entre(dor, 5, 7)) sinais.push(`Dor moderada (nota ${dor})`);
       if (urg || entre(dor, 5, 7)) return fim("AMARELO");
@@ -110,10 +124,14 @@ function condicaoAtendida(c: CondicaoExibicao | undefined, r: Respostas): boolea
 
 export function perguntasDaQueixa(queixa: CodigoQueixa): Pergunta[] {
   const cd = obterQueixa(queixa).cdQueixa;
-  return perguntas.filter((p) => p.cdQueixa === null || p.cdQueixa === cd).sort((a, b) => a.nrOrdem - b.nrOrdem);
+  const ordem = { PERFIL: 0, ENTRADA: 1, ALARME: 2, LARANJA: 3, URGENCIA: 5, CLASSIFICACAO: 6 };
+  const prioridade = (p: Pergunta) => p.codigo === "INST" ? 4 : ordem[p.bloco];
+  return perguntas.filter((p) => p.cdQueixa === null || p.cdQueixa === cd)
+    .sort((a, b) => prioridade(a) - prioridade(b) || a.nrOrdem - b.nrOrdem);
 }
 
 function visivel(p: Pergunta, queixa: CodigoQueixa, r: Respostas): boolean {
+  if (p.codigo === "INST") return precisaInstabilidade(queixa, r);
   if (!condicaoAtendida(p.condicaoExibicao, r)) return false;
   // Com urgência já definida, a classificação não muda o destino.
   if (p.bloco === "CLASSIFICACAO" && PESO[calcularOrientacao(queixa, r).dsCor] >= PESO.AMARELO) return false;
@@ -125,12 +143,19 @@ export function proximoPasso(queixa: CodigoQueixa, r: Respostas): PassoOrientaca
   if (idade !== null && idade < 18) return { tipo: "MENOR_IDADE" };
   if (queixa === "GRIPAL" && Array.isArray(r["P0"]) && r["P0"].length < 2) return { tipo: "POUCOS_SINTOMAS" };
   if (queixa === "GARGANTA" && r["G0"] === "SIM") return { tipo: "SUGERIR_GRIPAL" };
-  // Qualquer ALARME ou LARANJA positivo encerra o fluxo.
-  if (PESO[calcularOrientacao(queixa, r).dsCor] >= PESO.LARANJA) return { tipo: "RESULTADO" };
-
   const lista = perguntasDaQueixa(queixa);
   const respondidas = lista.filter((p) => p.codigo in r).length;
   const pendentes = lista.filter((p) => !(p.codigo in r) && visivel(p, queixa, r));
+  const cor = calcularOrientacao(queixa, r).dsCor;
+  const aguardaInst = precisaInstabilidade(queixa, r) && !("INST" in r);
+  if (cor === "VERMELHO") return { tipo: "RESULTADO" };
+  if (cor === "LARANJA") {
+    // A dor já é conhecida no perfil: não pode esconder nenhum alarme vermelho.
+    const anteriores = pendentes.filter((p) => ["PERFIL", "ENTRADA", "ALARME"].includes(p.bloco));
+    const pergunta = anteriores[0] ?? (aguardaInst ? pendentes.find((p) => p.bloco === "LARANJA") : undefined);
+    if (!pergunta) return { tipo: "RESULTADO" };
+    return { tipo: "PERGUNTA", pergunta, progresso: respondidas / (respondidas + pendentes.length) };
+  }
   const pergunta = pendentes[0];
   if (!pergunta) return { tipo: "RESULTADO" };
   return { tipo: "PERGUNTA", pergunta, progresso: respondidas / (respondidas + pendentes.length) };

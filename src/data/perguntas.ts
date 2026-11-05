@@ -46,6 +46,8 @@ export const perguntas: Pergunta[] = [
   }),
   q(null, "DOR", 4, "PERFIL", "ESCALA_DOR", "De 0 a 10, qual a nota da dor principal agora? (0 = sem dor)"),
 
+  q(null, "INST", 1000, "LARANJA", SNS, "Além disso, está com tontura forte ou desmaiou, confuso, com falta de ar ou com a pele fria e muito pálida?", { cor: "VERMELHO", sinal: "Tontura forte, desmaio, confusão, falta de ar ou pele fria e muito pálida" }),
+
   // SÍNDROME GRIPAL
   q(GRIPAL, "P0", 10, "ENTRADA", "MULTIPLA", "Quais destes sintomas {voce} tem?", {
     opcoes: [
@@ -62,7 +64,7 @@ export const perguntas: Pergunta[] = [
   q(GRIPAL, "P2", 12, "ALARME", SN, "{Voce} sente pressão ou dor no peito que não passa?", { cor: "VERMELHO", sinal: "Dor ou pressão no peito" }),
   q(GRIPAL, "P3", 13, "ALARME", SN, "Os lábios ou o rosto estão roxos ou azulados?", { cor: "VERMELHO", sinal: "Lábios ou rosto roxos" }),
   q(GRIPAL, "P4", 14, "ALARME", SN, "{Voce} está confuso, muito sonolento ou desmaiou?", { cor: "VERMELHO", sinal: "Confusão, sonolência ou desmaio" }),
-  q(GRIPAL, "P5", 15, "ALARME", SN, "Tem oxímetro e a saturação está abaixo de 95%?", { cor: "VERMELHO", sinal: "Saturação abaixo de 95%" }),
+  q(GRIPAL, "P5", 15, "LARANJA", SN, "Tem oxímetro e a saturação está abaixo de 95%?", { sinal: "Saturação abaixo de 95%" }),
   q(GRIPAL, "P6", 16, "URGENCIA", SNS, "Tem febre há mais de 3 dias, ou a febre voltou depois de 2 dias sem febre?", { cor: "AMARELO", sinal: "Febre há mais de 3 dias ou que voltou" }),
   q(GRIPAL, "P7", 17, "URGENCIA", SNS, "{Voce} está urinando bem menos, com a boca muito seca ou sem conseguir beber líquidos?", { cor: "AMARELO", sinal: "Urinando pouco ou sem beber líquidos" }),
   q(GRIPAL, "P8", 18, "URGENCIA", SNS, "Tem doença do pulmão ou do coração que piorou junto com a gripe?", { cor: "AMARELO", sinal: "Doença do pulmão ou coração piorou" }),
@@ -76,7 +78,7 @@ export const perguntas: Pergunta[] = [
   // DOR DE GARGANTA
   q(GARGANTA, "G0", 30, "ENTRADA", SN, "Além da dor de garganta, {voce} está com tosse ou coriza?"),
   q(GARGANTA, "G1", 31, "ALARME", SN, "Tem dificuldade para respirar ou faz um barulho agudo ao puxar o ar?", { cor: "VERMELHO", sinal: "Dificuldade para respirar" }),
-  q(GARGANTA, "G2", 32, "ALARME", SN, "Não consegue engolir a própria saliva, a ponto de babar?", { cor: "VERMELHO", sinal: "Não consegue engolir a saliva" }),
+  q(GARGANTA, "G2", 32, "LARANJA", SN, "Não consegue engolir a própria saliva, a ponto de babar?", { cor: "LARANJA", sinal: "Não consegue engolir a saliva" }),
   q(GARGANTA, "G3", 33, "LARANJA", SN, "Tem dificuldade para abrir a boca?", { cor: "LARANJA", sinal: "Dificuldade para abrir a boca" }),
   q(GARGANTA, "G4", 34, "LARANJA", SN, "A voz está abafada, como se falasse com algo quente na boca?", { cor: "LARANJA", sinal: "Voz abafada" }),
   q(GARGANTA, "G5", 35, "LARANJA", SNS, "A dor é muito forte e pior de um lado só, ou há inchaço visível de um lado da garganta?", { cor: "LARANJA", sinal: "Dor forte ou inchaço de um lado" }),
@@ -84,10 +86,11 @@ export const perguntas: Pergunta[] = [
   q(GARGANTA, "G7", 37, "CLASSIFICACAO", SN, "{Voce} está com febre?", { cor: "VERDE" }),
 
   // DIARREIA E VÔMITO
-  q(DIARREIA, "D1", 41, "ALARME", SN, "Está vomitando sangue ou algo parecido com borra de café?", { cor: "VERMELHO", sinal: "Vômito com sangue" }),
-  q(DIARREIA, "D2", 42, "ALARME", SN, "Hoje as fezes estão com sangue ou pretas como piche?", { cor: "VERMELHO", sinal: "Fezes com sangue ou pretas" }),
-  q(DIARREIA, "D3", 43, "ALARME", SN, "{Voce} está confuso, muito sonolento, desmaiou ou está sem urinar há muitas horas?", { cor: "VERMELHO", sinal: "Confusão, desmaio ou sem urinar" }),
-  q(DIARREIA, "D5", 44, "ALARME", SN, "Tem falta de ar, inchaço no rosto ou na garganta, ou pele fria e muito pálida?", { cor: "VERMELHO", sinal: "Falta de ar, inchaço ou pele fria" }),
+  q(DIARREIA, "D1", 43, "LARANJA", SN, "Está vomitando sangue ou algo parecido com borra de café?", { sinal: "Vômito com sangue" }),
+  q(DIARREIA, "D2", 44, "LARANJA", SN, "Hoje as fezes estão com sangue ou pretas como piche?", { sinal: "Fezes com sangue ou pretas" }),
+  q(DIARREIA, "D3a", 41, "ALARME", SN, "Está confuso, muito sonolento ou desmaiou?", { cor: "VERMELHO", sinal: "Confusão, sonolência ou desmaio" }),
+  q(DIARREIA, "D3b", 44.5, "LARANJA", SN, "Está sem urinar há muitas horas?", { sinal: "Sem urinar há muitas horas" }),
+  q(DIARREIA, "D5", 42, "ALARME", SN, "Tem falta de ar, inchaço no rosto ou na garganta, ou pele fria e muito pálida?", { cor: "VERMELHO", sinal: "Falta de ar, inchaço ou pele fria" }),
   q(DIARREIA, "D6", 45, "URGENCIA", SNS, "Nos últimos dias teve fezes pretas ou com sangue, ou vomitou sangue?", { cor: "AMARELO", sinal: "Sangue nos últimos dias" }),
   q(DIARREIA, "D7", 46, "URGENCIA", SNS, "Vomita tudo o que bebe?", { cor: "AMARELO", sinal: "Vomita tudo o que bebe" }),
   q(DIARREIA, "D8", 47, "URGENCIA", SNS, "Tem muita sede, boca seca, olhos fundos ou está urinando bem menos?", { cor: "AMARELO", sinal: "Sinais de desidratação" }),
