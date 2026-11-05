@@ -12,7 +12,7 @@ const TELAS_RAIZ = [
   "/recepcao/agenda", "/recepcao/pendentes", "/recepcao/lista-do-dia", "/recepcao/indicadores",
 ];
 
-function Aba({ to, label, icone: Icone }: { to: LinkProps["to"]; label: string; icone: IconType }) {
+function Aba({ to, label, icone: Icone }: { to: NonNullable<LinkProps["to"]>; label: string; icone: IconType }) {
   return (
     <Link
       to={to}
