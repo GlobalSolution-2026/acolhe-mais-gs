@@ -18,8 +18,9 @@ export const DESTINO_POR_COR: Record<Cor, Destino> = {
 
 const PESO: Record<Cor, number> = { AZUL: 0, VERDE: 1, AMARELO: 2, LARANJA: 3, VERMELHO: 4 };
 
-const sim = (r: Respostas, c: string) => r[c] === "SIM";
-const simOuNaoSei = (r: Respostas, c: string) => r[c] === "SIM" || r[c] === "NAO_SEI";
+const respostaAlarme = (c: string) => perguntas.find((p) => p.codigo === c)?.dsRespostaAlarme ?? "SIM";
+const sim = (r: Respostas, c: string) => r[c] === respostaAlarme(c);
+const simOuNaoSei = (r: Respostas, c: string) => sim(r, c) || r[c] === "NAO_SEI";
 const num = (r: Respostas, c: string): number | null => (typeof r[c] === "number" ? (r[c] as number) : null);
 const entre = (v: number | null, min: number, max: number) => v !== null && v >= min && v <= max;
 

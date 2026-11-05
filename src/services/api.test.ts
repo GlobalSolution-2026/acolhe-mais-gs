@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { EstadoSimulador } from "@/context/SimuladorContext";
 import type { Consulta } from "@/types";
-import { conectarStore, confirmarConsulta, listarUnidades, registrarPresenca, salvarOrientacao } from "./api";
+import { aceitarOfertaPorTelefone, agendarConsulta, conectarStore, confirmarConsulta, listarUnidades, registrarPresenca, salvarOrientacao } from "./api";
 
 const original: Consulta = {
   cdConsulta: 7, cdHorario: 12, cdCidadao: 9, cdOrientacao: 3,
@@ -14,6 +14,7 @@ let estado: EstadoSimulador;
 beforeEach(() => {
   vi.useFakeTimers();
   estado = {
+    dtSemente: "2026-11-05",
     unidades: [
       { cdUnidade: 1, nmUnidade: "UBS", tpUnidade: "UBS", dsEndereco: "Rua A", nrCep: "01000-000", nrTelefone: "1133333333" },
       { cdUnidade: 2, nmUnidade: "UPA", tpUnidade: "UPA", dsEndereco: "Rua B", nrCep: "01000-001", nrTelefone: "1133333334" },
@@ -55,5 +56,38 @@ describe("contratos dos serviços", () => {
     await vi.runAllTimersAsync();
     expect(await pendente).toEqual({ ...original, dsStatus: status });
     expect(estado.consultas).toEqual([{ ...original, dsStatus: status }]);
+  });
+});
+
+
+describe("agendamento por oferta", () => {
+  function preparar() {
+    estado.cidadaos = [{ cdCidadao: 9, nmCidadao: "Maria", nrCns: "111222233334444", dtNascimento: "1980-01-01", dsSexo: "F", nrCelular: "11999999999", nmContatoRecado: "", nrContatoRecado: "", nrCep: "04010-100" }];
+    estado.horarios = [{ cdHorario: 12, cdUnidade: 1, dtHorario: new Date(Date.now() + 48 * 3600000).toISOString(), nrDuracaoMin: 20, flOcupado: false }];
+    estado.listaDoDia = [{ cdEntrada: 1, cdCidadao: 9, cdUnidade: 1, nmCidadao: "Maria", dsCor: "VERDE", dtEntrada: new Date().toISOString(), flPrioridade: false, flCidadao: false, status: "AGUARDANDO" }];
+    estado.ofertas = [{ cdOferta: 1, cdHorario: 12, cdEntrada: 1, cdUnidade: 1, nmCidadao: "Maria", dtCriacao: new Date().toISOString(), status: "PENDENTE" }];
+  }
+  it("telefone cria consulta, ocupa horário e encerra oferta e entrada", async () => {
+    preparar(); const promise = aceitarOfertaPorTelefone(1); await vi.runAllTimersAsync();
+    const c = await promise;
+    expect(c.cdCidadao).toBe(9);
+    expect(estado.horarios[0]?.flOcupado).toBe(true);
+    expect(estado.ofertas[0]?.status).toBe("ACEITA");
+    expect(estado.listaDoDia[0]?.status).toBe("ENCERRADA");
+  });
+  it("oferta expirada não agenda nem ocupa", async () => {
+    preparar(); estado.ofertas = estado.ofertas.map((o) => ({ ...o, dtCriacao: new Date(Date.now() - 301000).toISOString() }));
+    const promise = agendarConsulta({ cdHorario: 12, cdCidadao: 9, cdOrientacao: null, cdOferta: 1 });
+    const rejection = expect(promise).rejects.toThrow("Esta oferta venceu ou foi repassada");
+    await vi.runAllTimersAsync(); await rejection;
+    expect(estado.horarios[0]?.flOcupado).toBe(false);
+    expect(estado.consultas).toHaveLength(1);
+  });
+  it("duas reservas concorrentes ocupam uma única vaga", async () => {
+    preparar(); const promises = [agendarConsulta({ cdHorario: 12, cdCidadao: 9, cdOrientacao: null }), agendarConsulta({ cdHorario: 12, cdCidadao: 9, cdOrientacao: null })];
+    const results = Promise.allSettled(promises);
+    await vi.runAllTimersAsync();
+    expect((await results).map((r) => r.status).sort()).toEqual(["fulfilled", "rejected"]);
+    expect(estado.consultas).toHaveLength(2);
   });
 });

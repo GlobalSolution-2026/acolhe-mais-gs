@@ -32,7 +32,7 @@ export function Sucesso({ cdConsulta }: { cdConsulta: number }) {
       </div>
       <section className="rounded-[12px] border border-borda bg-branco p-4 shadow-leve">
         <p className="text-lg font-extrabold">{consulta.nmUnidade}</p>
-        <p className="font-semibold capitalize">{fmtDiaHora(consulta.dtHorario)}</p>
+        <p className="font-semibold">{fmtDiaHora(consulta.dtHorario)}</p>
       </section>
       <p className="rounded-[12px] border border-borda bg-branco p-4">{explicacao}</p>
       <Link to="/cidadao/consultas" className="btn bg-primaria text-branco hover:bg-primariaEscura">

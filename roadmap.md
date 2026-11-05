@@ -1,11 +1,11 @@
 # Tarefas
 
-- [ ] MVP: ofertas elegíveis, repasse e vencimento global
-- [ ] MVP: simulação pura com alcance e resumo
-- [ ] MVP: semente diária coerente e persistência v2
-- [ ] MVP: dias compartilhados, datas, confirmação e folha baixa
-- [ ] MVP: perguntas positivas e indicador encerrado
-- [ ] MVP: todos os testes e verificação no navegador
+- [x] MVP: ofertas elegíveis, repasse e vencimento global
+- [x] MVP: simulação pura com alcance e resumo
+- [x] MVP: semente diária coerente e persistência v2
+- [x] MVP: dias compartilhados, datas, confirmação e folha baixa
+- [x] MVP: perguntas positivas e indicador encerrado
+- [x] MVP: todos os testes e verificação no navegador
 
 - [x] Ajuste 1: espaço inferior no main (nada atrás da barra/botão Emergência)
 - [x] Ajuste 2: textos oficiais de "O que fazer até a consulta" (VERDE/AZUL)

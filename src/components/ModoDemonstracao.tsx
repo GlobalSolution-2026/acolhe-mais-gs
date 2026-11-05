@@ -1,13 +1,14 @@
 import { useLocation, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { FiClock, FiRotateCcw, FiRepeat, FiSunset } from "react-icons/fi";
+import type { ResumoSimulacao } from "@/services/simulacao";
 import { useSimulador } from "@/context/SimuladorContext";
 
 export function ModoDemonstracao({ onConcluir }: { onConcluir?: () => void }) {
-  const { reiniciarDemonstracao, simularPassagemPrazo, encerrarDia } = useSimulador();
+  const { reiniciarDemonstracao, simularPassagemPrazo, vencerPrazoOfertas, encerrarDia } = useSimulador();
   const navigate = useNavigate();
   const [confirmando, setConfirmando] = useState(false);
-  const [prazoSimulado, setPrazoSimulado] = useState(false);
+  const [resumo, setResumo] = useState<ResumoSimulacao | null>(null);
   const [diaEncerrado, setDiaEncerrado] = useState(false);
   const { pathname } = useLocation();
   const cidadao = !pathname.startsWith("/recepcao");
@@ -24,7 +25,7 @@ export function ModoDemonstracao({ onConcluir }: { onConcluir?: () => void }) {
   const reiniciar = () => {
     reiniciarDemonstracao();
     setConfirmando(false);
-    setPrazoSimulado(false);
+    setResumo(null);
     setDiaEncerrado(false);
     void navigate({ to: "/cidadao/inicio" });
     onConcluir?.();
@@ -45,17 +46,21 @@ export function ModoDemonstracao({ onConcluir }: { onConcluir?: () => void }) {
           <>
             <div>
               <button
-                onClick={() => { simularPassagemPrazo(); setPrazoSimulado(true); }}
+                onClick={() => { setResumo(simularPassagemPrazo()); }}
                 className="btn w-full border border-borda bg-branco text-primaria"
               >
                 <FiClock /> Simular passagem do prazo
               </button>
               <p className="mt-1 text-sm text-textoSuave">
-                As consultas não confirmadas até 24 h antes viram LIBERADA e a vaga é oferecida ao primeiro da lista do
-                dia. Quem não tem nenhum contato válido mantém a consulta.
-                {prazoSimulado && <strong className="block text-primaria">Prazo simulado: veja a aba Avisos do cidadão.</strong>}
+                Libera as consultas não confirmadas da UBS selecionada nos próximos 3 dias, mais as do cidadão do app em qualquer data. Consultas marcadas com menos de 24 h e pacientes sem contato são mantidos.
+                {resumo && <strong className="mt-2 block text-primaria" role="status">
+                  {resumo.consultasLiberadas + resumo.mantidasSemContato === 0 ? "Nenhuma consulta não confirmada no período." : `${resumo.consultasLiberadas} consultas liberadas · ${resumo.vagasOferecidas} vagas oferecidas à lista do dia · ${resumo.vagasDeVoltaNaAgenda} voltou para a agenda · ${resumo.mantidasSemContato} mantida (paciente sem contato)`}
+                </strong>}
               </p>
             </div>
+            <button onClick={vencerPrazoOfertas} className="btn border border-borda bg-branco text-primaria">
+              <FiClock /> Vencer prazo das ofertas agora
+            </button>
             <div>
               <button
                 onClick={() => { encerrarDia(); setDiaEncerrado(true); }}

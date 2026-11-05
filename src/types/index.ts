@@ -54,6 +54,7 @@ export interface Consulta {
 /** Pessoa aguardando encaixe na lista do dia de uma UBS. */
 export interface EntradaListaDoDia {
   cdEntrada: number;
+  cdCidadao: number | null;
   cdUnidade: number;
   nmCidadao: string;
   dsCor: Extract<Cor, "VERDE" | "AZUL">;

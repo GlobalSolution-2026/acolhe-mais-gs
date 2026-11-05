@@ -1,36 +1,24 @@
 import type { Horario } from "@/types";
-import { unidadesIniciais } from "./unidades";
 
-const HORAS = [8, 9, 10, 11, 14, 15, 16];
-
-/** Gera horários nos próximos 5 dias úteis para cada UBS (alguns já ocupados). */
+/** Oito dias úteis anteriores, hoje (inclusive fim de semana) e dez posteriores. */
 export function gerarHorariosIniciais(base: Date = new Date()): Horario[] {
-  const dias: Date[] = [];
-  const d = new Date(base);
-  d.setHours(0, 0, 0, 0);
-  while (dias.length < 5) {
-    d.setDate(d.getDate() + 1);
-    const dow = d.getDay();
-    if (dow !== 0 && dow !== 6) dias.push(new Date(d));
+  const hoje = new Date(base);
+  hoje.setHours(0, 0, 0, 0);
+  const dias: Date[] = [hoje];
+  for (const [sentido, quantidade] of [[-1, 8], [1, 10]] as const) {
+    const d = new Date(hoje);
+    let encontrados = 0;
+    while (encontrados < quantidade) {
+      d.setDate(d.getDate() + sentido);
+      if (![0, 6].includes(d.getDay())) { dias.push(new Date(d)); encontrados++; }
+    }
   }
+  dias.sort((a, b) => a.getTime() - b.getTime());
   const horarios: Horario[] = [];
-  let cd = 1;
-  unidadesIniciais
-    .filter((u) => u.tpUnidade === "UBS")
-    .forEach((u) => {
-      dias.forEach((dia, iDia) => {
-        HORAS.forEach((h, iHora) => {
-          const dt = new Date(dia);
-          dt.setHours(h, 0, 0, 0);
-          horarios.push({
-            cdHorario: cd++,
-            cdUnidade: u.cdUnidade,
-            dtHorario: dt.toISOString(),
-            nrDuracaoMin: 20,
-            flOcupado: (iDia + iHora + u.cdUnidade) % 3 === 0,
-          });
-        });
-      });
-    });
+  for (const cdUnidade of [1, 2, 3]) for (const dia of dias) for (const hora of [8, 9, 10, 11, 14, 15, 16]) {
+    const dt = new Date(dia);
+    dt.setHours(hora);
+    horarios.push({ cdHorario: horarios.length + 1, cdUnidade, dtHorario: dt.toISOString(), nrDuracaoMin: 20, flOcupado: false });
+  }
   return horarios;
 }

@@ -7,7 +7,7 @@ import { MensagemErro } from "@/components/MensagemErro";
 import { useSimulador } from "@/context/SimuladorContext";
 import { fmtDiaHora } from "@/lib/datas";
 import { confirmarConsulta, listarConsultas } from "@/services/api";
-import { precisaConfirmar, prazoConfirmacao } from "@/services/regrasAgendamento";
+import { dispensadaConfirmacao, inicioPedidoConfirmacao, precisaConfirmar, prazoConfirmacao } from "@/services/regrasAgendamento";
 import type { Consulta } from "@/types";
 
 const ROTULO_STATUS: Record<Consulta["dsStatus"], string> = {
@@ -20,17 +20,19 @@ const ROTULO_STATUS: Record<Consulta["dsStatus"], string> = {
 
 function CardConsulta({ consulta, onConfirmar, confirmando }: { consulta: Consulta; onConfirmar: (c: Consulta) => void; confirmando: boolean }) {
   const prazo = prazoConfirmacao(consulta);
+  const inicio = inicioPedidoConfirmacao(consulta);
   const precisa = precisaConfirmar(consulta, new Date());
   return (
     <article className="flex flex-col gap-2 rounded-[12px] border border-borda bg-branco p-4 shadow-leve">
       <div className="flex items-center justify-between gap-2">
         <span className="rounded-full bg-mentaSuave px-2 py-0.5 text-xs font-bold text-primaria">{ROTULO_STATUS[consulta.dsStatus]}</span>
-        {consulta.dsRiscoFalta === "ALTO" && consulta.dsStatus === "AGENDADA" && (
-          <span className="text-xs font-bold text-gravidade-laranja">Confirmação com lembrete</span>
-        )}
       </div>
       <p className="flex items-center gap-2 font-bold"><FiMapPin className="shrink-0" />{consulta.nmUnidade}</p>
-      <p className="font-semibold capitalize">{fmtDiaHora(consulta.dtHorario)}</p>
+      <p className="font-semibold">{fmtDiaHora(consulta.dtHorario)}</p>
+      {consulta.dsStatus === "AGENDADA" && dispensadaConfirmacao(consulta) && <p className="text-sm">Não precisa confirmar: consulta marcada com menos de 24 h.</p>}
+      {consulta.dsStatus === "AGENDADA" && inicio && prazo && new Date() < inicio && <p className="text-sm">
+        Vamos pedir a confirmação em {fmtDiaHora(inicio.toISOString())}. Você terá até {fmtDiaHora(prazo.toISOString())} para confirmar.
+      </p>}
       {precisa && prazo && (
         <>
           <p className="text-sm font-semibold text-gravidade-laranja">
@@ -62,7 +64,7 @@ export function Consultas() {
     }
   }, [estado.cdCidadaoAtual]);
 
-  useEffect(() => { void carregar(); }, [carregar]);
+  useEffect(() => { void carregar(); }, [carregar, estado.consultas]);
 
   const confirmar = async (c: Consulta) => {
     setConfirmando(true);
