@@ -244,8 +244,8 @@ export function SimuladorProvider({ children }: { children: ReactNode }) {
   const simularPassagemPrazo = useCallback(
     () =>
       atualizarEstado((e) => {
-        // DEMONSTRAÇÃO: simula "agora" 3 dias no futuro para estourar os prazos.
-        const agora = new Date(Date.now() + 3 * 86_400_000);
+        // DEMONSTRAÇÃO: simula "agora" 10 dias no futuro para estourar os prazos.
+        const agora = new Date(Date.now() + 10 * 86_400_000);
         const liberadas = e.consultas.filter((c) =>
           deveLiberar(c, e.cidadaos.find((x) => x.cdCidadao === c.cdCidadao), agora),
         );
