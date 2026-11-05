@@ -5,6 +5,7 @@
  */
 import type { EstadoSimulador } from "@/context/SimuladorContext";
 import type { Cidadao, CidadaoEntrada, Consulta, ErroResponse, Horario, Unidade } from "@/types";
+import type { Orientacao, VerificacaoUrgenciaEntrada } from "@/types/orientacao";
 
 export const API_URL = import.meta.env["VITE_API_URL"] as string | undefined;
 
@@ -147,4 +148,30 @@ export async function getStatus(): Promise<{ status: string; modo: "mock" | "api
   // return res.json();
   await esperar();
   return { status: "UP", modo: API_URL ? "api" : "mock", url: API_URL };
+}
+
+// POST /orientacoes
+export async function postOrientacao(dados: Omit<Orientacao, "cdOrientacao" | "dtOrientacao">): Promise<Orientacao> {
+  // const res = await fetch(`${API_URL}/orientacoes`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(dados) });
+  // if (!res.ok) { const erro: ErroResponse = await res.json(); throw new Error(erro.erro); }
+  // return res.json();
+  await esperar();
+  let nova!: Orientacao;
+  getStore().atualizarEstado((e) => {
+    nova = { ...dados, cdOrientacao: Math.max(0, ...e.orientacoes.map((o) => o.cdOrientacao)) + 1, dtOrientacao: new Date().toISOString() };
+    return { ...e, orientacoes: [...e.orientacoes, nova] };
+  });
+  return nova;
+}
+
+/** API Flask do modelo de IA: só pode ELEVAR a gravidade. */
+export const FLASK_URL = import.meta.env["VITE_FLASK_URL"] as string | undefined;
+
+// POST /verificar-urgencia (API Flask)
+export async function verificarUrgencia(dados: VerificacaoUrgenciaEntrada): Promise<{ urgente: boolean }> {
+  // const res = await fetch(`${FLASK_URL}/verificar-urgencia`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(dados) });
+  // if (!res.ok) { const erro: ErroResponse = await res.json(); throw new Error(erro.erro); }
+  // return res.json();
+  await esperar();
+  return { urgente: dados.nrDor >= 7 && dados.idade >= 65 };
 }

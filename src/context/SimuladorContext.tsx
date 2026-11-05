@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import type { Cidadao, Consulta, Horario, Unidade } from "@/types";
+import type { CodigoQueixa, Orientacao, OrientacaoEmAndamento, Resposta, ResultadoFinal } from "@/types/orientacao";
 import { unidadesIniciais } from "@/data/unidades";
 import { gerarHorariosIniciais } from "@/data/horarios";
 import { conectarStore } from "@/services/api";
@@ -11,6 +12,8 @@ export interface EstadoSimulador {
   consultas: Consulta[];
   perfil: Perfil;
   cdUnidadeRecepcao: number;
+  orientacoes: Orientacao[];
+  orientacaoAtual: OrientacaoEmAndamento | null;
 }
 
 export type Perfil = "CIDADAO" | "RECEPCAO";
@@ -18,7 +21,7 @@ export type Perfil = "CIDADAO" | "RECEPCAO";
 const CHAVE = "acolhe-plus:simulador";
 
 function estadoInicial(): EstadoSimulador {
-  return { unidades: unidadesIniciais, horarios: gerarHorariosIniciais(), cidadaos: [], consultas: [], perfil: "CIDADAO", cdUnidadeRecepcao: 1 };
+  return { unidades: unidadesIniciais, horarios: gerarHorariosIniciais(), cidadaos: [], consultas: [], perfil: "CIDADAO", cdUnidadeRecepcao: 1, orientacoes: [], orientacaoAtual: null };
 }
 
 function lerStorage(): EstadoSimulador | null {
@@ -46,6 +49,11 @@ interface SimuladorValor {
   reiniciarDemonstracao: () => void;
   trocarPerfil: (perfil: Perfil) => void;
   selecionarUnidadeRecepcao: (cdUnidade: number) => void;
+  iniciarOrientacao: (cdQueixa: CodigoQueixa, nrCep: string) => void;
+  trocarQueixa: (cdQueixa: CodigoQueixa) => void;
+  responder: (codigo: string, valor: Resposta) => void;
+  voltarPergunta: () => void;
+  definirResultado: (resultado: ResultadoFinal) => void;
 }
 
 const SimuladorContext = createContext<SimuladorValor | null>(null);
@@ -94,9 +102,61 @@ export function SimuladorProvider({ children }: { children: ReactNode }) {
     [atualizarEstado],
   );
 
+  const alterarOrientacao = useCallback(
+    (fn: (o: OrientacaoEmAndamento) => OrientacaoEmAndamento) =>
+      atualizarEstado((e) => (e.orientacaoAtual ? { ...e, orientacaoAtual: fn(e.orientacaoAtual) } : e)),
+    [atualizarEstado],
+  );
+
+  const iniciarOrientacao = useCallback(
+    (cdQueixa: CodigoQueixa, nrCep: string) =>
+      atualizarEstado((e) => ({ ...e, orientacaoAtual: { cdQueixa, nrCep, respostas: {}, ordem: [], resultado: null } })),
+    [atualizarEstado],
+  );
+
+  /** Troca a queixa mantendo as respostas do perfil (PF1, PF2, PF3, DOR). */
+  const trocarQueixa = useCallback(
+    (cdQueixa: CodigoQueixa) =>
+      alterarOrientacao((o) => {
+        const perfil = ["PF1", "PF2", "PF3", "DOR"];
+        const respostas = Object.fromEntries(Object.entries(o.respostas).filter(([k]) => perfil.includes(k)));
+        return { ...o, cdQueixa, respostas, ordem: o.ordem.filter((c) => perfil.includes(c)), resultado: null };
+      }),
+    [alterarOrientacao],
+  );
+
+  const responder = useCallback(
+    (codigo: string, valor: Resposta) =>
+      alterarOrientacao((o) => ({
+        ...o,
+        respostas: { ...o.respostas, [codigo]: valor },
+        ordem: o.ordem.includes(codigo) ? o.ordem : [...o.ordem, codigo],
+      })),
+    [alterarOrientacao],
+  );
+
+  const voltarPergunta = useCallback(
+    () =>
+      alterarOrientacao((o) => {
+        const ultima = o.ordem[o.ordem.length - 1];
+        if (!ultima) return o;
+        const { [ultima]: _removida, ...respostas } = o.respostas;
+        return { ...o, respostas, ordem: o.ordem.slice(0, -1) };
+      }),
+    [alterarOrientacao],
+  );
+
+  const definirResultado = useCallback(
+    (resultado: ResultadoFinal) => alterarOrientacao((o) => ({ ...o, resultado })),
+    [alterarOrientacao],
+  );
+
   return (
     <SimuladorContext.Provider
-      value={{ estado, obterEstado, atualizarEstado, reiniciarDemonstracao, trocarPerfil, selecionarUnidadeRecepcao }}
+      value={{
+        estado, obterEstado, atualizarEstado, reiniciarDemonstracao, trocarPerfil, selecionarUnidadeRecepcao,
+        iniciarOrientacao, trocarQueixa, responder, voltarPergunta, definirResultado,
+      }}
     >
       {children}
     </SimuladorContext.Provider>

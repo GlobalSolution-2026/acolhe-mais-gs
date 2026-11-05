@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { TelaEmConstrucao } from "@/pages/TelaEmConstrucao";
 
-export const Route = createFileRoute("/inicio")({
+export const Route = createFileRoute("/inicio/")({
   head: () => ({
     meta: [
       { title: "Início | Acolhe+" },
