@@ -23,7 +23,7 @@ function mascararCep(v: string) {
 export function Inicio() {
   const { estado, iniciarOrientacao } = useSimulador();
   const navigate = useNavigate();
-  const { register, control, handleSubmit, formState: { errors } } = useForm<{ cep: string }>({
+  const { register, control, handleSubmit, setValue, formState: { errors, isSubmitted } } = useForm<{ cep: string }>({
     defaultValues: { cep: estado.orientacaoAtual?.nrCep ?? "" },
   });
   const cep = useWatch({ control, name: "cep" });
@@ -38,8 +38,8 @@ export function Inicio() {
   const registroCep = register("cep", {
     required: "Informe o CEP para continuar.",
     pattern: { value: /^\d{5}-\d{3}$/, message: "O CEP tem 8 números." },
-    onChange: (e) => {
-      e.target.value = mascararCep(e.target.value);
+    onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
+      setValue("cep", mascararCep(e.target.value), { shouldValidate: isSubmitted });
     },
   });
 
