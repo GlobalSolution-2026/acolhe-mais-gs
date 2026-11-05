@@ -3,7 +3,7 @@ import { FiAlertTriangle, FiBell, FiCalendar, FiChevronLeft, FiHome, FiUser } fr
 import type { IconType } from "react-icons";
 import { useSimulador } from "@/context/SimuladorContext";
 
-function AbaCelular({ to, label, icone: Icone }: { to: string; label: string; icone: IconType }) {
+function AbaCelular({ to, label, icone: Icone }: { to: "/simulador/cidadao/inicio" | "/simulador/cidadao/consultas" | "/simulador/cidadao/avisos" | "/simulador/cidadao/perfil"; label: string; icone: IconType }) {
   return (
     <Link to={to} className="flex min-h-14 flex-1 flex-col items-center justify-center gap-0.5 text-xs font-bold text-textoSuave"
       activeProps={{ className: "text-primaria" }}>
