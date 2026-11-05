@@ -24,5 +24,5 @@ function BarraCidadao() {
 }
 
 export function LayoutCidadao() {
-  return <LayoutCompartilhado cidadao=true barra={<BarraCidadao />} />;
+  return <LayoutCompartilhado cidadao={true} barra={<BarraCidadao />} />;
 }

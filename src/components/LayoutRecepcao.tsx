@@ -14,5 +14,5 @@ function BarraRecepcao() {
 
 
 export function LayoutRecepcao() {
-  return <LayoutCompartilhado cidadao=false barra={<BarraRecepcao />} />;
+  return <LayoutCompartilhado cidadao={false} barra={<BarraRecepcao />} />;
 }

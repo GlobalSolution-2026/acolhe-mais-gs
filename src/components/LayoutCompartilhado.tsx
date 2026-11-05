@@ -2,7 +2,7 @@ import { Link, Outlet, useLocation, type LinkProps } from "@tanstack/react-route
 import { useState, type ReactNode } from "react";
 import type { IconType } from "react-icons";
 import {
-  FiAlertTriangle, FiBarChart2, FiBell, FiCalendar, FiChevronLeft, FiClock, FiHome, FiList, FiUser, FiX,
+  FiBell, FiChevronLeft, FiX,
 } from "react-icons/fi";
 import { useSimulador } from "@/context/SimuladorContext";
 import { rotaPai } from "@/services/navegacao";
@@ -40,11 +40,10 @@ function Folha({ onFechar, children }: { onFechar: () => void; children: ReactNo
 }
 
 export function LayoutCompartilhado({ cidadao, barra }: { cidadao: boolean; barra: ReactNode }) {
-  const { pathname } = useLocation();
+  const { pathname, searchStr } = useLocation();
   const { estado, selecionarUnidadeRecepcao } = useSimulador();
   const [demoAberto, setDemoAberto] = useState(false);
-  const { search } = useLocation();
-  const cdHorario = Number(new URLSearchParams(search).get("horario"));
+  const cdHorario = Number(new URLSearchParams(searchStr).get("horario"));
   const cdUnidade = estado.horarios.find((h) => h.cdHorario === cdHorario)?.cdUnidade;
   const pai = rotaPai(pathname, cdUnidade);
   const agora = new Date();
