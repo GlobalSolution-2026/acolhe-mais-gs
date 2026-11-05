@@ -34,3 +34,6 @@ use the editor.
 - Triage rules and the questionnaire engine live only in src/services/regrasOrientacao.ts (pure, unit-tested); questions are data in src/data/perguntas.ts. The AI check (verificarUrgencia) may only raise severity. Why: rules must be testable and never live in components.
 
 - Internal back navigation uses the pure rotaPai helper, never browser history; editing and UBS detail routes are unnested leaves so their parent screens cannot hide them. Why: deterministic navigation and correct independent rendering.
+
+- Offer selection, expiry, handoff and deadline simulation use pure service helpers; the Provider owns the global expiry timer, while booking validates and consumes an offer within the API store update. Why: all screens share the same lifecycle and stale offers cannot book.
+- Generate the daily demo through the seeded data generators and persist its date with the versioned state; use shared date/day helpers in both scheduling views. Why: occupancy and displayed days remain consistent.

@@ -59,6 +59,7 @@ export function gerarSemente(horariosBase: Horario[], agora: Date = new Date()):
         if (max >= min) { c.dtConfirmacao = new Date(min + rand() * (max - min)).toISOString(); c.dsCanalConfirmacao = (["APP", "TELEFONE", "PRESENCIAL"] as const)[c.cdConsulta % 3] ?? "APP"; }
       }
     }
+    if (c.dsStatus === "CONFIRMADA" && !c.dtConfirmacao) c.dsStatus = "AGENDADA";
     consultas.push(c); return c;
   };
 

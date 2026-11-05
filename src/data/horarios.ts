@@ -5,7 +5,7 @@ export function gerarHorariosIniciais(base: Date = new Date()): Horario[] {
   const hoje = new Date(base);
   hoje.setHours(0, 0, 0, 0);
   const dias: Date[] = [hoje];
-  for (const [sentido, quantidade] of [[-1, 8], [1, 10]]) {
+  for (const [sentido, quantidade] of [[-1, 8], [1, 10]] as const) {
     const d = new Date(hoje);
     let encontrados = 0;
     while (encontrados < quantidade) {

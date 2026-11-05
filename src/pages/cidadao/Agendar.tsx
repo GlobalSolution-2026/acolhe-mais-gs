@@ -36,6 +36,7 @@ export function Agendar({ cdHorario, cdOferta }: { cdHorario: number; cdOferta: 
       const consulta = await agendarConsulta({
         cdHorario,
         cdCidadao: cidadao.cdCidadao,
+        ...(cdOferta ? { cdOferta } : {}),
         cdOrientacao: estado.orientacaoAtual?.resultado?.cdOrientacao ?? null,
       });
       if (cdOferta) responderOferta(cdOferta, "ACEITA");

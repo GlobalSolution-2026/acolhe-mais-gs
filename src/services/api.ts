@@ -119,7 +119,7 @@ export async function preverFalta(dados: PrevisaoFaltaEntrada): Promise<{ dsRisc
 }
 
 // POST /consultas
-export async function agendarConsulta(dados: { cdHorario: number; cdCidadao: number; cdOrientacao: number | null }): Promise<Consulta> {
+export async function agendarConsulta(dados: { cdHorario: number; cdCidadao: number; cdOrientacao: number | null; cdOferta?: number }): Promise<Consulta> {
   // const res = await fetch(`${API_URL}/consultas`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(dados) });
   // if (!res.ok) { const erro: ErroResponse = await res.json(); throw new Error(erro.erro); }
   // return res.json();
@@ -159,9 +159,12 @@ export async function agendarConsulta(dados: { cdHorario: number; cdCidadao: num
   };
   s.atualizarEstado((atual) => {
     if (atual.horarios.some((h) => h.cdHorario === dados.cdHorario && h.flOcupado)) falhar({ status: 409, erro: "Este horário acabou de ser ocupado. Escolha outro." });
+    const oferta = atual.ofertas.find((o) => o.cdOferta === dados.cdOferta && o.cdHorario === dados.cdHorario && o.status === "PENDENTE");
+    const entrada = atual.listaDoDia.find((x) => x.cdEntrada === oferta?.cdEntrada);
+    if (dados.cdOferta && (!oferta || !entrada || entrada.cdCidadao !== dados.cdCidadao || segundosRestantesOferta(oferta, new Date()) === 0)) falhar({ status: 409, erro: "Esta oferta venceu ou foi repassada. Confira seus avisos." });
     const nova = { ...consulta, cdConsulta: Math.max(0, ...atual.consultas.map((c) => c.cdConsulta)) + 1 };
     consulta.cdConsulta = nova.cdConsulta;
-    return { ...atual, horarios: atual.horarios.map((h) => h.cdHorario === dados.cdHorario ? { ...h, flOcupado: true } : h), consultas: [...atual.consultas, nova] };
+    return { ...atual, horarios: atual.horarios.map((h) => h.cdHorario === dados.cdHorario ? { ...h, flOcupado: true } : h), consultas: [...atual.consultas, nova], ofertas: atual.ofertas.map((o) => o.cdOferta === dados.cdOferta ? { ...o, status: "ACEITA" } : o), listaDoDia: atual.listaDoDia.map((x) => x.cdEntrada === entrada?.cdEntrada ? { ...x, status: "ENCERRADA" } : x) };
   });
   return consulta;
 }
@@ -220,7 +223,7 @@ export async function aceitarOfertaPorTelefone(cdOferta: number): Promise<Consul
   const oferta = e.ofertas.find((o) => o.cdOferta === cdOferta && o.status === "PENDENTE");
   const entrada = e.listaDoDia.find((x) => x.cdEntrada === oferta?.cdEntrada);
   if (!oferta || segundosRestantesOferta(oferta, new Date()) === 0 || !entrada || entrada.cdCidadao === null) falhar({ status: 409, erro: "Oferta indisponível." });
-  const consulta = await agendarConsulta({ cdHorario: oferta.cdHorario, cdCidadao: entrada.cdCidadao, cdOrientacao: null });
+  const consulta = await agendarConsulta({ cdHorario: oferta.cdHorario, cdCidadao: entrada.cdCidadao, cdOrientacao: null, cdOferta });
   getStore().atualizarEstado((atual) => ({ ...atual, ofertas: atual.ofertas.map((o) => o.cdOferta === cdOferta ? { ...o, status: "ACEITA" } : o), listaDoDia: atual.listaDoDia.map((x) => x.cdEntrada === entrada.cdEntrada ? { ...x, status: "ENCERRADA" } : x) }));
   return consulta;
 }
