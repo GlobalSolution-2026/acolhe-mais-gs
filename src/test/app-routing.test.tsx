@@ -38,7 +38,7 @@ describe("navegação por perfil", () => {
     expect(matches.at(-1)?.routeId).toBe(id);
     expect(matches.at(-1)?.routeId).not.toBe(rootRouteId);
     expect(matches.map((m) => m.routeId)).toContain(layout);
-    expect(router.routesById[id]?.options.component).toBeDefined();
+    expect(Object.values(router.routesById).find((route) => route.id === id)?.options.component).toBeDefined();
   });
 
   it("edição abre EditarPerfil, sem ficar dentro da tela Perfil", () => {
