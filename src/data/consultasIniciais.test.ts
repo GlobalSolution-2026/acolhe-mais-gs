@@ -61,6 +61,11 @@ for (const data of ["2026-11-05T10:30:00", "2026-11-07T00:00:01", "2026-11-08T23
         if (c.cdOrientacao !== null) expect(new Date(s.orientacoes.find((o) => o.cdOrientacao === c.cdOrientacao)?.dtOrientacao ?? "").getTime()).toBeLessThan(new Date(c.dtAgendamento).getTime());
       }
     });
+    it("contatos preservam proporções e têm hífen", () => {
+      expect(s.cidadaos.filter((p) => !p.nrCelular && p.nrContatoRecado)).toHaveLength(13);
+      for (const p of s.cidadaos) for (const tel of [p.nrCelular, p.nrContatoRecado].filter(Boolean)) expect(tel).toMatch(/^\(11\) 9\d{4}-\d{4}$/);
+      expect(s.cidadaos.find((p) => p.cdCidadao === 5)?.nrCelular).toBe("(11) 98888-0005");
+    });
     it("listas de hoje usam cadastrados sem consulta hoje e têm prioridade", () => {
       expect(s.cidadaos).toHaveLength(80);
       expect(s.cidadaos.filter((p) => !temContatoValido(p))).toHaveLength(8);

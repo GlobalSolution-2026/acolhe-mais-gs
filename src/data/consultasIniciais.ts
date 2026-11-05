@@ -88,12 +88,12 @@ export function gerarSemente(horariosBase: Horario[], agora: Date = new Date()):
     let candidatos = cidadaos.filter((c) => chaveDia(h.dtHorario) !== hoje || !filaIds.includes(c.cdCidadao));
     const dia = chaveDia(h.dtHorario);
     candidatos = candidatos.filter((c) => !ativosDia.has(`${c.cdCidadao}:${dia}`) && !reservados.has(`${c.cdCidadao}:${dia}`));
-    const pessoa = candidatos[Math.floor(rand() * candidatos.length)] ?? cidadaos[0];
+    const pessoa = candidatos[Math.floor(rand() * candidatos.length)];
     if (!pessoa) continue;
     const id = exemplo?.id ?? pessoa.cdCidadao;
     const alto = exemplo?.alto ?? rand() < .45;
     const curta = delta >= 0 && delta < 24 * H && rand() < .15;
-    const status: Consulta["dsStatus"] = exemplo ? "AGENDADA" : delta < 0 ? (rand() < (alto ? .32 : .13) ? "FALTA" : "REALIZADA") : delta < 24 * H ? (curta ? "AGENDADA" : "CONFIRMADA") : delta <= 72 * H ? (exemplo || liberarPassada || rand() < .65 ? "AGENDADA" : "CONFIRMADA") : "AGENDADA";
+    const status: Consulta["dsStatus"] = exemplo ? "AGENDADA" : delta < 0 ? (rand() < (alto ? .32 : .13) ? "FALTA" : "REALIZADA") : delta < 24 * H ? (curta ? "AGENDADA" : "CONFIRMADA") : delta <= 72 * H ? (rand() < .65 ? "AGENDADA" : "CONFIRMADA") : "AGENDADA";
     if (liberarPassada) {
       const perdida = criar(h, id, "LIBERADA", true);
       if (reutilizadas < 4) {
