@@ -15,6 +15,9 @@ import { Route as ConsultasRouteImport } from './routes/consultas'
 import { Route as EmergenciaRouteImport } from './routes/emergencia'
 import { Route as PerfilRouteImport } from './routes/perfil'
 import { Route as InicioIndexRouteImport } from './routes/inicio.index'
+import { Route as InicioHorariosRouteImport } from './routes/inicio.horarios'
+import { Route as InicioOrientacaoRouteImport } from './routes/inicio.orientacao'
+import { Route as InicioResultadoRouteImport } from './routes/inicio.resultado'
 import { Route as RecepcaoIndexRouteImport } from './routes/recepcao.index'
 import { Route as RecepcaoAgendaRouteImport } from './routes/recepcao.agenda'
 import { Route as RecepcaoIndicadoresRouteImport } from './routes/recepcao.indicadores'
@@ -51,6 +54,21 @@ const InicioIndexRoute = InicioIndexRouteImport.update({
   path: '/inicio/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const InicioHorariosRoute = InicioHorariosRouteImport.update({
+  id: '/inicio/horarios',
+  path: '/inicio/horarios',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InicioOrientacaoRoute = InicioOrientacaoRouteImport.update({
+  id: '/inicio/orientacao',
+  path: '/inicio/orientacao',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InicioResultadoRoute = InicioResultadoRouteImport.update({
+  id: '/inicio/resultado',
+  path: '/inicio/resultado',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RecepcaoIndexRoute = RecepcaoIndexRouteImport.update({
   id: '/recepcao/',
   path: '/recepcao/',
@@ -83,6 +101,9 @@ export interface FileRoutesByFullPath {
   '/consultas': typeof ConsultasRoute
   '/emergencia': typeof EmergenciaRoute
   '/perfil': typeof PerfilRoute
+  '/inicio/horarios': typeof InicioHorariosRoute
+  '/inicio/orientacao': typeof InicioOrientacaoRoute
+  '/inicio/resultado': typeof InicioResultadoRoute
   '/recepcao/agenda': typeof RecepcaoAgendaRoute
   '/recepcao/indicadores': typeof RecepcaoIndicadoresRoute
   '/recepcao/lista-do-dia': typeof RecepcaoListaDoDiaRoute
@@ -96,6 +117,9 @@ export interface FileRoutesByTo {
   '/consultas': typeof ConsultasRoute
   '/emergencia': typeof EmergenciaRoute
   '/perfil': typeof PerfilRoute
+  '/inicio/horarios': typeof InicioHorariosRoute
+  '/inicio/orientacao': typeof InicioOrientacaoRoute
+  '/inicio/resultado': typeof InicioResultadoRoute
   '/recepcao/agenda': typeof RecepcaoAgendaRoute
   '/recepcao/indicadores': typeof RecepcaoIndicadoresRoute
   '/recepcao/lista-do-dia': typeof RecepcaoListaDoDiaRoute
@@ -110,6 +134,9 @@ export interface FileRoutesById {
   '/consultas': typeof ConsultasRoute
   '/emergencia': typeof EmergenciaRoute
   '/perfil': typeof PerfilRoute
+  '/inicio/horarios': typeof InicioHorariosRoute
+  '/inicio/orientacao': typeof InicioOrientacaoRoute
+  '/inicio/resultado': typeof InicioResultadoRoute
   '/recepcao/agenda': typeof RecepcaoAgendaRoute
   '/recepcao/indicadores': typeof RecepcaoIndicadoresRoute
   '/recepcao/lista-do-dia': typeof RecepcaoListaDoDiaRoute
@@ -125,6 +152,9 @@ export interface FileRouteTypes {
     | '/consultas'
     | '/emergencia'
     | '/perfil'
+    | '/inicio/horarios'
+    | '/inicio/orientacao'
+    | '/inicio/resultado'
     | '/recepcao/agenda'
     | '/recepcao/indicadores'
     | '/recepcao/lista-do-dia'
@@ -138,6 +168,9 @@ export interface FileRouteTypes {
     | '/consultas'
     | '/emergencia'
     | '/perfil'
+    | '/inicio/horarios'
+    | '/inicio/orientacao'
+    | '/inicio/resultado'
     | '/recepcao/agenda'
     | '/recepcao/indicadores'
     | '/recepcao/lista-do-dia'
@@ -151,6 +184,9 @@ export interface FileRouteTypes {
     | '/consultas'
     | '/emergencia'
     | '/perfil'
+    | '/inicio/horarios'
+    | '/inicio/orientacao'
+    | '/inicio/resultado'
     | '/recepcao/agenda'
     | '/recepcao/indicadores'
     | '/recepcao/lista-do-dia'
@@ -165,6 +201,9 @@ export interface RootRouteChildren {
   ConsultasRoute: typeof ConsultasRoute
   EmergenciaRoute: typeof EmergenciaRoute
   PerfilRoute: typeof PerfilRoute
+  InicioHorariosRoute: typeof InicioHorariosRoute
+  InicioOrientacaoRoute: typeof InicioOrientacaoRoute
+  InicioResultadoRoute: typeof InicioResultadoRoute
   RecepcaoAgendaRoute: typeof RecepcaoAgendaRoute
   RecepcaoIndicadoresRoute: typeof RecepcaoIndicadoresRoute
   RecepcaoListaDoDiaRoute: typeof RecepcaoListaDoDiaRoute
@@ -217,6 +256,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof InicioIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/inicio/horarios': {
+      id: '/inicio/horarios'
+      path: '/inicio/horarios'
+      fullPath: '/inicio/horarios'
+      preLoaderRoute: typeof InicioHorariosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/inicio/orientacao': {
+      id: '/inicio/orientacao'
+      path: '/inicio/orientacao'
+      fullPath: '/inicio/orientacao'
+      preLoaderRoute: typeof InicioOrientacaoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/inicio/resultado': {
+      id: '/inicio/resultado'
+      path: '/inicio/resultado'
+      fullPath: '/inicio/resultado'
+      preLoaderRoute: typeof InicioResultadoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/recepcao/': {
       id: '/recepcao/'
       path: '/recepcao'
@@ -261,6 +321,9 @@ const rootRouteChildren: RootRouteChildren = {
   ConsultasRoute: ConsultasRoute,
   EmergenciaRoute: EmergenciaRoute,
   PerfilRoute: PerfilRoute,
+  InicioHorariosRoute: InicioHorariosRoute,
+  InicioOrientacaoRoute: InicioOrientacaoRoute,
+  InicioResultadoRoute: InicioResultadoRoute,
   RecepcaoAgendaRoute: RecepcaoAgendaRoute,
   RecepcaoIndicadoresRoute: RecepcaoIndicadoresRoute,
   RecepcaoListaDoDiaRoute: RecepcaoListaDoDiaRoute,
