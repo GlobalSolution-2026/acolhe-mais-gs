@@ -91,8 +91,8 @@ export interface Indicadores {
   comparecimentoAposOrientacao: number | null;
 }
 
-export function calcularIndicadores(consultas: Consulta[], listaDoDia: EntradaListaDoDia[]): Indicadores {
-  const encerradas = consultas.filter((c) => c.dsStatus === "REALIZADA" || c.dsStatus === "FALTA");
+export function calcularIndicadores(consultas: Consulta[], listaDoDia: EntradaListaDoDia[], agora = new Date()): Indicadores {
+  const encerradas = consultas.filter((c) => (c.dsStatus === "REALIZADA" || c.dsStatus === "FALTA") && new Date(c.dtHorario) < agora);
   const faltas = encerradas.filter((c) => c.dsStatus === "FALTA").length;
   const taxaAbsenteismo = encerradas.length > 0 ? faltas / encerradas.length : null;
 
@@ -134,7 +134,9 @@ export function segundosRestantesOferta(oferta: OfertaVaga, agora: Date): number
 }
 
 export function tempoRestanteOferta(oferta: OfertaVaga, agora: Date): string {
-  const segundosSimulados = Math.ceil(segundosRestantesOferta(oferta, agora) * 60 / ESCALA_DEMO_SEGUNDOS_POR_MIN);
+  const duracao = PRAZO_ACEITAR_OFERTA_MIN * ESCALA_DEMO_SEGUNDOS_POR_MIN * 1000;
+  const msRestantes = Math.max(0, Math.min(duracao, duracao - (agora.getTime() - new Date(oferta.dtCriacao).getTime())));
+  const segundosSimulados = Math.ceil(msRestantes * 60 / (ESCALA_DEMO_SEGUNDOS_POR_MIN * 1000));
   return `${String(Math.floor(segundosSimulados / 60)).padStart(2, "0")}:${String(segundosSimulados % 60).padStart(2, "0")}`;
 }
 

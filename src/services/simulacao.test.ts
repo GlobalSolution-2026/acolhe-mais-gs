@@ -34,6 +34,8 @@ describe("destinatário das ofertas", () => {
   it("30 minutos duram 300 segundos reais e contador usa tempo simulado", () => {
     expect(segundosRestantesOferta(oferta(1), agora)).toBe(300);
     expect(tempoRestanteOferta(oferta(1), new Date(agora.getTime() + 30_000))).toBe("27:00");
+    expect(tempoRestanteOferta(oferta(1), new Date(agora.getTime() + 23_333))).toBe("27:40");
+    expect(tempoRestanteOferta(oferta(1), new Date(agora.getTime() - 1000))).toBe("30:00");
     expect(segundosRestantesOferta(oferta(1), new Date(agora.getTime() + 300_000))).toBe(0);
   });
   it("vencimento global repassa sem expirar a oferta recém-criada", () => {

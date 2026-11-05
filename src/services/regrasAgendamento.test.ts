@@ -138,8 +138,8 @@ describe("ordenação da lista do dia", () => {
 describe("indicadores", () => {
   it("calcula absenteísmo, reaproveitamento, não encaixados e comparecimento após orientação", () => {
     const consultas: Consulta[] = [
-      consulta({ cdConsulta: 1, dsStatus: "REALIZADA", cdOrientacao: 1 }),
-      consulta({ cdConsulta: 2, dsStatus: "FALTA", cdOrientacao: 1 }),
+      consulta({ cdConsulta: 1, dsStatus: "REALIZADA", cdOrientacao: 1, dtHorario: new Date(base.getTime() - HORA).toISOString() }),
+      consulta({ cdConsulta: 2, dsStatus: "FALTA", cdOrientacao: 1, dtHorario: new Date(base.getTime() - HORA).toISOString() }),
       consulta({ cdConsulta: 3, dsStatus: "LIBERADA", cdHorario: 50, dtAgendamento: new Date(base.getTime() - 2 * HORA).toISOString() }),
       consulta({ cdConsulta: 4, dsStatus: "AGENDADA", cdHorario: 50, dtAgendamento: base.toISOString() }), // reocupou o horário 50
       consulta({ cdConsulta: 5, dsStatus: "LIBERADA", cdHorario: 51 }),
@@ -148,7 +148,7 @@ describe("indicadores", () => {
       { cdEntrada: 1, cdCidadao: 1, cdUnidade: 1, nmCidadao: "A", dsCor: "VERDE", dtEntrada: base.toISOString(), flPrioridade: false, flCidadao: false, status: "AGUARDANDO" },
       { cdEntrada: 2, cdCidadao: 2, cdUnidade: 1, nmCidadao: "B", dsCor: "AZUL", dtEntrada: base.toISOString(), flPrioridade: false, flCidadao: false, status: "AGUARDANDO" },
     ];
-    const i = calcularIndicadores(consultas, lista);
+    const i = calcularIndicadores(consultas, lista, base);
     expect(i.taxaAbsenteismo).toBeCloseTo(1 / 2);
     expect(i.taxaReaproveitamento).toBeCloseTo(1 / 2);
     expect(i.naoEncaixadas).toBe(2);
@@ -161,5 +161,12 @@ describe("indicadores", () => {
     expect(i.taxaReaproveitamento).toBeNull();
     expect(i.comparecimentoAposOrientacao).toBeNull();
     expect(i.naoEncaixadas).toBe(0);
+  });
+
+  it("absenteísmo exclui futuras e liberadas mesmo com status encerrado inconsistente", () => {
+    const passadas = [consulta({ dsStatus: "REALIZADA", dtHorario: new Date(base.getTime() - HORA).toISOString() }), consulta({ dsStatus: "FALTA", dtHorario: new Date(base.getTime() - HORA).toISOString() })];
+    const outras = [consulta({ dsStatus: "FALTA" }), consulta({ dsStatus: "CONFIRMADA" }), consulta({ dsStatus: "LIBERADA", dtHorario: new Date(base.getTime() - HORA).toISOString() })];
+    expect(calcularIndicadores([...passadas, ...outras], [], base).taxaAbsenteismo).toBe(.5);
+    expect(calcularIndicadores(outras, [], base).taxaAbsenteismo).toBeNull();
   });
 });
