@@ -31,3 +31,4 @@ use the editor.
 
 - Pages live in src/pages and route files in src/routes only wire them (head + component), so the screens can be reused by a separate site/simulator project later. This project is only the Acolhe+ app: AppShell (in __root) renders a profile-dependent top bar and bottom nav; the current profile lives in SimuladorContext state. Why: app screens are reused elsewhere.
 - All data access goes through src/services/api.ts (one function per future Java REST endpoint) backed by SimuladorContext mock state persisted in localStorage. Why: no backend in the prototype.
+- Triage rules and the questionnaire engine live only in src/services/regrasOrientacao.ts (pure, unit-tested); questions are data in src/data/perguntas.ts. The AI check (verificarUrgencia) may only raise severity. Why: rules must be testable and never live in components.
