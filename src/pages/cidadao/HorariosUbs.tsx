@@ -6,7 +6,7 @@ import { Carregando } from "@/components/Carregando";
 import { EstadoVazio } from "@/components/EstadoVazio";
 import { MensagemErro } from "@/components/MensagemErro";
 import { useSimulador } from "@/context/SimuladorContext";
-import { chaveDia, fmtDiaLongo } from "@/lib/datas";
+import { chaveDia, listarDiasUnidade, rotuloDia } from "@/lib/datas";
 import { listarHorarios } from "@/services/api";
 import type { Horario } from "@/types";
 
@@ -25,18 +25,15 @@ export function HorariosUbs({ cdUnidade }: { cdUnidade: number }) {
     }
   }, [cdUnidade]);
 
-  useEffect(() => { void carregar(); }, [carregar]);
+  useEffect(() => { void carregar(); }, [carregar, estado.horarios]);
 
   const unidade = estado.unidades.find((u) => u.cdUnidade === cdUnidade);
-  const livres = useMemo(() => (horarios ?? []).filter((h) => !h.flOcupado), [horarios]);
+  const livres = useMemo(() => (horarios ?? []).filter((h) => !h.flOcupado && new Date(h.dtHorario).getTime() > Date.now() && !estado.horarios.find((atual) => atual.cdHorario === h.cdHorario)?.flOcupado), [horarios, estado.horarios]);
   const porDia = useMemo(() => {
-    const mapa = new Map<string, Horario[]>();
-    for (const h of livres) {
-      const chave = chaveDia(h.dtHorario);
-      mapa.set(chave, [...(mapa.get(chave) ?? []), h]);
-    }
-    return [...mapa.entries()];
-  }, [livres]);
+    return listarDiasUnidade(estado.horarios, cdUnidade)
+      .map((dia): [string, Horario[]] => [dia, livres.filter((h) => chaveDia(h.dtHorario) === dia)])
+      .filter(([, lista]) => lista.length > 0);
+  }, [livres, estado.horarios, cdUnidade]);
 
   const entrarNaLista = () => {
     const cor = estado.orientacaoAtual?.resultado?.dsCor === "AZUL" ? "AZUL" : "VERDE";
@@ -59,7 +56,7 @@ export function HorariosUbs({ cdUnidade }: { cdUnidade: number }) {
       )}
       {porDia.map(([dia, lista]) => (
         <section key={dia}>
-          <h2 className="mb-2 font-extrabold capitalize">{fmtDiaLongo(lista[0]?.dtHorario ?? dia)}</h2>
+          <h2 className="mb-2 font-extrabold">{rotuloDia(lista[0]?.dtHorario ?? dia, true)}</h2>
           <div className="grid grid-cols-3 gap-2">
             {lista.map((h) => (
               <CardHorario key={h.cdHorario} horario={h}

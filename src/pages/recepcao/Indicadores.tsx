@@ -27,7 +27,7 @@ export function Indicadores() {
     <div className="flex flex-col gap-4">
       <h1 className="text-2xl font-extrabold text-primaria">Indicadores</h1>
       <Card titulo="Taxa de absenteísmo" valor={pct(i.taxaAbsenteismo)}
-        explicacao="Faltas divididas pelas consultas agendadas." />
+        explicacao="Faltas entre as consultas agendadas que já aconteceram." />
       <Card titulo="Taxa de reaproveitamento" valor={pct(i.taxaReaproveitamento)}
         explicacao="Horários liberados que foram ocupados de novo, divididos pelos horários liberados." />
       <Card titulo="Não encaixados hoje" valor={String(i.naoEncaixadas)}

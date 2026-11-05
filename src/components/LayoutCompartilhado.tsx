@@ -6,7 +6,7 @@ import {
 } from "react-icons/fi";
 import { useSimulador } from "@/context/SimuladorContext";
 import { rotaPai } from "@/services/navegacao";
-import { precisaConfirmar } from "@/services/regrasAgendamento";
+import { ofertasDoCidadao, precisaConfirmar } from "@/services/regrasAgendamento";
 import { ModoDemonstracao } from "./ModoDemonstracao";
 
 export function Aba({ to, label, icone: Icone }: { to: NonNullable<LinkProps["to"]>; label: string; icone: IconType }) {
@@ -27,8 +27,8 @@ function Folha({ onFechar, children }: { onFechar: () => void; children: ReactNo
   return (
     <div className="fixed inset-0 z-50 flex justify-center" role="dialog" aria-modal="true">
       <button className="absolute inset-0 bg-primariaEscura/50" aria-label="Fechar" onClick={onFechar} />
-      <div className="absolute bottom-0 w-full max-w-md rounded-t-[20px] bg-branco p-4 pb-6 shadow-celular">
-        <div className="mb-2 flex justify-end">
+      <div className="absolute bottom-0 w-full max-w-md max-h-[90dvh] overflow-y-auto rounded-t-[20px] bg-branco px-4 pb-[calc(1.5rem+env(safe-area-inset-bottom))] shadow-celular">
+        <div className="sticky top-0 z-10 mb-2 flex justify-end bg-branco py-2">
           <button onClick={onFechar} className="flex h-12 w-12 items-center justify-center rounded-[12px] hover:bg-fundo" aria-label="Fechar">
             <FiX size={24} />
           </button>
@@ -49,7 +49,7 @@ export function LayoutCompartilhado({ cidadao, barra }: { cidadao: boolean; barr
   const agora = new Date();
   const avisos = cidadao
     ? estado.consultas.filter((c) => c.cdCidadao === estado.cdCidadaoAtual && precisaConfirmar(c, agora)).length +
-      estado.ofertas.filter((o) => o.status === "PENDENTE").length
+      ofertasDoCidadao(estado.ofertas, estado.listaDoDia).length
     : estado.consultas.filter(
         (c) =>
           c.dsStatus === "AGENDADA" &&

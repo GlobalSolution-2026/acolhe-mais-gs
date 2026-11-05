@@ -51,7 +51,7 @@ export function Pendentes() {
                 Risco {c.dsRiscoFalta}
               </span>
             </div>
-            <p className="font-semibold capitalize">{fmtDiaHora(c.dtHorario)}</p>
+            <p className="font-semibold">{fmtDiaHora(c.dtHorario)}</p>
             {prazo && <p className="text-sm font-semibold text-gravidade-laranja">Prazo para confirmar: {fmtDiaHora(prazo.toISOString())}</p>}
             {cidadao?.nrCelular && <p className="text-sm">Celular: {cidadao.nrCelular}</p>}
             {cidadao?.nmContatoRecado && (

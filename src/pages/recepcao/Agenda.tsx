@@ -1,10 +1,10 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { FiUserPlus } from "react-icons/fi";
 import { EstadoVazio } from "@/components/EstadoVazio";
 import { FormularioCidadao } from "@/components/FormularioCidadao";
 import { MensagemErro } from "@/components/MensagemErro";
 import { useSimulador } from "@/context/SimuladorContext";
-import { chaveDia, fmtHora } from "@/lib/datas";
+import { chaveDia, fmtHora, listarDiasUnidade, rotuloDia } from "@/lib/datas";
 import { agendarConsulta, cadastrarCidadao, registrarPresenca } from "@/services/api";
 import type { CidadaoEntrada, Consulta, Horario } from "@/types";
 
@@ -25,10 +25,15 @@ export function Agenda() {
   const [enviando, setEnviando] = useState(false);
 
   const dias = useMemo(
-    () => [...new Set(estado.horarios.filter((h) => h.cdUnidade === cdUnidade).map((h) => chaveDia(h.dtHorario)))].sort(),
+    () => listarDiasUnidade(estado.horarios, cdUnidade),
     [estado.horarios, cdUnidade],
   );
-  const [dia, setDia] = useState(dias[0] ?? "");
+  const [dia, setDia] = useState(() => chaveDia(new Date().toISOString()));
+  const assinaturaDias = dias.join(",");
+  useEffect(() => {
+    const hoje = chaveDia(new Date().toISOString());
+    setDia(dias.includes(hoje) ? hoje : dias[0] ?? "");
+  }, [assinaturaDias, cdUnidade]);
 
   const horariosDia = useMemo(
     () =>
@@ -39,7 +44,8 @@ export function Agenda() {
   );
 
   const consultaDoHorario = (h: Horario) =>
-    estado.consultas.find((c) => c.cdHorario === h.cdHorario && c.dsStatus !== "LIBERADA");
+    estado.consultas.find((c) => c.cdHorario === h.cdHorario && c.dsStatus !== "LIBERADA") ??
+    estado.consultas.find((c) => c.cdHorario === h.cdHorario && c.dsStatus === "LIBERADA");
   const nomePaciente = (c: Consulta) =>
     estado.cidadaos.find((x) => x.cdCidadao === c.cdCidadao)?.nmCidadao ?? "Paciente";
 
@@ -75,7 +81,7 @@ export function Agenda() {
           className="min-h-12 rounded-[12px] border border-borda bg-branco px-4">
           {dias.map((d) => {
             const h = estado.horarios.find((x) => chaveDia(x.dtHorario) === d);
-            return <option key={d} value={d}>{h ? new Date(h.dtHorario).toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "2-digit" }) : d}</option>;
+            return <option key={d} value={d}>{h ? rotuloDia(h.dtHorario) : d}</option>;
           })}
         </select>
       </div>
@@ -111,7 +117,7 @@ export function Agenda() {
                 )}
               </>
             )}
-            {!consulta && (
+            {!h.flOcupado && new Date(h.dtHorario).getTime() > Date.now() && (
               formAberto === h.cdHorario ? (
                 <div className="flex flex-col gap-3 border-t border-borda pt-3">
                   <p className="font-bold">Agendar para quem chegou sem celular</p>
