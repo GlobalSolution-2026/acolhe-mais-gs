@@ -3,11 +3,14 @@
  * Prazos vêm de src/data/configuracoes.ts.
  */
 import {
+  ANTECEDENCIA_MINIMA_LISTA_DIA_MIN,
+  ESCALA_DEMO_SEGUNDOS_POR_MIN,
+  PRAZO_ACEITAR_OFERTA_MIN,
   CONFIRMACAO_RISCO_ALTO_H,
   CONFIRMACAO_RISCO_BAIXO_H,
   PRAZO_FINAL_CONFIRMACAO_H,
 } from "@/data/configuracoes";
-import type { Cidadao, Consulta, EntradaListaDoDia } from "@/types";
+import type { Cidadao, Consulta, EntradaListaDoDia, OfertaVaga, Horario } from "@/types";
 
 const HORA_MS = 3_600_000;
 
@@ -89,8 +92,9 @@ export interface Indicadores {
 }
 
 export function calcularIndicadores(consultas: Consulta[], listaDoDia: EntradaListaDoDia[]): Indicadores {
-  const faltas = consultas.filter((c) => c.dsStatus === "FALTA").length;
-  const taxaAbsenteismo = consultas.length > 0 ? faltas / consultas.length : null;
+  const encerradas = consultas.filter((c) => c.dsStatus === "REALIZADA" || c.dsStatus === "FALTA");
+  const faltas = encerradas.filter((c) => c.dsStatus === "FALTA").length;
+  const taxaAbsenteismo = encerradas.length > 0 ? faltas / encerradas.length : null;
 
   const liberadas = consultas.filter((c) => c.dsStatus === "LIBERADA");
   const reocupadas = liberadas.filter((l) =>
@@ -109,4 +113,31 @@ export function calcularIndicadores(consultas: Consulta[], listaDoDia: EntradaLi
   const comparecimentoAposOrientacao = comOrientacao.length > 0 ? realizadas.length / comOrientacao.length : null;
 
   return { taxaAbsenteismo, taxaReaproveitamento, naoEncaixadas: ordenarListaDoDia(listaDoDia).length, comparecimentoAposOrientacao };
+}
+
+/** Não repetir destinatários para a mesma vaga nem devolver a quem a perdeu. */
+export function escolherDestinatarioOferta(fila: EntradaListaDoDia[], ofertas: OfertaVaga[], cdHorario: number, cdCidadaoQuePerdeu: number | null): EntradaListaDoDia | undefined {
+  return ordenarListaDoDia(fila).find((e) =>
+    (cdCidadaoQuePerdeu === null || e.cdCidadao !== cdCidadaoQuePerdeu) &&
+    !ofertas.some((o) => o.cdEntrada === e.cdEntrada && (o.status === "PENDENTE" ||
+      (o.cdHorario === cdHorario && (o.status === "RECUSADA" || o.status === "EXPIRADA")))));
+}
+
+export function horarioOferecivel(h: Horario, ofertas: OfertaVaga[], agora: Date): boolean {
+  return !h.flOcupado && new Date(h.dtHorario).getTime() >= agora.getTime() + ANTECEDENCIA_MINIMA_LISTA_DIA_MIN * 60_000 &&
+    !ofertas.some((o) => o.cdHorario === h.cdHorario && o.status === "PENDENTE");
+}
+
+export function segundosRestantesOferta(oferta: OfertaVaga, agora: Date): number {
+  return Math.max(0, Math.ceil((PRAZO_ACEITAR_OFERTA_MIN * ESCALA_DEMO_SEGUNDOS_POR_MIN * 1000 -
+    (agora.getTime() - new Date(oferta.dtCriacao).getTime())) / 1000));
+}
+
+export function tempoRestanteOferta(oferta: OfertaVaga, agora: Date): string {
+  const segundosSimulados = Math.ceil(segundosRestantesOferta(oferta, agora) * 60 / ESCALA_DEMO_SEGUNDOS_POR_MIN);
+  return `${String(Math.floor(segundosSimulados / 60)).padStart(2, "0")}:${String(segundosSimulados % 60).padStart(2, "0")}`;
+}
+
+export function ofertasDoCidadao(ofertas: OfertaVaga[], fila: EntradaListaDoDia[]): OfertaVaga[] {
+  return ofertas.filter((o) => o.status === "PENDENTE" && fila.some((e) => e.cdEntrada === o.cdEntrada && e.flCidadao));
 }

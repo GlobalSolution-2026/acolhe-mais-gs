@@ -14,3 +14,6 @@ export const CONFIRMACAO_RISCO_ALTO_H = 72;
 
 /** Prazo final para confirmar: 24 h antes da consulta. */
 export const PRAZO_FINAL_CONFIRMACAO_H = 24;
+
+/** Cada minuto simulado dura dez segundos reais. */
+export const ESCALA_DEMO_SEGUNDOS_POR_MIN = 10;

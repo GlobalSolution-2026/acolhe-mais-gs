@@ -13,7 +13,7 @@ function q(
   bloco: BlocoPergunta,
   tipoResposta: TipoResposta,
   dsPergunta: string,
-  extra: { cor?: Cor; opcoes?: Opcao[]; cond?: CondicaoExibicao; sinal?: string } = {},
+  extra: { cor?: Cor; opcoes?: Opcao[]; cond?: CondicaoExibicao; sinal?: string; alarme?: "SIM" | "NAO" } = {},
 ): Pergunta {
   return {
     cdPergunta: ++cd,
@@ -24,6 +24,7 @@ function q(
     bloco,
     tipoResposta,
     dsCorSeSim: extra.cor ?? null,
+    ...(extra.alarme ? { dsRespostaAlarme: extra.alarme } : {}),
     ...(extra.opcoes ? { opcoes: extra.opcoes } : {}),
     ...(extra.cond ? { condicaoExibicao: extra.cond } : {}),
     ...(extra.sinal ? { dsSinal: extra.sinal } : {}),
@@ -78,11 +79,11 @@ export const perguntas: Pergunta[] = [
   // DOR DE GARGANTA
   q(GARGANTA, "G0", 30, "ENTRADA", SN, "Além da dor de garganta, {voce} está com tosse ou coriza?"),
   q(GARGANTA, "G1", 31, "ALARME", SN, "Tem dificuldade para respirar ou faz um barulho agudo ao puxar o ar?", { cor: "VERMELHO", sinal: "Dificuldade para respirar" }),
-  q(GARGANTA, "G2", 32, "LARANJA", SN, "Não consegue engolir a própria saliva, a ponto de babar?", { cor: "LARANJA", sinal: "Não consegue engolir a saliva" }),
+  q(GARGANTA, "G2", 32, "LARANJA", SN, "Consegue engolir a própria saliva?", { alarme: "NAO", cor: "LARANJA", sinal: "Não consegue engolir a saliva" }),
   q(GARGANTA, "G3", 33, "LARANJA", SN, "Tem dificuldade para abrir a boca?", { cor: "LARANJA", sinal: "Dificuldade para abrir a boca" }),
   q(GARGANTA, "G4", 34, "LARANJA", SN, "A voz está abafada, como se falasse com algo quente na boca?", { cor: "LARANJA", sinal: "Voz abafada" }),
   q(GARGANTA, "G5", 35, "LARANJA", SNS, "A dor é muito forte e pior de um lado só, ou há inchaço visível de um lado da garganta?", { cor: "LARANJA", sinal: "Dor forte ou inchaço de um lado" }),
-  q(GARGANTA, "G6", 36, "URGENCIA", SNS, "Não consegue beber líquidos por causa da dor?", { cor: "AMARELO", sinal: "Não consegue beber líquidos" }),
+  q(GARGANTA, "G6", 36, "URGENCIA", SNS, "Consegue beber líquidos, mesmo com a dor?", { alarme: "NAO", cor: "AMARELO", sinal: "Não consegue beber líquidos" }),
   q(GARGANTA, "G7", 37, "CLASSIFICACAO", SN, "{Voce} está com febre?", { cor: "VERDE" }),
 
   // DIARREIA E VÔMITO
@@ -94,7 +95,7 @@ export const perguntas: Pergunta[] = [
   q(DIARREIA, "D6", 45, "URGENCIA", SNS, "Nos últimos dias teve fezes pretas ou com sangue, ou vomitou sangue?", { cor: "AMARELO", sinal: "Sangue nos últimos dias" }),
   q(DIARREIA, "D7", 46, "URGENCIA", SNS, "Vomita tudo o que bebe?", { cor: "AMARELO", sinal: "Vomita tudo o que bebe" }),
   q(DIARREIA, "D8", 47, "URGENCIA", SNS, "Tem muita sede, boca seca, olhos fundos ou está urinando bem menos?", { cor: "AMARELO", sinal: "Sinais de desidratação" }),
-  q(DIARREIA, "D10", 48, "URGENCIA", SNS, "A diarreia é tão frequente que não consegue repor bebendo líquidos?", { cor: "AMARELO", sinal: "Diarreia sem conseguir repor líquidos" }),
+  q(DIARREIA, "D10", 48, "URGENCIA", SNS, "Consegue repor os líquidos bebendo, mesmo com a diarreia?", { alarme: "NAO", cor: "AMARELO", sinal: "Diarreia sem conseguir repor líquidos" }),
   q(DIARREIA, "D11", 49, "URGENCIA", SNS, "{Voce} tem diabetes?"),
   q(DIARREIA, "D11a", 50, "URGENCIA", SNS, "Usa insulina, ou está com fraqueza ou dor na barriga?", { cor: "AMARELO", cond: { tipo: "RESPOSTA_EM", codigo: "D11", valores: ["SIM", "NAO_SEI"] }, sinal: "Diabetes com insulina, fraqueza ou dor" }),
   q(DIARREIA, "D12", 51, "CLASSIFICACAO", SN, "A diarreia dura 14 dias ou mais?", { cor: "VERDE" }),
@@ -106,7 +107,7 @@ export const perguntas: Pergunta[] = [
   q(CABECA, "C3", 63, "ALARME", SN, "Tem fraqueza ou dormência de um lado do corpo, fala enrolada, boca torta, perda de visão ou confusão?", { cor: "VERMELHO", sinal: "Fraqueza de um lado, fala enrolada ou confusão" }),
   q(CABECA, "C4", 64, "ALARME", SN, "Teve convulsão?", { cor: "VERMELHO", sinal: "Convulsão" }),
   q(CABECA, "C5", 65, "LARANJA", SN, "A dor começou depois de uma batida na cabeça?", { cor: "LARANJA", sinal: "Dor depois de batida na cabeça" }),
-  q(CABECA, "C6", 66, "URGENCIA", SNS, "A dor não melhorou com o remédio que já tomou?", { cor: "AMARELO", cond: { tipo: "DOR_MIN", valor: 8 }, sinal: "Dor forte que não melhora com remédio" }),
+  q(CABECA, "C6", 66, "URGENCIA", SNS, "A dor melhorou com o remédio que já tomou?", { alarme: "NAO", cor: "AMARELO", cond: { tipo: "DOR_MIN", valor: 8 }, sinal: "Dor forte que não melhora com remédio" }),
   q(CABECA, "C7", 67, "URGENCIA", SNS, "Tem vômitos em jato, sem enjoo antes?", { cor: "AMARELO", sinal: "Vômitos em jato" }),
   q(CABECA, "C8", 68, "URGENCIA", SNS, "A dor é diferente das que costuma ter, ou está piorando nas últimas semanas?", { cor: "AMARELO", sinal: "Dor diferente ou piorando" }),
   q(CABECA, "C9", 69, "URGENCIA", SNS, "É a primeira vez com uma dor assim?", { cor: "AMARELO", cond: { tipo: "IDADE_MIN", valor: 50 }, sinal: "Primeira dor assim após os 50" }),

@@ -32,6 +32,7 @@ export interface Pergunta {
   tipoResposta: TipoResposta;
   opcoes?: Opcao[];
   dsCorSeSim: Cor | null;
+  dsRespostaAlarme?: "SIM" | "NAO";
   condicaoExibicao?: CondicaoExibicao;
   /** Texto curto usado na lista de sinais marcados. */
   dsSinal?: string;
