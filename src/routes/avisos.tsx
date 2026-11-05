@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { TelaEmConstrucao } from "@/pages/TelaEmConstrucao";
+import { Avisos } from "@/pages/cidadao/Avisos";
 
 export const Route = createFileRoute("/avisos")({
   head: () => ({
@@ -10,5 +10,5 @@ export const Route = createFileRoute("/avisos")({
       { property: "og:description", content: "Avisos no aplicativo Acolhe+, orientação e agendamento no SUS." },
     ],
   }),
-  component: () => <TelaEmConstrucao titulo="Avisos" />,
+  component: Avisos,
 });
