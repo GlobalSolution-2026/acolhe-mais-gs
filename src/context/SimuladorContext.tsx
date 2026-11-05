@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState, ty
 import type { Cidadao, Consulta, Horario, Unidade } from "@/types";
 import { unidadesIniciais } from "@/data/unidades";
 import { gerarHorariosIniciais } from "@/data/horarios";
+import { conectarStore } from "@/services/api";
 
 export interface EstadoSimulador {
   unidades: Unidade[];
@@ -68,6 +69,8 @@ export function SimuladorProvider({ children }: { children: ReactNode }) {
     ref.current = novo;
     setEstado(novo);
   }, []);
+
+  conectarStore({ obterEstado, atualizarEstado });
 
   const reiniciarDemonstracao = useCallback(() => {
     const novo = estadoInicial();
