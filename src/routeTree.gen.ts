@@ -27,7 +27,7 @@ import { Route as RecepcaoAgendaRouteImport } from './routes/recepcao.agenda'
 import { Route as RecepcaoIndicadoresRouteImport } from './routes/recepcao.indicadores'
 import { Route as RecepcaoListaDoDiaRouteImport } from './routes/recepcao.lista-do-dia'
 import { Route as RecepcaoPendentesRouteImport } from './routes/recepcao.pendentes'
-import { Route as InicioUbsCdUnidadeRouteImport } from './routes/inicio.ubs.$cdUnidade'
+import { Route as InicioUbsCdUnidadeRouteImport } from './routes/inicio.ubs_.$cdUnidade'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -120,9 +120,9 @@ const RecepcaoPendentesRoute = RecepcaoPendentesRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const InicioUbsCdUnidadeRoute = InicioUbsCdUnidadeRouteImport.update({
-  id: '/$cdUnidade',
-  path: '/$cdUnidade',
-  getParentRoute: () => InicioUbsRoute,
+  id: '/inicio/ubs_/$cdUnidade',
+  path: '/inicio/ubs/$cdUnidade',
+  getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -136,7 +136,7 @@ export interface FileRoutesByFullPath {
   '/inicio/orientacao': typeof InicioOrientacaoRoute
   '/inicio/resultado': typeof InicioResultadoRoute
   '/inicio/sucesso': typeof InicioSucessoRoute
-  '/inicio/ubs': typeof InicioUbsRouteWithChildren
+  '/inicio/ubs': typeof InicioUbsRoute
   '/perfil/editar': typeof PerfilEditarRoute
   '/recepcao/agenda': typeof RecepcaoAgendaRoute
   '/recepcao/indicadores': typeof RecepcaoIndicadoresRoute
@@ -157,7 +157,7 @@ export interface FileRoutesByTo {
   '/inicio/orientacao': typeof InicioOrientacaoRoute
   '/inicio/resultado': typeof InicioResultadoRoute
   '/inicio/sucesso': typeof InicioSucessoRoute
-  '/inicio/ubs': typeof InicioUbsRouteWithChildren
+  '/inicio/ubs': typeof InicioUbsRoute
   '/perfil/editar': typeof PerfilEditarRoute
   '/recepcao/agenda': typeof RecepcaoAgendaRoute
   '/recepcao/indicadores': typeof RecepcaoIndicadoresRoute
@@ -179,7 +179,7 @@ export interface FileRoutesById {
   '/inicio/orientacao': typeof InicioOrientacaoRoute
   '/inicio/resultado': typeof InicioResultadoRoute
   '/inicio/sucesso': typeof InicioSucessoRoute
-  '/inicio/ubs': typeof InicioUbsRouteWithChildren
+  '/inicio/ubs': typeof InicioUbsRoute
   '/perfil/editar': typeof PerfilEditarRoute
   '/recepcao/agenda': typeof RecepcaoAgendaRoute
   '/recepcao/indicadores': typeof RecepcaoIndicadoresRoute
@@ -187,7 +187,7 @@ export interface FileRoutesById {
   '/recepcao/pendentes': typeof RecepcaoPendentesRoute
   '/inicio/': typeof InicioIndexRoute
   '/recepcao/': typeof RecepcaoIndexRoute
-  '/inicio/ubs/$cdUnidade': typeof InicioUbsCdUnidadeRoute
+  '/inicio/ubs_/$cdUnidade': typeof InicioUbsCdUnidadeRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -252,7 +252,7 @@ export interface FileRouteTypes {
     | '/recepcao/pendentes'
     | '/inicio/'
     | '/recepcao/'
-    | '/inicio/ubs/$cdUnidade'
+    | '/inicio/ubs_/$cdUnidade'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -266,13 +266,14 @@ export interface RootRouteChildren {
   InicioOrientacaoRoute: typeof InicioOrientacaoRoute
   InicioResultadoRoute: typeof InicioResultadoRoute
   InicioSucessoRoute: typeof InicioSucessoRoute
-  InicioUbsRoute: typeof InicioUbsRouteWithChildren
+  InicioUbsRoute: typeof InicioUbsRoute
   RecepcaoAgendaRoute: typeof RecepcaoAgendaRoute
   RecepcaoIndicadoresRoute: typeof RecepcaoIndicadoresRoute
   RecepcaoListaDoDiaRoute: typeof RecepcaoListaDoDiaRoute
   RecepcaoPendentesRoute: typeof RecepcaoPendentesRoute
   InicioIndexRoute: typeof InicioIndexRoute
   RecepcaoIndexRoute: typeof RecepcaoIndexRoute
+  InicioUbsCdUnidadeRoute: typeof InicioUbsCdUnidadeRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -403,12 +404,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RecepcaoPendentesRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/inicio/ubs/$cdUnidade': {
-      id: '/inicio/ubs/$cdUnidade'
-      path: '/$cdUnidade'
+    '/inicio/ubs_/$cdUnidade': {
+      id: '/inicio/ubs_/$cdUnidade'
+      path: '/inicio/ubs/$cdUnidade'
       fullPath: '/inicio/ubs/$cdUnidade'
       preLoaderRoute: typeof InicioUbsCdUnidadeRouteImport
-      parentRoute: typeof InicioUbsRoute
+      parentRoute: typeof rootRouteImport
     }
   }
 }
@@ -424,18 +425,6 @@ const PerfilRouteChildren: PerfilRouteChildren = {
 const PerfilRouteWithChildren =
   PerfilRoute._addFileChildren(PerfilRouteChildren)
 
-interface InicioUbsRouteChildren {
-  InicioUbsCdUnidadeRoute: typeof InicioUbsCdUnidadeRoute
-}
-
-const InicioUbsRouteChildren: InicioUbsRouteChildren = {
-  InicioUbsCdUnidadeRoute: InicioUbsCdUnidadeRoute,
-}
-
-const InicioUbsRouteWithChildren = InicioUbsRoute._addFileChildren(
-  InicioUbsRouteChildren,
-)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AvisosRoute: AvisosRoute,
@@ -447,13 +436,14 @@ const rootRouteChildren: RootRouteChildren = {
   InicioOrientacaoRoute: InicioOrientacaoRoute,
   InicioResultadoRoute: InicioResultadoRoute,
   InicioSucessoRoute: InicioSucessoRoute,
-  InicioUbsRoute: InicioUbsRouteWithChildren,
+  InicioUbsRoute: InicioUbsRoute,
   RecepcaoAgendaRoute: RecepcaoAgendaRoute,
   RecepcaoIndicadoresRoute: RecepcaoIndicadoresRoute,
   RecepcaoListaDoDiaRoute: RecepcaoListaDoDiaRoute,
   RecepcaoPendentesRoute: RecepcaoPendentesRoute,
   InicioIndexRoute: InicioIndexRoute,
   RecepcaoIndexRoute: RecepcaoIndexRoute,
+  InicioUbsCdUnidadeRoute: InicioUbsCdUnidadeRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

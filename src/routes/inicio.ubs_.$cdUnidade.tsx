@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { HorariosUbs } from "@/pages/cidadao/HorariosUbs";
 
-export const Route = createFileRoute("/inicio/ubs/$cdUnidade")({
+export const Route = createFileRoute("/inicio/ubs_/$cdUnidade")({
   head: () => ({
     meta: [
       { title: "Horários da UBS | Acolhe+" },
