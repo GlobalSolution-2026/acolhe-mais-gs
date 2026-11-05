@@ -8,7 +8,7 @@ import { SeloGravidade } from "@/components/SeloGravidade";
 import { useSimulador } from "@/context/SimuladorContext";
 import { obterQueixa } from "@/data/queixas";
 import { orientacoesUbs } from "@/data/orientacoesUbs";
-import { getUnidades } from "@/services/api";
+import { listarUnidades } from "@/services/api";
 import { concluirOrientacao, upaMaisProxima } from "@/services/orientacao";
 import type { Unidade } from "@/types";
 import type { OrientacaoEmAndamento, ResultadoFinal } from "@/types/orientacao";
@@ -61,7 +61,7 @@ function Amarelo({ atual, res }: { atual: OrientacaoEmAndamento; res: ResultadoF
     setCarregando(true);
     setErro(null);
     try {
-      setUpa(upaMaisProxima(await getUnidades("UPA"), atual.nrCep));
+      setUpa(upaMaisProxima(await listarUnidades("UPA"), atual.nrCep));
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Não foi possível carregar as UPAs.");
     } finally {
@@ -103,14 +103,14 @@ function Ubs({ atual }: { atual: OrientacaoEmAndamento }) {
     <>
       <h1 className="text-2xl font-extrabold">Procure a UBS</h1>
       <section className="rounded-[12px] bg-mentaSuave p-4">
-        <h2 className="mb-1 font-extrabold text-primaria">Cuidados</h2>
+        <h2 className="mb-1 font-extrabold text-primaria">O que fazer até a consulta</h2>
         <ul className="list-disc pl-6">{o.cuidados.map((c) => <li key={c}>{c}</li>)}</ul>
       </section>
       <section className="rounded-[12px] border border-borda bg-branco p-4">
         <h2 className="mb-1 font-extrabold text-primaria">Procure a urgência se...</h2>
         <ul className="list-disc pl-6">{o.procureUrgencia.map((c) => <li key={c}>{c}</li>)}</ul>
       </section>
-      <Link to="/inicio/horarios" className="btn bg-primaria text-branco hover:bg-primariaEscura">
+      <Link to="/inicio/ubs" className="btn bg-primaria text-branco hover:bg-primariaEscura">
         <FiCalendar /> Ver horários nas UBS próximas
       </Link>
     </>

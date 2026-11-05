@@ -5,6 +5,7 @@ import {
   FiAlertTriangle, FiBarChart2, FiBell, FiCalendar, FiChevronLeft, FiClock, FiHome, FiList, FiUser, FiX,
 } from "react-icons/fi";
 import { useSimulador } from "@/context/SimuladorContext";
+import { precisaConfirmar } from "@/services/regrasAgendamento";
 import { ModoDemonstracao } from "./ModoDemonstracao";
 
 const TELAS_RAIZ = [
@@ -81,9 +82,15 @@ export function AppShell() {
   const [demoAberto, setDemoAberto] = useState(false);
   const cidadao = estado.perfil === "CIDADAO";
   const raiz = TELAS_RAIZ.includes(pathname.replace(/\/$/, ""));
+  const agora = new Date();
   const avisos = cidadao
-    ? estado.consultas.filter((c) => c.dsStatus === "AGENDADA").length
-    : estado.consultas.filter((c) => c.dsStatus === "AGENDADA" && c.dsRiscoFalta === "ALTO").length;
+    ? estado.consultas.filter((c) => c.cdCidadao === estado.cdCidadaoAtual && precisaConfirmar(c, agora)).length +
+      estado.ofertas.filter((o) => o.status === "PENDENTE").length
+    : estado.consultas.filter(
+        (c) =>
+          c.dsStatus === "AGENDADA" &&
+          estado.horarios.some((h) => h.cdHorario === c.cdHorario && h.cdUnidade === estado.cdUnidadeRecepcao),
+      ).length;
   const ubs = estado.unidades.filter((u) => u.tpUnidade === "UBS");
 
   return (
@@ -133,7 +140,7 @@ export function AppShell() {
         )}
       </header>
 
-      <main className="flex-1 p-4 pb-28">
+      <main className="flex-1 p-4 pb-44">
         <Outlet />
       </main>
 

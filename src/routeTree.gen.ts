@@ -15,14 +15,19 @@ import { Route as ConsultasRouteImport } from './routes/consultas'
 import { Route as EmergenciaRouteImport } from './routes/emergencia'
 import { Route as PerfilRouteImport } from './routes/perfil'
 import { Route as InicioIndexRouteImport } from './routes/inicio.index'
-import { Route as InicioHorariosRouteImport } from './routes/inicio.horarios'
+import { Route as InicioAgendarRouteImport } from './routes/inicio.agendar'
+import { Route as InicioListaDoDiaRouteImport } from './routes/inicio.lista-do-dia'
 import { Route as InicioOrientacaoRouteImport } from './routes/inicio.orientacao'
 import { Route as InicioResultadoRouteImport } from './routes/inicio.resultado'
+import { Route as InicioSucessoRouteImport } from './routes/inicio.sucesso'
+import { Route as InicioUbsRouteImport } from './routes/inicio.ubs'
+import { Route as PerfilEditarRouteImport } from './routes/perfil.editar'
 import { Route as RecepcaoIndexRouteImport } from './routes/recepcao.index'
 import { Route as RecepcaoAgendaRouteImport } from './routes/recepcao.agenda'
 import { Route as RecepcaoIndicadoresRouteImport } from './routes/recepcao.indicadores'
 import { Route as RecepcaoListaDoDiaRouteImport } from './routes/recepcao.lista-do-dia'
 import { Route as RecepcaoPendentesRouteImport } from './routes/recepcao.pendentes'
+import { Route as InicioUbsCdUnidadeRouteImport } from './routes/inicio.ubs_.$cdUnidade'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -54,9 +59,14 @@ const InicioIndexRoute = InicioIndexRouteImport.update({
   path: '/inicio/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const InicioHorariosRoute = InicioHorariosRouteImport.update({
-  id: '/inicio/horarios',
-  path: '/inicio/horarios',
+const InicioAgendarRoute = InicioAgendarRouteImport.update({
+  id: '/inicio/agendar',
+  path: '/inicio/agendar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InicioListaDoDiaRoute = InicioListaDoDiaRouteImport.update({
+  id: '/inicio/lista-do-dia',
+  path: '/inicio/lista-do-dia',
   getParentRoute: () => rootRouteImport,
 } as any)
 const InicioOrientacaoRoute = InicioOrientacaoRouteImport.update({
@@ -68,6 +78,21 @@ const InicioResultadoRoute = InicioResultadoRouteImport.update({
   id: '/inicio/resultado',
   path: '/inicio/resultado',
   getParentRoute: () => rootRouteImport,
+} as any)
+const InicioSucessoRoute = InicioSucessoRouteImport.update({
+  id: '/inicio/sucesso',
+  path: '/inicio/sucesso',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InicioUbsRoute = InicioUbsRouteImport.update({
+  id: '/inicio/ubs',
+  path: '/inicio/ubs',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PerfilEditarRoute = PerfilEditarRouteImport.update({
+  id: '/editar',
+  path: '/editar',
+  getParentRoute: () => PerfilRoute,
 } as any)
 const RecepcaoIndexRoute = RecepcaoIndexRouteImport.update({
   id: '/recepcao/',
@@ -94,38 +119,53 @@ const RecepcaoPendentesRoute = RecepcaoPendentesRouteImport.update({
   path: '/recepcao/pendentes',
   getParentRoute: () => rootRouteImport,
 } as any)
+const InicioUbsCdUnidadeRoute = InicioUbsCdUnidadeRouteImport.update({
+  id: '/inicio/ubs_/$cdUnidade',
+  path: '/inicio/ubs/$cdUnidade',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/avisos': typeof AvisosRoute
   '/consultas': typeof ConsultasRoute
   '/emergencia': typeof EmergenciaRoute
-  '/perfil': typeof PerfilRoute
-  '/inicio/horarios': typeof InicioHorariosRoute
+  '/perfil': typeof PerfilRouteWithChildren
+  '/inicio/agendar': typeof InicioAgendarRoute
+  '/inicio/lista-do-dia': typeof InicioListaDoDiaRoute
   '/inicio/orientacao': typeof InicioOrientacaoRoute
   '/inicio/resultado': typeof InicioResultadoRoute
+  '/inicio/sucesso': typeof InicioSucessoRoute
+  '/inicio/ubs': typeof InicioUbsRoute
+  '/perfil/editar': typeof PerfilEditarRoute
   '/recepcao/agenda': typeof RecepcaoAgendaRoute
   '/recepcao/indicadores': typeof RecepcaoIndicadoresRoute
   '/recepcao/lista-do-dia': typeof RecepcaoListaDoDiaRoute
   '/recepcao/pendentes': typeof RecepcaoPendentesRoute
   '/inicio/': typeof InicioIndexRoute
   '/recepcao/': typeof RecepcaoIndexRoute
+  '/inicio/ubs/$cdUnidade': typeof InicioUbsCdUnidadeRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/avisos': typeof AvisosRoute
   '/consultas': typeof ConsultasRoute
   '/emergencia': typeof EmergenciaRoute
-  '/perfil': typeof PerfilRoute
-  '/inicio/horarios': typeof InicioHorariosRoute
+  '/perfil': typeof PerfilRouteWithChildren
+  '/inicio/agendar': typeof InicioAgendarRoute
+  '/inicio/lista-do-dia': typeof InicioListaDoDiaRoute
   '/inicio/orientacao': typeof InicioOrientacaoRoute
   '/inicio/resultado': typeof InicioResultadoRoute
+  '/inicio/sucesso': typeof InicioSucessoRoute
+  '/inicio/ubs': typeof InicioUbsRoute
+  '/perfil/editar': typeof PerfilEditarRoute
   '/recepcao/agenda': typeof RecepcaoAgendaRoute
   '/recepcao/indicadores': typeof RecepcaoIndicadoresRoute
   '/recepcao/lista-do-dia': typeof RecepcaoListaDoDiaRoute
   '/recepcao/pendentes': typeof RecepcaoPendentesRoute
   '/inicio': typeof InicioIndexRoute
   '/recepcao': typeof RecepcaoIndexRoute
+  '/inicio/ubs/$cdUnidade': typeof InicioUbsCdUnidadeRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -133,16 +173,21 @@ export interface FileRoutesById {
   '/avisos': typeof AvisosRoute
   '/consultas': typeof ConsultasRoute
   '/emergencia': typeof EmergenciaRoute
-  '/perfil': typeof PerfilRoute
-  '/inicio/horarios': typeof InicioHorariosRoute
+  '/perfil': typeof PerfilRouteWithChildren
+  '/inicio/agendar': typeof InicioAgendarRoute
+  '/inicio/lista-do-dia': typeof InicioListaDoDiaRoute
   '/inicio/orientacao': typeof InicioOrientacaoRoute
   '/inicio/resultado': typeof InicioResultadoRoute
+  '/inicio/sucesso': typeof InicioSucessoRoute
+  '/inicio/ubs': typeof InicioUbsRoute
+  '/perfil/editar': typeof PerfilEditarRoute
   '/recepcao/agenda': typeof RecepcaoAgendaRoute
   '/recepcao/indicadores': typeof RecepcaoIndicadoresRoute
   '/recepcao/lista-do-dia': typeof RecepcaoListaDoDiaRoute
   '/recepcao/pendentes': typeof RecepcaoPendentesRoute
   '/inicio/': typeof InicioIndexRoute
   '/recepcao/': typeof RecepcaoIndexRoute
+  '/inicio/ubs_/$cdUnidade': typeof InicioUbsCdUnidadeRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -152,15 +197,20 @@ export interface FileRouteTypes {
     | '/consultas'
     | '/emergencia'
     | '/perfil'
-    | '/inicio/horarios'
+    | '/inicio/agendar'
+    | '/inicio/lista-do-dia'
     | '/inicio/orientacao'
     | '/inicio/resultado'
+    | '/inicio/sucesso'
+    | '/inicio/ubs'
+    | '/perfil/editar'
     | '/recepcao/agenda'
     | '/recepcao/indicadores'
     | '/recepcao/lista-do-dia'
     | '/recepcao/pendentes'
     | '/inicio/'
     | '/recepcao/'
+    | '/inicio/ubs/$cdUnidade'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -168,15 +218,20 @@ export interface FileRouteTypes {
     | '/consultas'
     | '/emergencia'
     | '/perfil'
-    | '/inicio/horarios'
+    | '/inicio/agendar'
+    | '/inicio/lista-do-dia'
     | '/inicio/orientacao'
     | '/inicio/resultado'
+    | '/inicio/sucesso'
+    | '/inicio/ubs'
+    | '/perfil/editar'
     | '/recepcao/agenda'
     | '/recepcao/indicadores'
     | '/recepcao/lista-do-dia'
     | '/recepcao/pendentes'
     | '/inicio'
     | '/recepcao'
+    | '/inicio/ubs/$cdUnidade'
   id:
     | '__root__'
     | '/'
@@ -184,15 +239,20 @@ export interface FileRouteTypes {
     | '/consultas'
     | '/emergencia'
     | '/perfil'
-    | '/inicio/horarios'
+    | '/inicio/agendar'
+    | '/inicio/lista-do-dia'
     | '/inicio/orientacao'
     | '/inicio/resultado'
+    | '/inicio/sucesso'
+    | '/inicio/ubs'
+    | '/perfil/editar'
     | '/recepcao/agenda'
     | '/recepcao/indicadores'
     | '/recepcao/lista-do-dia'
     | '/recepcao/pendentes'
     | '/inicio/'
     | '/recepcao/'
+    | '/inicio/ubs_/$cdUnidade'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -200,16 +260,20 @@ export interface RootRouteChildren {
   AvisosRoute: typeof AvisosRoute
   ConsultasRoute: typeof ConsultasRoute
   EmergenciaRoute: typeof EmergenciaRoute
-  PerfilRoute: typeof PerfilRoute
-  InicioHorariosRoute: typeof InicioHorariosRoute
+  PerfilRoute: typeof PerfilRouteWithChildren
+  InicioAgendarRoute: typeof InicioAgendarRoute
+  InicioListaDoDiaRoute: typeof InicioListaDoDiaRoute
   InicioOrientacaoRoute: typeof InicioOrientacaoRoute
   InicioResultadoRoute: typeof InicioResultadoRoute
+  InicioSucessoRoute: typeof InicioSucessoRoute
+  InicioUbsRoute: typeof InicioUbsRoute
   RecepcaoAgendaRoute: typeof RecepcaoAgendaRoute
   RecepcaoIndicadoresRoute: typeof RecepcaoIndicadoresRoute
   RecepcaoListaDoDiaRoute: typeof RecepcaoListaDoDiaRoute
   RecepcaoPendentesRoute: typeof RecepcaoPendentesRoute
   InicioIndexRoute: typeof InicioIndexRoute
   RecepcaoIndexRoute: typeof RecepcaoIndexRoute
+  InicioUbsCdUnidadeRoute: typeof InicioUbsCdUnidadeRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -256,11 +320,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof InicioIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/inicio/horarios': {
-      id: '/inicio/horarios'
-      path: '/inicio/horarios'
-      fullPath: '/inicio/horarios'
-      preLoaderRoute: typeof InicioHorariosRouteImport
+    '/inicio/agendar': {
+      id: '/inicio/agendar'
+      path: '/inicio/agendar'
+      fullPath: '/inicio/agendar'
+      preLoaderRoute: typeof InicioAgendarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/inicio/lista-do-dia': {
+      id: '/inicio/lista-do-dia'
+      path: '/inicio/lista-do-dia'
+      fullPath: '/inicio/lista-do-dia'
+      preLoaderRoute: typeof InicioListaDoDiaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/inicio/orientacao': {
@@ -276,6 +347,27 @@ declare module '@tanstack/react-router' {
       fullPath: '/inicio/resultado'
       preLoaderRoute: typeof InicioResultadoRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/inicio/sucesso': {
+      id: '/inicio/sucesso'
+      path: '/inicio/sucesso'
+      fullPath: '/inicio/sucesso'
+      preLoaderRoute: typeof InicioSucessoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/inicio/ubs': {
+      id: '/inicio/ubs'
+      path: '/inicio/ubs'
+      fullPath: '/inicio/ubs'
+      preLoaderRoute: typeof InicioUbsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/perfil/editar': {
+      id: '/perfil/editar'
+      path: '/editar'
+      fullPath: '/perfil/editar'
+      preLoaderRoute: typeof PerfilEditarRouteImport
+      parentRoute: typeof PerfilRoute
     }
     '/recepcao/': {
       id: '/recepcao/'
@@ -312,24 +404,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RecepcaoPendentesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/inicio/ubs_/$cdUnidade': {
+      id: '/inicio/ubs_/$cdUnidade'
+      path: '/inicio/ubs/$cdUnidade'
+      fullPath: '/inicio/ubs/$cdUnidade'
+      preLoaderRoute: typeof InicioUbsCdUnidadeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
+
+interface PerfilRouteChildren {
+  PerfilEditarRoute: typeof PerfilEditarRoute
+}
+
+const PerfilRouteChildren: PerfilRouteChildren = {
+  PerfilEditarRoute: PerfilEditarRoute,
+}
+
+const PerfilRouteWithChildren =
+  PerfilRoute._addFileChildren(PerfilRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AvisosRoute: AvisosRoute,
   ConsultasRoute: ConsultasRoute,
   EmergenciaRoute: EmergenciaRoute,
-  PerfilRoute: PerfilRoute,
-  InicioHorariosRoute: InicioHorariosRoute,
+  PerfilRoute: PerfilRouteWithChildren,
+  InicioAgendarRoute: InicioAgendarRoute,
+  InicioListaDoDiaRoute: InicioListaDoDiaRoute,
   InicioOrientacaoRoute: InicioOrientacaoRoute,
   InicioResultadoRoute: InicioResultadoRoute,
+  InicioSucessoRoute: InicioSucessoRoute,
+  InicioUbsRoute: InicioUbsRoute,
   RecepcaoAgendaRoute: RecepcaoAgendaRoute,
   RecepcaoIndicadoresRoute: RecepcaoIndicadoresRoute,
   RecepcaoListaDoDiaRoute: RecepcaoListaDoDiaRoute,
   RecepcaoPendentesRoute: RecepcaoPendentesRoute,
   InicioIndexRoute: InicioIndexRoute,
   RecepcaoIndexRoute: RecepcaoIndexRoute,
+  InicioUbsCdUnidadeRoute: InicioUbsCdUnidadeRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

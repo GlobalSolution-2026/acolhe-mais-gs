@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { TelaEmConstrucao } from "@/pages/TelaEmConstrucao";
+import { Indicadores } from "@/pages/recepcao/Indicadores";
 
 export const Route = createFileRoute("/recepcao/indicadores")({
   head: () => ({
@@ -10,5 +10,5 @@ export const Route = createFileRoute("/recepcao/indicadores")({
       { property: "og:description", content: "Indicadores no aplicativo Acolhe+, orientação e agendamento no SUS." },
     ],
   }),
-  component: () => <TelaEmConstrucao titulo="Indicadores" />,
+  component: Indicadores,
 });
