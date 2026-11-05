@@ -5,8 +5,9 @@ import { useSimulador } from "@/context/SimuladorContext";
 
 function AbaCelular({ to, label, icone: Icone }: { to: "/simulador/cidadao/inicio" | "/simulador/cidadao/consultas" | "/simulador/cidadao/avisos" | "/simulador/cidadao/perfil"; label: string; icone: IconType }) {
   return (
-    <Link to={to} className="flex min-h-14 flex-1 flex-col items-center justify-center gap-0.5 text-xs font-bold text-textoSuave"
-      activeProps={{ className: "text-primaria" }}>
+    <Link to={to} className="flex min-h-14 flex-1 flex-col items-center justify-center gap-0.5 text-xs font-bold"
+      activeProps={{ className: "text-primaria" }}
+      inactiveProps={{ className: "text-textoSuave" }}>
       <Icone size={22} />
       {label}
     </Link>

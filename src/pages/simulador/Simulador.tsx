@@ -21,8 +21,9 @@ export function Simulador() {
       <nav className="mb-6 flex gap-2 overflow-x-auto rounded-[12px] bg-branco p-1 shadow-leve" aria-label="Abas do simulador">
         {abas.map(({ to, label, icone: Icone }) => (
           <Link key={to} to={to}
-            className="flex min-h-12 flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] px-4 font-bold text-textoSuave hover:bg-fundo"
-            activeProps={{ className: "bg-primaria text-branco hover:bg-primaria" }}>
+            className="flex min-h-12 flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] px-4 font-bold"
+            activeProps={{ className: "bg-primaria text-branco" }}
+            inactiveProps={{ className: "text-textoSuave hover:bg-fundo" }}>
             <Icone /> {label}
           </Link>
         ))}
