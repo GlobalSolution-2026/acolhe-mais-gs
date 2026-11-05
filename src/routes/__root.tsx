@@ -1,10 +1,9 @@
-import { Outlet, createRootRoute, HeadContent, Scripts, type ErrorComponentProps } from "@tanstack/react-router";
+import { createRootRoute, HeadContent, Scripts, type ErrorComponentProps } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
-import { Header } from "@/components/Header";
-import { Footer } from "@/components/Footer";
+import { AppShell } from "@/components/AppShell";
 import { MensagemErro } from "@/components/MensagemErro";
 import { NaoEncontrada } from "@/pages/NaoEncontrada";
 import { SimuladorProvider } from "@/context/SimuladorContext";
@@ -26,6 +25,7 @@ export const Route = createRootRoute({
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "Acolhe+" },
+      { name: "theme-color", content: "#1E3A5F" },
       { name: "description", content: "Orientação sobre onde buscar atendimento no SUS." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -61,13 +61,7 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   return (
     <SimuladorProvider>
-      <div className="flex min-h-screen flex-col">
-        <Header />
-        <main className="flex-1">
-          <Outlet />
-        </main>
-        <Footer />
-      </div>
+      <AppShell />
     </SimuladorProvider>
   );
 }
