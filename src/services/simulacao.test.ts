@@ -77,3 +77,12 @@ describe("simulação do prazo", () => {
     expect(simularPrazo(e, agora).resumo).toEqual({ consultasLiberadas: 0, vagasOferecidas: 0, vagasDeVoltaNaAgenda: 0, mantidasSemContato: 0 });
   });
 });
+
+it("simulação conta três dias com horários, atravessando fim de semana", () => {
+  const e = estado();
+  const agora = new Date("2026-11-06T10:00:00");
+  const datas = ["2026-11-06T14:00:00", "2026-11-09T09:00:00", "2026-11-10T16:00:00", "2026-11-11T08:00:00"];
+  e.horarios = e.horarios.map((h, i) => ({ ...h, cdUnidade: 1, dtHorario: datas[i] ?? "" }));
+  e.consultas = e.consultas.map((c, i) => ({ ...c, cdCidadao: 1, dtHorario: datas[i] ?? "", dtAgendamento: "2026-10-30T08:00:00" }));
+  expect(simularPrazo(e, agora).novoEstado.consultas.map((c) => c.dsStatus)).toEqual(["LIBERADA", "LIBERADA", "LIBERADA", "AGENDADA"]);
+});
