@@ -59,7 +59,7 @@ export function HorariosUbs({ cdUnidade }: { cdUnidade: number }) {
       )}
       {porDia.map(([dia, lista]) => (
         <section key={dia}>
-          <h2 className="mb-2 font-extrabold capitalize">{fmtDiaLongo(lista[0].dtHorario)}</h2>
+          <h2 className="mb-2 font-extrabold capitalize">{fmtDiaLongo(lista[0]?.dtHorario ?? dia)}</h2>
           <div className="grid grid-cols-3 gap-2">
             {lista.map((h) => (
               <CardHorario key={h.cdHorario} horario={h}
