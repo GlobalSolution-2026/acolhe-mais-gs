@@ -14,6 +14,7 @@ let estado: EstadoSimulador;
 beforeEach(() => {
   vi.useFakeTimers();
   estado = {
+    dtSemente: "2026-11-05",
     unidades: [
       { cdUnidade: 1, nmUnidade: "UBS", tpUnidade: "UBS", dsEndereco: "Rua A", nrCep: "01000-000", nrTelefone: "1133333333" },
       { cdUnidade: 2, nmUnidade: "UPA", tpUnidade: "UPA", dsEndereco: "Rua B", nrCep: "01000-001", nrTelefone: "1133333334" },

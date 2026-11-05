@@ -26,7 +26,7 @@ describe("Síndrome gripal", () => {
 
 describe("Dor de garganta", () => {
   it("LARANJA ao não engolir saliva", () => {
-    expect(calcularOrientacao("GARGANTA", perfil({ G2: "SIM" })).dsCor).toBe("LARANJA");
+    expect(calcularOrientacao("GARGANTA", perfil({ G2: "NAO" })).dsCor).toBe("LARANJA");
   });
   it("LARANJA/PRONTO_SOCORRO com G5 = Sim", () => {
     expect(calcularOrientacao("GARGANTA", perfil({ G5: "SIM" }))).toMatchObject({ dsCor: "LARANJA", dsDestino: "PRONTO_SOCORRO" });
@@ -123,7 +123,7 @@ describe("Instabilidade e prioridade dos alarmes", () => {
   });
   it.each([
     ["GRIPAL", { P6: "SIM", P7: "SIM", P8: "NAO_SEI" }],
-    ["GARGANTA", { G5: "NAO_SEI", G6: "SIM" }],
+    ["GARGANTA", { G5: "NAO_SEI", G6: "NAO" }],
     ["DIARREIA", { D6: "SIM", D7: "SIM", D8: "SIM" }],
     ["CABECA", { C7: "SIM", C8: "SIM" }],
     ["URINA", { U2: "SIM", U3: "SIM", U4: "SIM" }],
@@ -149,9 +149,29 @@ describe("Instabilidade e prioridade dos alarmes", () => {
       .toMatchObject({ tipo: "PERGUNTA", pergunta: { codigo: "D6" } });
   });
   it.each(["G2", "G3", "G4", "G5"])("%s termina sem INST", (codigo) => {
-    expect(proximoPasso("GARGANTA", perfil({ G0: "NAO", G1: "NAO", [codigo]: "SIM" })).tipo).toBe("RESULTADO");
+    expect(proximoPasso("GARGANTA", perfil({ G0: "NAO", G1: "NAO", [codigo]: codigo === "G2" ? "NAO" : "SIM" })).tipo).toBe("RESULTADO");
   });
   it("C5 termina sem INST", () => {
     expect(proximoPasso("CABECA", perfil({ C1: "NAO", C2: "NAO", C3: "NAO", C4: "NAO", C5: "SIM" })).tipo).toBe("RESULTADO");
+  });
+});
+
+
+describe("perguntas positivas preservam o significado clínico", () => {
+  it.each([
+    ["GARGANTA", "G2", "LARANJA"],
+    ["GARGANTA", "G6", "AMARELO"],
+    ["CABECA", "C6", "AMARELO"],
+    ["DIARREIA", "D10", "AMARELO"],
+  ] as const)("%s %s Não é alarme, Sim não é", (queixa, codigo, cor) => {
+    const base = perfil(queixa === "CABECA" ? { DOR: 8 } : {});
+    expect(calcularOrientacao(queixa, { ...base, [codigo]: "NAO" }).dsCor).toBe(cor);
+    expect(calcularOrientacao(queixa, { ...base, [codigo]: "SIM" }).dsCor).toBe("AZUL");
+  });
+  it.each([["GARGANTA", "G6"], ["CABECA", "C6"], ["DIARREIA", "D10"]] as const)("%s %s Não sei mantém pior caso", (queixa, codigo) => {
+    expect(calcularOrientacao(queixa, perfil({ DOR: queixa === "CABECA" ? 8 : 2, [codigo]: "NAO_SEI" })).dsCor).toBe("AMARELO");
+  });
+  it("C6 permanece oculta abaixo de dor 8", () => {
+    expect(proximoPasso("CABECA", perfil({ C1: "NAO", C2: "NAO", C3: "NAO", C4: "NAO", C5: "NAO" }))).toMatchObject({ tipo: "PERGUNTA", pergunta: { codigo: "C7" } });
   });
 });

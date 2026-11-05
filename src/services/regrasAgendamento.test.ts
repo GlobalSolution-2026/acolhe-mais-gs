@@ -102,6 +102,7 @@ describe("liberação de não confirmados", () => {
 describe("ordenação da lista do dia", () => {
   const entrada = (cdEntrada: number, dsCor: "VERDE" | "AZUL", minutos: number, flPrioridade = false): EntradaListaDoDia => ({
     cdEntrada,
+    cdCidadao: cdEntrada,
     cdUnidade: 1,
     nmCidadao: `P${cdEntrada}`,
     dsCor,
@@ -144,11 +145,11 @@ describe("indicadores", () => {
       consulta({ cdConsulta: 5, dsStatus: "LIBERADA", cdHorario: 51 }),
     ];
     const lista: EntradaListaDoDia[] = [
-      { cdEntrada: 1, cdUnidade: 1, nmCidadao: "A", dsCor: "VERDE", dtEntrada: base.toISOString(), flPrioridade: false, flCidadao: false, status: "AGUARDANDO" },
-      { cdEntrada: 2, cdUnidade: 1, nmCidadao: "B", dsCor: "AZUL", dtEntrada: base.toISOString(), flPrioridade: false, flCidadao: false, status: "AGUARDANDO" },
+      { cdEntrada: 1, cdCidadao: 1, cdUnidade: 1, nmCidadao: "A", dsCor: "VERDE", dtEntrada: base.toISOString(), flPrioridade: false, flCidadao: false, status: "AGUARDANDO" },
+      { cdEntrada: 2, cdCidadao: 2, cdUnidade: 1, nmCidadao: "B", dsCor: "AZUL", dtEntrada: base.toISOString(), flPrioridade: false, flCidadao: false, status: "AGUARDANDO" },
     ];
     const i = calcularIndicadores(consultas, lista);
-    expect(i.taxaAbsenteismo).toBeCloseTo(1 / 5);
+    expect(i.taxaAbsenteismo).toBeCloseTo(1 / 2);
     expect(i.taxaReaproveitamento).toBeCloseTo(1 / 2);
     expect(i.naoEncaixadas).toBe(2);
     expect(i.comparecimentoAposOrientacao).toBeCloseTo(1 / 2);
