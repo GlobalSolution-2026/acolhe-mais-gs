@@ -1,19 +1,15 @@
-import { Link, Outlet, useLocation, useRouter, type LinkProps } from "@tanstack/react-router";
+import { Link, Outlet, useLocation, type LinkProps } from "@tanstack/react-router";
 import { useState, type ReactNode } from "react";
 import type { IconType } from "react-icons";
 import {
   FiAlertTriangle, FiBarChart2, FiBell, FiCalendar, FiChevronLeft, FiClock, FiHome, FiList, FiUser, FiX,
 } from "react-icons/fi";
 import { useSimulador } from "@/context/SimuladorContext";
+import { rotaPai } from "@/services/navegacao";
 import { precisaConfirmar } from "@/services/regrasAgendamento";
 import { ModoDemonstracao } from "./ModoDemonstracao";
 
-const TELAS_RAIZ = [
-  "/inicio", "/consultas", "/emergencia", "/avisos", "/perfil",
-  "/recepcao/agenda", "/recepcao/pendentes", "/recepcao/lista-do-dia", "/recepcao/indicadores",
-];
-
-function Aba({ to, label, icone: Icone }: { to: NonNullable<LinkProps["to"]>; label: string; icone: IconType }) {
+export function Aba({ to, label, icone: Icone }: { to: NonNullable<LinkProps["to"]>; label: string; icone: IconType }) {
   return (
     <Link
       to={to}
@@ -24,38 +20,6 @@ function Aba({ to, label, icone: Icone }: { to: NonNullable<LinkProps["to"]>; la
       <Icone size={22} />
       {label}
     </Link>
-  );
-}
-
-function BarraCidadao() {
-  return (
-    <>
-      <Aba to="/inicio" label="Início" icone={FiHome} />
-      <Aba to="/consultas" label="Consultas" icone={FiCalendar} />
-      <div className="flex flex-1 justify-center">
-        <Link
-          to="/emergencia"
-          aria-label="Emergência"
-          className="-mt-10 flex h-20 w-20 flex-col items-center justify-center rounded-full border-4 border-branco bg-gravidade-vermelho text-[11px] font-extrabold text-branco shadow-celular"
-        >
-          <FiAlertTriangle size={26} />
-          Emergência
-        </Link>
-      </div>
-      <Aba to="/avisos" label="Avisos" icone={FiBell} />
-      <Aba to="/perfil" label="Perfil" icone={FiUser} />
-    </>
-  );
-}
-
-function BarraRecepcao() {
-  return (
-    <>
-      <Aba to="/recepcao/agenda" label="Agenda" icone={FiCalendar} />
-      <Aba to="/recepcao/pendentes" label="Pendentes" icone={FiClock} />
-      <Aba to="/recepcao/lista-do-dia" label="Lista do dia" icone={FiList} />
-      <Aba to="/recepcao/indicadores" label="Indicadores" icone={FiBarChart2} />
-    </>
   );
 }
 
@@ -75,13 +39,14 @@ function Folha({ onFechar, children }: { onFechar: () => void; children: ReactNo
   );
 }
 
-export function AppShell() {
-  const router = useRouter();
+export function LayoutCompartilhado({ cidadao, barra }: { cidadao: boolean; barra: ReactNode }) {
   const { pathname } = useLocation();
   const { estado, selecionarUnidadeRecepcao } = useSimulador();
   const [demoAberto, setDemoAberto] = useState(false);
-  const cidadao = estado.perfil === "CIDADAO";
-  const raiz = TELAS_RAIZ.includes(pathname.replace(/\/$/, ""));
+  const { search } = useLocation();
+  const cdHorario = Number(new URLSearchParams(search).get("horario"));
+  const cdUnidade = estado.horarios.find((h) => h.cdHorario === cdHorario)?.cdUnidade;
+  const pai = rotaPai(pathname, cdUnidade);
   const agora = new Date();
   const avisos = cidadao
     ? estado.consultas.filter((c) => c.cdCidadao === estado.cdCidadaoAtual && precisaConfirmar(c, agora)).length +
@@ -98,10 +63,10 @@ export function AppShell() {
       <header className="sticky top-0 z-30 bg-primaria text-branco shadow-leve">
         <div className="flex h-16 items-center gap-1 px-2">
           <div className="w-12">
-            {!raiz && (
-              <button onClick={() => router.history.back()} className="flex h-12 w-12 items-center justify-center rounded-[12px] hover:bg-primariaEscura" aria-label="Voltar">
+            {pai && (
+              <Link to={pai} params={pai === "/cidadao/ubs/$cdUnidade" ? { cdUnidade: String(cdUnidade) } : {}} className="flex h-12 w-12 items-center justify-center rounded-[12px] hover:bg-primariaEscura" aria-label="Voltar">
                 <FiChevronLeft size={26} />
-              </button>
+              </Link>
             )}
           </div>
           <span className="text-xl font-extrabold">Acolhe<span className="text-menta">+</span></span>
@@ -113,7 +78,7 @@ export function AppShell() {
             {cidadao ? "Cidadão" : "Recepção UBS"}
           </button>
           <Link
-            to={cidadao ? "/avisos" : "/recepcao/pendentes"}
+            to={cidadao ? "/cidadao/avisos" : "/recepcao/pendentes"}
             className="relative ml-auto flex h-12 w-12 items-center justify-center rounded-[12px] hover:bg-primariaEscura"
             aria-label={`Avisos: ${avisos}`}
           >
@@ -148,7 +113,7 @@ export function AppShell() {
         className="fixed bottom-0 left-1/2 z-30 flex w-full max-w-md -translate-x-1/2 items-end border-x border-t border-borda bg-branco px-2 pb-3 pt-1"
         aria-label={cidadao ? "Menu do cidadão" : "Menu da recepção"}
       >
-        {cidadao ? <BarraCidadao /> : <BarraRecepcao />}
+        {barra}
       </nav>
 
       {demoAberto && (
