@@ -1,6 +1,6 @@
 /**
  * Camada de serviços do Acolhe+.
- * Cada função tem o nome e formato de um endpoint REST da futura API Java.
+ * As funções Java seguem os endpoints REST planejados; Flask e ações locais estão identificados.
  * No protótipo, lê/altera o estado mockado do Context e espera 400 ms.
  */
 import type { EstadoSimulador } from "@/context/SimuladorContext";
@@ -32,11 +32,12 @@ function getStore(): Store {
   return store;
 }
 
-// GET /unidades?tipo=UBS
+// GET /unidades — filtro de tipo aplicado no front.
 export async function listarUnidades(tipo?: Unidade["tpUnidade"]): Promise<Unidade[]> {
-  // const res = await fetch(`${API_URL}/unidades${tipo ? `?tipo=${tipo}` : ""}`);
+  // const res = await fetch(`${API_URL}/unidades`);
   // if (!res.ok) { const erro: ErroResponse = await res.json(); throw new Error(erro.erro); }
-  // return res.json();
+  // const unidades: Unidade[] = await res.json();
+  // return tipo ? unidades.filter((u) => u.tpUnidade === tipo) : unidades;
   await esperar();
   const { unidades } = getStore().obterEstado();
   return tipo ? unidades.filter((u) => u.tpUnidade === tipo) : unidades;
@@ -61,9 +62,8 @@ export async function cadastrarCidadao(dados: CidadaoEntrada): Promise<Cidadao> 
   await esperar();
   const s = getStore();
   if (s.obterEstado().cidadaos.some((c) => c.nrCns === dados.nrCns)) falhar({ status: 409, erro: "Já existe cadastro com este CNS." });
-  let novo!: Cidadao;
+  const novo: Cidadao = { ...dados, cdCidadao: Math.max(0, ...s.obterEstado().cidadaos.map((c) => c.cdCidadao)) + 1 };
   s.atualizarEstado((e) => {
-    novo = { ...dados, cdCidadao: Math.max(0, ...e.cidadaos.map((c) => c.cdCidadao)) + 1 };
     return { ...e, cidadaos: [...e.cidadaos, novo] };
   });
   return novo;
@@ -167,50 +167,38 @@ export async function agendarConsulta(dados: { cdHorario: number; cdCidadao: num
 
 // PUT /consultas/{cdConsulta} — confirmar presença
 export async function confirmarConsulta(cdConsulta: number, canal: CanalConfirmacao): Promise<Consulta> {
-  // const res = await fetch(`${API_URL}/consultas/${cdConsulta}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ dsStatus: "CONFIRMADA", dsCanalConfirmacao: canal }) });
-  // if (!res.ok) { const erro: ErroResponse = await res.json(); throw new Error(erro.erro); }
-  // return res.json();
   await esperar();
   const s = getStore();
   const atual = s.obterEstado().consultas.find((c) => c.cdConsulta === cdConsulta);
   if (!atual) falhar({ status: 404, erro: "Consulta não encontrada." });
   const nova: Consulta = { ...atual, dsStatus: "CONFIRMADA", dtConfirmacao: new Date().toISOString(), dsCanalConfirmacao: canal };
+  // const res = await fetch(`${API_URL}/consultas/${cdConsulta}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(nova) });
+  // if (!res.ok) { const erro: ErroResponse = await res.json(); throw new Error(erro.erro); }
+  // return res.json();
   s.atualizarEstado((e) => ({ ...e, consultas: e.consultas.map((c) => (c.cdConsulta === cdConsulta ? nova : c)) }));
   return nova;
 }
 
 // PUT /consultas/{cdConsulta} — registrar presença ou falta
 export async function registrarPresenca(cdConsulta: number, status: "REALIZADA" | "FALTA"): Promise<Consulta> {
-  // const res = await fetch(`${API_URL}/consultas/${cdConsulta}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ dsStatus: status }) });
-  // if (!res.ok) { const erro: ErroResponse = await res.json(); throw new Error(erro.erro); }
-  // return res.json();
   await esperar();
   const s = getStore();
   const atual = s.obterEstado().consultas.find((c) => c.cdConsulta === cdConsulta);
   if (!atual) falhar({ status: 404, erro: "Consulta não encontrada." });
   const nova: Consulta = { ...atual, dsStatus: status };
+  // const res = await fetch(`${API_URL}/consultas/${cdConsulta}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(nova) });
+  // if (!res.ok) { const erro: ErroResponse = await res.json(); throw new Error(erro.erro); }
+  // return res.json();
   s.atualizarEstado((e) => ({ ...e, consultas: e.consultas.map((c) => (c.cdConsulta === cdConsulta ? nova : c)) }));
   return nova;
 }
 
-// GET /status
-export async function getStatus(): Promise<{ status: string; modo: "mock" | "api"; url: string | undefined }> {
-  // const res = await fetch(`${API_URL}/status`);
-  // if (!res.ok) { const erro: ErroResponse = await res.json(); throw new Error(erro.erro); }
-  // return res.json();
+/** DEMONSTRAÇÃO: fica só no front; não existe na API Java. */
+export async function salvarOrientacao(dados: Omit<Orientacao, "cdOrientacao" | "dtOrientacao">): Promise<Orientacao> {
   await esperar();
-  return { status: "UP", modo: API_URL ? "api" : "mock", url: API_URL };
-}
-
-// POST /orientacoes
-export async function postOrientacao(dados: Omit<Orientacao, "cdOrientacao" | "dtOrientacao">): Promise<Orientacao> {
-  // const res = await fetch(`${API_URL}/orientacoes`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(dados) });
-  // if (!res.ok) { const erro: ErroResponse = await res.json(); throw new Error(erro.erro); }
-  // return res.json();
-  await esperar();
-  let nova!: Orientacao;
-  getStore().atualizarEstado((e) => {
-    nova = { ...dados, cdOrientacao: Math.max(0, ...e.orientacoes.map((o) => o.cdOrientacao)) + 1, dtOrientacao: new Date().toISOString() };
+  const s = getStore();
+  const nova: Orientacao = { ...dados, cdOrientacao: Math.max(0, ...s.obterEstado().orientacoes.map((o) => o.cdOrientacao)) + 1, dtOrientacao: new Date().toISOString() };
+  s.atualizarEstado((e) => {
     return { ...e, orientacoes: [...e.orientacoes, nova] };
   });
   return nova;

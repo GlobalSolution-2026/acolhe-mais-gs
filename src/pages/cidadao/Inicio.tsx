@@ -32,7 +32,7 @@ export function Inicio() {
   const escolher = (codigo: CodigoQueixa) =>
     handleSubmit(({ cep }) => {
       iniciarOrientacao(codigo, cep);
-      void navigate({ to: "/inicio/orientacao" });
+      void navigate({ to: "/cidadao/orientacao" });
     })();
 
   const registroCep = register("cep", {

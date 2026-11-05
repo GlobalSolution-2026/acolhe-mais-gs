@@ -110,7 +110,7 @@ function Ubs({ atual }: { atual: OrientacaoEmAndamento }) {
         <h2 className="mb-1 font-extrabold text-primaria">Procure a urgência se...</h2>
         <ul className="list-disc pl-6">{o.procureUrgencia.map((c) => <li key={c}>{c}</li>)}</ul>
       </section>
-      <Link to="/inicio/ubs" className="btn bg-primaria text-branco hover:bg-primariaEscura">
+      <Link to="/cidadao/ubs" className="btn bg-primaria text-branco hover:bg-primariaEscura">
         <FiCalendar /> Ver horários nas UBS próximas
       </Link>
     </>
@@ -142,7 +142,7 @@ export function Resultado() {
     return (
       <div className="flex flex-col gap-4">
         <EstadoVazio mensagem="Nenhuma orientação feita ainda." />
-        <Link to="/inicio" className="btn bg-primaria text-branco">Voltar ao início</Link>
+        <Link to="/cidadao/inicio" className="btn bg-primaria text-branco">Voltar ao início</Link>
       </div>
     );
   }
@@ -165,7 +165,7 @@ export function Resultado() {
       <p className="text-sm text-textoSuave">
         O Acolhe+ orienta, mas não faz diagnóstico nem substitui a avaliação de profissionais de saúde.
       </p>
-      <Link to="/inicio" className="btn border border-borda bg-branco text-primaria">Voltar ao início</Link>
+      <Link to="/cidadao/inicio" className="btn border border-borda bg-branco text-primaria">Voltar ao início</Link>
     </div>
   );
 }

@@ -38,7 +38,7 @@ function CardOferta({ oferta, onExpirar }: { oferta: OfertaVaga; onExpirar: () =
       </p>
       <div className="grid grid-cols-2 gap-2">
         <button
-          onClick={() => void navigate({ to: "/inicio/agendar", search: { horario: oferta.cdHorario, oferta: oferta.cdOferta } })}
+          onClick={() => void navigate({ to: "/cidadao/agendar", search: { horario: oferta.cdHorario, oferta: oferta.cdOferta } })}
           className="btn bg-primaria text-branco hover:bg-primariaEscura">
           <FiCheck /> Aceitar
         </button>

@@ -22,7 +22,7 @@ export function Agendar({ cdHorario, cdOferta }: { cdHorario: number; cdOferta: 
     return (
       <div className="flex flex-col gap-4">
         <EstadoVazio mensagem="Horário não encontrado. Escolha outro horário." />
-        <Link to="/inicio/ubs" className="btn bg-primaria text-branco">Ver UBS próximas</Link>
+        <Link to="/cidadao/ubs" className="btn bg-primaria text-branco">Ver UBS próximas</Link>
       </div>
     );
   }
@@ -39,7 +39,7 @@ export function Agendar({ cdHorario, cdOferta }: { cdHorario: number; cdOferta: 
         cdOrientacao: estado.orientacaoAtual?.resultado?.cdOrientacao ?? null,
       });
       if (cdOferta) responderOferta(cdOferta, "ACEITA");
-      void navigate({ to: "/inicio/sucesso", search: { consulta: consulta.cdConsulta } });
+      void navigate({ to: "/cidadao/sucesso", search: { consulta: consulta.cdConsulta } });
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Não foi possível concluir o agendamento.");
     } finally {

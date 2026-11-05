@@ -1,7 +1,7 @@
 import { obterQueixa } from "@/data/queixas";
 import type { Unidade } from "@/types";
 import type { CodigoQueixa, Respostas, ResultadoFinal } from "@/types/orientacao";
-import { postOrientacao, verificarUrgencia } from "./api";
+import { salvarOrientacao, verificarUrgencia } from "./api";
 import { calcularOrientacao, DESTINO_POR_COR } from "./regrasOrientacao";
 
 /** Aplica as regras, chama a verificação de IA (só eleva) e salva a orientação. */
@@ -27,7 +27,7 @@ export async function concluirOrientacao(queixa: CodigoQueixa, respostas: Respos
   }
 
   const dsDestino = DESTINO_POR_COR[dsCor];
-  const salva = await postOrientacao({ cdQueixa: obterQueixa(queixa).cdQueixa, dsCor, dsDestino, nrDor, flElevadaModelo });
+  const salva = await salvarOrientacao({ cdQueixa: obterQueixa(queixa).cdQueixa, dsCor, dsDestino, nrDor, flElevadaModelo });
   return { cdOrientacao: salva.cdOrientacao, dsCor, dsDestino, sinaisMarcados: regras.sinaisMarcados, nrDor, flElevadaModelo };
 }
 

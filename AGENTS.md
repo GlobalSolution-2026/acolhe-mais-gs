@@ -29,6 +29,8 @@ use the editor.
 - **Secrets.** Lovable manages them. Do not put secret values in the repo.
 <!-- LOVABLE:END -->
 
-- Pages live in src/pages and route files in src/routes only wire them (head + component), so the screens can be reused by a separate site/simulator project later. This project is only the Acolhe+ app: AppShell (in __root) renders a profile-dependent top bar and bottom nav; the current profile lives in SimuladorContext state. Why: app screens are reused elsewhere.
-- All data access goes through src/services/api.ts (one function per future Java REST endpoint) backed by SimuladorContext mock state persisted in localStorage. Why: no backend in the prototype.
+- Pages live in src/pages and route files in src/routes only wire them (head + component), so the screens can be reused by a separate site/simulator project later. This project is only the Acolhe+ app: the root renders only the Provider and Outlet, while /cidadao and /recepcao own separate layouts with a shared header; the URL alone defines the profile. Why: app screens are reused elsewhere.
+- All data access goes through src/services/api.ts (Java endpoints, separate Flask endpoints, and explicitly labeled front-only demo actions) backed by SimuladorContext mock state persisted in localStorage. Why: no backend in the prototype.
 - Triage rules and the questionnaire engine live only in src/services/regrasOrientacao.ts (pure, unit-tested); questions are data in src/data/perguntas.ts. The AI check (verificarUrgencia) may only raise severity. Why: rules must be testable and never live in components.
+
+- Internal back navigation uses the pure rotaPai helper, never browser history; editing and UBS detail routes are unnested leaves so their parent screens cannot hide them. Why: deterministic navigation and correct independent rendering.

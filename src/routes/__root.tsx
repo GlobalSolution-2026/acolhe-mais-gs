@@ -1,9 +1,8 @@
-import { createRootRoute, HeadContent, Scripts, type ErrorComponentProps } from "@tanstack/react-router";
+import { createRootRoute, Outlet, HeadContent, Scripts, type ErrorComponentProps } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
-import { AppShell } from "@/components/AppShell";
 import { MensagemErro } from "@/components/MensagemErro";
 import { NaoEncontrada } from "@/pages/NaoEncontrada";
 import { SimuladorProvider } from "@/context/SimuladorContext";
@@ -61,7 +60,7 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   return (
     <SimuladorProvider>
-      <AppShell />
+      <Outlet />
     </SimuladorProvider>
   );
 }

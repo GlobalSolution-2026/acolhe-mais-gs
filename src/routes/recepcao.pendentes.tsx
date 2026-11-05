@@ -4,6 +4,8 @@ import { Pendentes } from "@/pages/recepcao/Pendentes";
 export const Route = createFileRoute("/recepcao/pendentes")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { title: "Pendentes | Acolhe+" },
       { name: "description", content: "Pendentes no aplicativo Acolhe+, orientação e agendamento no SUS." },
       { property: "og:title", content: "Pendentes | Acolhe+" },

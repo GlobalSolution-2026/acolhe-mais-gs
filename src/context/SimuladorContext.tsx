@@ -12,7 +12,6 @@ export interface EstadoSimulador {
   horarios: Horario[];
   cidadaos: Cidadao[];
   consultas: Consulta[];
-  perfil: Perfil;
   cdUnidadeRecepcao: number;
   orientacoes: Orientacao[];
   orientacaoAtual: OrientacaoEmAndamento | null;
@@ -21,8 +20,6 @@ export interface EstadoSimulador {
   /** Cadastro do cidadão que usa o app (null até o primeiro agendamento). */
   cdCidadaoAtual: number | null;
 }
-
-export type Perfil = "CIDADAO" | "RECEPCAO";
 
 const CHAVE = "acolhe-plus:simulador";
 
@@ -33,7 +30,6 @@ function estadoInicial(): EstadoSimulador {
     horarios: semente.horarios,
     cidadaos: semente.cidadaos,
     consultas: semente.consultas,
-    perfil: "CIDADAO",
     cdUnidadeRecepcao: 1,
     orientacoes: semente.orientacoes,
     orientacaoAtual: null,
@@ -46,7 +42,9 @@ function estadoInicial(): EstadoSimulador {
 function lerStorage(): EstadoSimulador | null {
   try {
     const bruto = localStorage.getItem(CHAVE);
-    return bruto ? { ...estadoInicial(), ...(JSON.parse(bruto) as Partial<EstadoSimulador>) } : null;
+    if (!bruto) return null;
+    const { perfil: _perfilAntigo, ...salvo } = JSON.parse(bruto) as Partial<EstadoSimulador> & { perfil?: unknown };
+    return { ...estadoInicial(), ...salvo };
   } catch {
     return null;
   }
@@ -66,7 +64,6 @@ interface SimuladorValor {
   obterEstado: () => EstadoSimulador;
   atualizarEstado: (fn: (atual: EstadoSimulador) => EstadoSimulador) => void;
   reiniciarDemonstracao: () => void;
-  trocarPerfil: (perfil: Perfil) => void;
   selecionarUnidadeRecepcao: (cdUnidade: number) => void;
   iniciarOrientacao: (cdQueixa: CodigoQueixa, nrCep: string) => void;
   trocarQueixa: (cdQueixa: CodigoQueixa) => void;
@@ -118,11 +115,6 @@ export function SimuladorProvider({ children }: { children: ReactNode }) {
     ref.current = novo;
     setEstado(novo);
   }, []);
-
-  const trocarPerfil = useCallback(
-    (perfil: Perfil) => atualizarEstado((e) => ({ ...e, perfil })),
-    [atualizarEstado],
-  );
 
   const selecionarUnidadeRecepcao = useCallback(
     (cdUnidade: number) => atualizarEstado((e) => ({ ...e, cdUnidadeRecepcao: cdUnidade })),
@@ -297,7 +289,7 @@ export function SimuladorProvider({ children }: { children: ReactNode }) {
   return (
     <SimuladorContext.Provider
       value={{
-        estado, obterEstado, atualizarEstado, reiniciarDemonstracao, trocarPerfil, selecionarUnidadeRecepcao,
+        estado, obterEstado, atualizarEstado, reiniciarDemonstracao, selecionarUnidadeRecepcao,
         iniciarOrientacao, trocarQueixa, responder, voltarPergunta, definirResultado,
         definirCidadaoAtual, entrarNaListaDoDia, oferecerVaga, responderOferta, simularPassagemPrazo, encerrarDia,
       }}

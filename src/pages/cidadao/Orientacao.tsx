@@ -103,14 +103,14 @@ export function Orientacao() {
   const passo = atual ? proximoPasso(atual.cdQueixa, atual.respostas) : null;
 
   useEffect(() => {
-    if (passo?.tipo === "RESULTADO") void navigate({ to: "/inicio/resultado", replace: true });
+    if (passo?.tipo === "RESULTADO") void navigate({ to: "/cidadao/resultado", replace: true });
   }, [passo?.tipo, navigate]);
 
   if (!atual || !passo) {
     return (
       <div className="flex flex-col gap-4">
         <EstadoVazio mensagem="Nenhuma orientação em andamento." />
-        <Link to="/inicio" className="btn bg-primaria text-branco">Escolher o que estou sentindo</Link>
+        <Link to="/cidadao/inicio" className="btn bg-primaria text-branco">Escolher o que estou sentindo</Link>
       </div>
     );
   }
@@ -138,15 +138,15 @@ export function Orientacao() {
       {passo.tipo === "MENOR_IDADE" && (
         <Encerramento titulo="Esta orientação é para adultos">
           <p>Para menores de 18 anos, procure a UBS mais próxima. Em caso de risco, ligue para o SAMU.</p>
-          <Link to="/emergencia" className="btn bg-gravidade-vermelho text-branco"><FiAlertTriangle /> Emergência</Link>
-          <Link to="/inicio" className="btn border border-borda bg-branco text-primaria">Voltar ao início</Link>
+          <Link to="/cidadao/emergencia" className="btn bg-gravidade-vermelho text-branco"><FiAlertTriangle /> Emergência</Link>
+          <Link to="/cidadao/inicio" className="btn border border-borda bg-branco text-primaria">Voltar ao início</Link>
         </Encerramento>
       )}
 
       {passo.tipo === "POUCOS_SINTOMAS" && (
         <Encerramento titulo="Pode não ser síndrome gripal">
           <p>Com menos de 2 sintomas, escolha outra queixa ou procure a UBS.</p>
-          <Link to="/inicio" className="btn bg-primaria text-branco hover:bg-primariaEscura">Escolher outra queixa</Link>
+          <Link to="/cidadao/inicio" className="btn bg-primaria text-branco hover:bg-primariaEscura">Escolher outra queixa</Link>
         </Encerramento>
       )}
 

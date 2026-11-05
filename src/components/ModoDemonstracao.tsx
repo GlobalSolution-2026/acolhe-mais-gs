@@ -1,23 +1,22 @@
-import { useNavigate } from "@tanstack/react-router";
+import { useLocation, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { FiClock, FiRotateCcw, FiRepeat, FiSunset } from "react-icons/fi";
 import { useSimulador } from "@/context/SimuladorContext";
 
 export function ModoDemonstracao({ onConcluir }: { onConcluir?: () => void }) {
-  const { estado, trocarPerfil, reiniciarDemonstracao, simularPassagemPrazo, encerrarDia } = useSimulador();
+  const { reiniciarDemonstracao, simularPassagemPrazo, encerrarDia } = useSimulador();
   const navigate = useNavigate();
   const [confirmando, setConfirmando] = useState(false);
   const [prazoSimulado, setPrazoSimulado] = useState(false);
   const [diaEncerrado, setDiaEncerrado] = useState(false);
-  const cidadao = estado.perfil === "CIDADAO";
+  const { pathname } = useLocation();
+  const cidadao = !pathname.startsWith("/recepcao");
 
   const trocar = () => {
     if (cidadao) {
-      trocarPerfil("RECEPCAO");
       void navigate({ to: "/recepcao/agenda" });
     } else {
-      trocarPerfil("CIDADAO");
-      void navigate({ to: "/inicio" });
+      void navigate({ to: "/cidadao/inicio" });
     }
     onConcluir?.();
   };
@@ -27,7 +26,7 @@ export function ModoDemonstracao({ onConcluir }: { onConcluir?: () => void }) {
     setConfirmando(false);
     setPrazoSimulado(false);
     setDiaEncerrado(false);
-    void navigate({ to: "/inicio" });
+    void navigate({ to: "/cidadao/inicio" });
     onConcluir?.();
   };
 

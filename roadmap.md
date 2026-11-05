@@ -9,3 +9,7 @@
 - [x] Recepção: agenda, pendentes, lista-do-dia, indicadores
 - [x] Modo demonstração: simular prazo, encerrar o dia
 - [x] Testes vitest das regras puras + rodar testes
+
+- [ ] Separar layouts e rotas por URL, remover perfil salvo e corrigir voltar/editar
+- [ ] Alinhar serviços com Java e Flask
+- [ ] Testar rotas, regras existentes e abas dos dois perfis no navegador
