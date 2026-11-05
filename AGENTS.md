@@ -28,3 +28,6 @@ use the editor.
   own key and store it in Secrets.
 - **Secrets.** Lovable manages them. Do not put secret values in the repo.
 <!-- LOVABLE:END -->
+
+- Pages live in src/pages and route files in src/routes only wire them (head + component), so the UI can be moved to a react-router-dom front later. Why: the project is a prototype to be migrated.
+- All data access goes through src/services/api.ts (one function per future Java REST endpoint) backed by SimuladorContext mock state persisted in localStorage. Why: no backend in the prototype.
