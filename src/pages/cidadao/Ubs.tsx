@@ -56,7 +56,7 @@ export function Ubs() {
       {ubs && ordenadas.length === 0 && <EstadoVazio mensagem="Nenhuma UBS encontrada." />}
       {ordenadas.map((u) => (
         <CardUnidade key={u.cdUnidade} unidade={u}
-          onClick={() => void navigate({ to: "/inicio/ubs/$cdUnidade", params: { cdUnidade: String(u.cdUnidade) } })} />
+          onClick={() => void navigate({ to: "/inicio/ubs_/$cdUnidade", params: { cdUnidade: String(u.cdUnidade) } })} />
       ))}
     </div>
   );
