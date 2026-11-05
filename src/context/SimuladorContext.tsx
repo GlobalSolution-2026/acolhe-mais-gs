@@ -88,7 +88,13 @@ interface SimuladorValor {
   encerrarDia: () => void;
 }
 
-const SimuladorContext = createContext<SimuladorValor | null>(null);
+// Preserve only the Context identity across module updates, never its state/value.
+// An already-mounted Provider and refreshed consumers must use the same object.
+const registroContexto = globalThis as typeof globalThis & {
+  __acolheSimuladorContext?: ReturnType<typeof createContext<SimuladorValor | null>>;
+};
+const SimuladorContext = registroContexto.__acolheSimuladorContext ?? createContext<SimuladorValor | null>(null);
+registroContexto.__acolheSimuladorContext = SimuladorContext;
 
 export function SimuladorProvider({ children }: { children: ReactNode }) {
   const [estado, setEstado] = useState<EstadoSimulador>(estadoInicial);
