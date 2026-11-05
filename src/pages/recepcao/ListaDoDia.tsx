@@ -76,7 +76,7 @@ export function ListaDoDia() {
         <div>
           <button onClick={oferecer}
             className="btn w-full bg-primaria text-branco hover:bg-primariaEscura disabled:opacity-60">
-            <FiSend /> {`Oferecer vaga de ${fmtDiaHora(vaga.dtHorario)}`}
+            <FiSend /> {`Oferecer vaga de ${fmtDiaHora(vaga.dtHorario, false)}`}
           </button>
           <p className="mt-1 text-sm text-textoSuave">O cidadão tem 30 minutos para aceitar no aviso do app.</p>
         </div>

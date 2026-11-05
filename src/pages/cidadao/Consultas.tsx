@@ -31,12 +31,12 @@ function CardConsulta({ consulta, onConfirmar, confirmando }: { consulta: Consul
       <p className="font-semibold">{fmtDiaHora(consulta.dtHorario)}</p>
       {consulta.dsStatus === "AGENDADA" && dispensadaConfirmacao(consulta) && <p className="text-sm">Não precisa confirmar: consulta marcada com menos de 24 h.</p>}
       {consulta.dsStatus === "AGENDADA" && inicio && prazo && new Date() < inicio && <p className="text-sm">
-        Vamos pedir a confirmação em {fmtDiaHora(inicio.toISOString())}. Você terá até {fmtDiaHora(prazo.toISOString())} para confirmar.
+        Vamos pedir a confirmação em {fmtDiaHora(inicio.toISOString(), false)}. Você terá até {fmtDiaHora(prazo.toISOString(), false)} para confirmar.
       </p>}
       {precisa && prazo && (
         <>
           <p className="text-sm font-semibold text-gravidade-laranja">
-            Confirme sua presença até {fmtDiaHora(prazo.toISOString())}.
+            Confirme sua presença até {fmtDiaHora(prazo.toISOString(), false)}.
           </p>
           <button onClick={() => onConfirmar(consulta)} disabled={confirmando}
             className="btn bg-primaria text-branco hover:bg-primariaEscura disabled:opacity-60">

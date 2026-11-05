@@ -87,7 +87,7 @@ export interface Indicadores {
   taxaReaproveitamento: number | null;
   /** Pessoas ainda aguardando encaixe na lista do dia. */
   naoEncaixadas: number;
-  /** REALIZADA ÷ consultas vindas de orientação (null se não há orientações). */
+  /** REALIZADA ÷ (REALIZADA + FALTA) com orientação (null se não há orientações). */
   comparecimentoAposOrientacao: number | null;
 }
 
@@ -108,7 +108,7 @@ export function calcularIndicadores(consultas: Consulta[], listaDoDia: EntradaLi
   );
   const taxaReaproveitamento = liberadas.length > 0 ? reocupadas.length / liberadas.length : null;
 
-  const comOrientacao = consultas.filter((c) => c.cdOrientacao !== null);
+  const comOrientacao = encerradas.filter((c) => c.cdOrientacao !== null);
   const realizadas = comOrientacao.filter((c) => c.dsStatus === "REALIZADA");
   const comparecimentoAposOrientacao = comOrientacao.length > 0 ? realizadas.length / comOrientacao.length : null;
 
@@ -142,4 +142,12 @@ export function tempoRestanteOferta(oferta: OfertaVaga, agora: Date): string {
 
 export function ofertasDoCidadao(ofertas: OfertaVaga[], fila: EntradaListaDoDia[]): OfertaVaga[] {
   return ofertas.filter((o) => o.status === "PENDENTE" && fila.some((e) => e.cdEntrada === o.cdEntrada && e.flCidadao));
+}
+
+/** Fonte única da lista e do contador de confirmações da recepção. */
+export function listarPendentesConfirmacao(consultas: Consulta[], horarios: Horario[], cdUnidade: number, agora: Date): Consulta[] {
+  const ids = new Set(horarios.filter((h) => h.cdUnidade === cdUnidade).map((h) => h.cdHorario));
+  return consultas.filter((c) => ids.has(c.cdHorario) && precisaConfirmar(c, agora)).sort((a, b) =>
+    Number(b.dsRiscoFalta === "ALTO") - Number(a.dsRiscoFalta === "ALTO") ||
+    (prazoConfirmacao(a)?.getTime() ?? 0) - (prazoConfirmacao(b)?.getTime() ?? 0));
 }
