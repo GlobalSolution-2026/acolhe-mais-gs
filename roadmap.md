@@ -13,3 +13,6 @@
 - [x] Separar layouts e rotas por URL, remover perfil salvo e corrigir voltar/editar
 - [x] Alinhar serviços com Java e Flask
 - [x] Testar rotas, regras existentes e abas dos dois perfis no navegador
+- [ ] Ajustar gravidade, pergunta INST e ordem dos sinais vermelhos/laranjas
+- [ ] Acrescentar aviso e ligação 192 no resultado laranja
+- [ ] Executar todos os testes e verificar INST no navegador
