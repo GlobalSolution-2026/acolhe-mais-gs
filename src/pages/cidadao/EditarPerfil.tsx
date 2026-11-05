@@ -18,7 +18,7 @@ export function EditarPerfil() {
     return (
       <div className="flex flex-col gap-4">
         <EstadoVazio mensagem="Você ainda não tem cadastro." />
-        <Link to="/inicio" className="btn bg-primaria text-branco">Voltar ao início</Link>
+        <Link to="/cidadao/inicio" className="btn bg-primaria text-branco">Voltar ao início</Link>
       </div>
     );
   }
@@ -28,7 +28,7 @@ export function EditarPerfil() {
     setErro(null);
     try {
       await atualizarCidadao(cadastro.cdCidadao, dados);
-      void navigate({ to: "/perfil" });
+      void navigate({ to: "/cidadao/perfil" });
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Não foi possível salvar.");
     } finally {

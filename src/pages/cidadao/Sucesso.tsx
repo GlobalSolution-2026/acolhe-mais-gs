@@ -13,7 +13,7 @@ export function Sucesso({ cdConsulta }: { cdConsulta: number }) {
     return (
       <div className="flex flex-col gap-4">
         <EstadoVazio mensagem="Consulta não encontrada." />
-        <Link to="/inicio" className="btn bg-primaria text-branco">Voltar ao início</Link>
+        <Link to="/cidadao/inicio" className="btn bg-primaria text-branco">Voltar ao início</Link>
       </div>
     );
   }
@@ -35,7 +35,7 @@ export function Sucesso({ cdConsulta }: { cdConsulta: number }) {
         <p className="font-semibold capitalize">{fmtDiaHora(consulta.dtHorario)}</p>
       </section>
       <p className="rounded-[12px] border border-borda bg-branco p-4">{explicacao}</p>
-      <Link to="/consultas" className="btn bg-primaria text-branco hover:bg-primariaEscura">
+      <Link to="/cidadao/consultas" className="btn bg-primaria text-branco hover:bg-primariaEscura">
         <FiCalendar /> Ver minhas consultas
       </Link>
     </div>

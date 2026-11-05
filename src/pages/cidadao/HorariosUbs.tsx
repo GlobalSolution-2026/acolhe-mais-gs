@@ -41,7 +41,7 @@ export function HorariosUbs({ cdUnidade }: { cdUnidade: number }) {
   const entrarNaLista = () => {
     const cor = estado.orientacaoAtual?.resultado?.dsCor === "AZUL" ? "AZUL" : "VERDE";
     entrarNaListaDoDia(cdUnidade, cor);
-    void navigate({ to: "/inicio/lista-do-dia" });
+    void navigate({ to: "/cidadao/lista-do-dia" });
   };
 
   return (
@@ -63,7 +63,7 @@ export function HorariosUbs({ cdUnidade }: { cdUnidade: number }) {
           <div className="grid grid-cols-3 gap-2">
             {lista.map((h) => (
               <CardHorario key={h.cdHorario} horario={h}
-                onSelecionar={(sel) => void navigate({ to: "/inicio/agendar", search: { horario: sel.cdHorario, oferta: 0 } })} />
+                onSelecionar={(sel) => void navigate({ to: "/cidadao/agendar", search: { horario: sel.cdHorario, oferta: 0 } })} />
             ))}
           </div>
         </section>

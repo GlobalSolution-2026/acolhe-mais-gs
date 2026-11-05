@@ -94,7 +94,7 @@ export function Consultas() {
       {lista.length === 0 && (
         <>
           <EstadoVazio mensagem="Você ainda não tem consultas." />
-          <Link to="/inicio" className="btn bg-primaria text-branco hover:bg-primariaEscura">Iniciar uma orientação</Link>
+          <Link to="/cidadao/inicio" className="btn bg-primaria text-branco hover:bg-primariaEscura">Iniciar uma orientação</Link>
         </>
       )}
       {proximas.length > 0 && (

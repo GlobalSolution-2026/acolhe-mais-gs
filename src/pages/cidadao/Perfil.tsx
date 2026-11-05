@@ -23,7 +23,7 @@ export function Perfil() {
       {!cadastro ? (
         <>
           <EstadoVazio mensagem="Você ainda não tem cadastro. Ele é criado no primeiro agendamento." />
-          <Link to="/inicio" className="btn bg-primaria text-branco hover:bg-primariaEscura">Iniciar uma orientação</Link>
+          <Link to="/cidadao/inicio" className="btn bg-primaria text-branco hover:bg-primariaEscura">Iniciar uma orientação</Link>
         </>
       ) : (
         <>
@@ -32,7 +32,7 @@ export function Perfil() {
             <Linha rotulo="Cartão SUS" valor={cadastro.nrCns} />
             <Linha rotulo="Celular" valor={cadastro.nrCelular} />
             <Linha rotulo="Contato de recado" valor={cadastro.nmContatoRecado ? `${cadastro.nmContatoRecado} · ${cadastro.nrContatoRecado}` : ""} />
-            <Link to="/perfil/editar" className="btn border border-borda bg-branco text-primaria">
+            <Link to="/cidadao/perfil/editar" className="btn border border-borda bg-branco text-primaria">
               <FiEdit2 /> Editar dados
             </Link>
           </section>

@@ -13,7 +13,7 @@ export function ListaDoDiaCidadao() {
     return (
       <div className="flex flex-col gap-4">
         <EstadoVazio mensagem="Você não está na lista do dia de nenhuma UBS." />
-        <Link to="/inicio" className="btn bg-primaria text-branco">Voltar ao início</Link>
+        <Link to="/cidadao/inicio" className="btn bg-primaria text-branco">Voltar ao início</Link>
       </div>
     );
   }
@@ -34,7 +34,7 @@ export function ListaDoDiaCidadao() {
       <p className="flex items-start gap-2 rounded-[12px] bg-mentaSuave p-3 font-semibold">
         <FiAlertTriangle className="mt-1 shrink-0" /> Se piorar, ligue 192 ou procure a UPA.
       </p>
-      <Link to="/avisos" className="btn border border-borda bg-branco text-primaria">Ver meus avisos</Link>
+      <Link to="/cidadao/avisos" className="btn border border-borda bg-branco text-primaria">Ver meus avisos</Link>
     </div>
   );
 }

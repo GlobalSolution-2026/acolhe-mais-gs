@@ -10,270 +10,287 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as AvisosRouteImport } from './routes/avisos'
-import { Route as ConsultasRouteImport } from './routes/consultas'
-import { Route as EmergenciaRouteImport } from './routes/emergencia'
-import { Route as PerfilRouteImport } from './routes/perfil'
-import { Route as InicioIndexRouteImport } from './routes/inicio.index'
-import { Route as InicioAgendarRouteImport } from './routes/inicio.agendar'
-import { Route as InicioListaDoDiaRouteImport } from './routes/inicio.lista-do-dia'
-import { Route as InicioOrientacaoRouteImport } from './routes/inicio.orientacao'
-import { Route as InicioResultadoRouteImport } from './routes/inicio.resultado'
-import { Route as InicioSucessoRouteImport } from './routes/inicio.sucesso'
-import { Route as InicioUbsRouteImport } from './routes/inicio.ubs'
-import { Route as PerfilEditarRouteImport } from './routes/perfil.editar'
+import { Route as CidadaoRouteImport } from './routes/cidadao'
+import { Route as RecepcaoRouteImport } from './routes/recepcao'
+import { Route as CidadaoIndexRouteImport } from './routes/cidadao.index'
+import { Route as CidadaoAgendarRouteImport } from './routes/cidadao.agendar'
+import { Route as CidadaoAvisosRouteImport } from './routes/cidadao.avisos'
+import { Route as CidadaoConsultasRouteImport } from './routes/cidadao.consultas'
+import { Route as CidadaoEmergenciaRouteImport } from './routes/cidadao.emergencia'
+import { Route as CidadaoInicioRouteImport } from './routes/cidadao.inicio'
+import { Route as CidadaoListaDoDiaRouteImport } from './routes/cidadao.lista-do-dia'
+import { Route as CidadaoOrientacaoRouteImport } from './routes/cidadao.orientacao'
+import { Route as CidadaoPerfilRouteImport } from './routes/cidadao.perfil'
+import { Route as CidadaoResultadoRouteImport } from './routes/cidadao.resultado'
+import { Route as CidadaoSucessoRouteImport } from './routes/cidadao.sucesso'
+import { Route as CidadaoUbsRouteImport } from './routes/cidadao.ubs'
 import { Route as RecepcaoIndexRouteImport } from './routes/recepcao.index'
 import { Route as RecepcaoAgendaRouteImport } from './routes/recepcao.agenda'
 import { Route as RecepcaoIndicadoresRouteImport } from './routes/recepcao.indicadores'
 import { Route as RecepcaoListaDoDiaRouteImport } from './routes/recepcao.lista-do-dia'
 import { Route as RecepcaoPendentesRouteImport } from './routes/recepcao.pendentes'
-import { Route as InicioUbsCdUnidadeRouteImport } from './routes/inicio.ubs_.$cdUnidade'
+import { Route as CidadaoPerfilEditarRouteImport } from './routes/cidadao.perfil_.editar'
+import { Route as CidadaoUbsCdUnidadeRouteImport } from './routes/cidadao.ubs_.$cdUnidade'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AvisosRoute = AvisosRouteImport.update({
+const CidadaoRoute = CidadaoRouteImport.update({
+  id: '/cidadao',
+  path: '/cidadao',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RecepcaoRoute = RecepcaoRouteImport.update({
+  id: '/recepcao',
+  path: '/recepcao',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CidadaoIndexRoute = CidadaoIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => CidadaoRoute,
+} as any)
+const CidadaoAgendarRoute = CidadaoAgendarRouteImport.update({
+  id: '/agendar',
+  path: '/agendar',
+  getParentRoute: () => CidadaoRoute,
+} as any)
+const CidadaoAvisosRoute = CidadaoAvisosRouteImport.update({
   id: '/avisos',
   path: '/avisos',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => CidadaoRoute,
 } as any)
-const ConsultasRoute = ConsultasRouteImport.update({
+const CidadaoConsultasRoute = CidadaoConsultasRouteImport.update({
   id: '/consultas',
   path: '/consultas',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => CidadaoRoute,
 } as any)
-const EmergenciaRoute = EmergenciaRouteImport.update({
+const CidadaoEmergenciaRoute = CidadaoEmergenciaRouteImport.update({
   id: '/emergencia',
   path: '/emergencia',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => CidadaoRoute,
 } as any)
-const PerfilRoute = PerfilRouteImport.update({
+const CidadaoInicioRoute = CidadaoInicioRouteImport.update({
+  id: '/inicio',
+  path: '/inicio',
+  getParentRoute: () => CidadaoRoute,
+} as any)
+const CidadaoListaDoDiaRoute = CidadaoListaDoDiaRouteImport.update({
+  id: '/lista-do-dia',
+  path: '/lista-do-dia',
+  getParentRoute: () => CidadaoRoute,
+} as any)
+const CidadaoOrientacaoRoute = CidadaoOrientacaoRouteImport.update({
+  id: '/orientacao',
+  path: '/orientacao',
+  getParentRoute: () => CidadaoRoute,
+} as any)
+const CidadaoPerfilRoute = CidadaoPerfilRouteImport.update({
   id: '/perfil',
   path: '/perfil',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => CidadaoRoute,
 } as any)
-const InicioIndexRoute = InicioIndexRouteImport.update({
-  id: '/inicio/',
-  path: '/inicio/',
-  getParentRoute: () => rootRouteImport,
+const CidadaoResultadoRoute = CidadaoResultadoRouteImport.update({
+  id: '/resultado',
+  path: '/resultado',
+  getParentRoute: () => CidadaoRoute,
 } as any)
-const InicioAgendarRoute = InicioAgendarRouteImport.update({
-  id: '/inicio/agendar',
-  path: '/inicio/agendar',
-  getParentRoute: () => rootRouteImport,
+const CidadaoSucessoRoute = CidadaoSucessoRouteImport.update({
+  id: '/sucesso',
+  path: '/sucesso',
+  getParentRoute: () => CidadaoRoute,
 } as any)
-const InicioListaDoDiaRoute = InicioListaDoDiaRouteImport.update({
-  id: '/inicio/lista-do-dia',
-  path: '/inicio/lista-do-dia',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const InicioOrientacaoRoute = InicioOrientacaoRouteImport.update({
-  id: '/inicio/orientacao',
-  path: '/inicio/orientacao',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const InicioResultadoRoute = InicioResultadoRouteImport.update({
-  id: '/inicio/resultado',
-  path: '/inicio/resultado',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const InicioSucessoRoute = InicioSucessoRouteImport.update({
-  id: '/inicio/sucesso',
-  path: '/inicio/sucesso',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const InicioUbsRoute = InicioUbsRouteImport.update({
-  id: '/inicio/ubs',
-  path: '/inicio/ubs',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PerfilEditarRoute = PerfilEditarRouteImport.update({
-  id: '/editar',
-  path: '/editar',
-  getParentRoute: () => PerfilRoute,
+const CidadaoUbsRoute = CidadaoUbsRouteImport.update({
+  id: '/ubs',
+  path: '/ubs',
+  getParentRoute: () => CidadaoRoute,
 } as any)
 const RecepcaoIndexRoute = RecepcaoIndexRouteImport.update({
-  id: '/recepcao/',
-  path: '/recepcao/',
-  getParentRoute: () => rootRouteImport,
+  id: '/',
+  path: '/',
+  getParentRoute: () => RecepcaoRoute,
 } as any)
 const RecepcaoAgendaRoute = RecepcaoAgendaRouteImport.update({
-  id: '/recepcao/agenda',
-  path: '/recepcao/agenda',
-  getParentRoute: () => rootRouteImport,
+  id: '/agenda',
+  path: '/agenda',
+  getParentRoute: () => RecepcaoRoute,
 } as any)
 const RecepcaoIndicadoresRoute = RecepcaoIndicadoresRouteImport.update({
-  id: '/recepcao/indicadores',
-  path: '/recepcao/indicadores',
-  getParentRoute: () => rootRouteImport,
+  id: '/indicadores',
+  path: '/indicadores',
+  getParentRoute: () => RecepcaoRoute,
 } as any)
 const RecepcaoListaDoDiaRoute = RecepcaoListaDoDiaRouteImport.update({
-  id: '/recepcao/lista-do-dia',
-  path: '/recepcao/lista-do-dia',
-  getParentRoute: () => rootRouteImport,
+  id: '/lista-do-dia',
+  path: '/lista-do-dia',
+  getParentRoute: () => RecepcaoRoute,
 } as any)
 const RecepcaoPendentesRoute = RecepcaoPendentesRouteImport.update({
-  id: '/recepcao/pendentes',
-  path: '/recepcao/pendentes',
-  getParentRoute: () => rootRouteImport,
+  id: '/pendentes',
+  path: '/pendentes',
+  getParentRoute: () => RecepcaoRoute,
 } as any)
-const InicioUbsCdUnidadeRoute = InicioUbsCdUnidadeRouteImport.update({
-  id: '/inicio/ubs_/$cdUnidade',
-  path: '/inicio/ubs/$cdUnidade',
-  getParentRoute: () => rootRouteImport,
+const CidadaoPerfilEditarRoute = CidadaoPerfilEditarRouteImport.update({
+  id: '/perfil_/editar',
+  path: '/perfil/editar',
+  getParentRoute: () => CidadaoRoute,
+} as any)
+const CidadaoUbsCdUnidadeRoute = CidadaoUbsCdUnidadeRouteImport.update({
+  id: '/ubs_/$cdUnidade',
+  path: '/ubs/$cdUnidade',
+  getParentRoute: () => CidadaoRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/avisos': typeof AvisosRoute
-  '/consultas': typeof ConsultasRoute
-  '/emergencia': typeof EmergenciaRoute
-  '/perfil': typeof PerfilRouteWithChildren
-  '/inicio/agendar': typeof InicioAgendarRoute
-  '/inicio/lista-do-dia': typeof InicioListaDoDiaRoute
-  '/inicio/orientacao': typeof InicioOrientacaoRoute
-  '/inicio/resultado': typeof InicioResultadoRoute
-  '/inicio/sucesso': typeof InicioSucessoRoute
-  '/inicio/ubs': typeof InicioUbsRoute
-  '/perfil/editar': typeof PerfilEditarRoute
+  '/cidadao': typeof CidadaoRouteWithChildren
+  '/recepcao': typeof RecepcaoRouteWithChildren
+  '/cidadao/agendar': typeof CidadaoAgendarRoute
+  '/cidadao/avisos': typeof CidadaoAvisosRoute
+  '/cidadao/consultas': typeof CidadaoConsultasRoute
+  '/cidadao/emergencia': typeof CidadaoEmergenciaRoute
+  '/cidadao/inicio': typeof CidadaoInicioRoute
+  '/cidadao/lista-do-dia': typeof CidadaoListaDoDiaRoute
+  '/cidadao/orientacao': typeof CidadaoOrientacaoRoute
+  '/cidadao/perfil': typeof CidadaoPerfilRoute
+  '/cidadao/resultado': typeof CidadaoResultadoRoute
+  '/cidadao/sucesso': typeof CidadaoSucessoRoute
+  '/cidadao/ubs': typeof CidadaoUbsRoute
   '/recepcao/agenda': typeof RecepcaoAgendaRoute
   '/recepcao/indicadores': typeof RecepcaoIndicadoresRoute
   '/recepcao/lista-do-dia': typeof RecepcaoListaDoDiaRoute
   '/recepcao/pendentes': typeof RecepcaoPendentesRoute
-  '/inicio/': typeof InicioIndexRoute
+  '/cidadao/': typeof CidadaoIndexRoute
   '/recepcao/': typeof RecepcaoIndexRoute
-  '/inicio/ubs/$cdUnidade': typeof InicioUbsCdUnidadeRoute
+  '/cidadao/perfil/editar': typeof CidadaoPerfilEditarRoute
+  '/cidadao/ubs/$cdUnidade': typeof CidadaoUbsCdUnidadeRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/avisos': typeof AvisosRoute
-  '/consultas': typeof ConsultasRoute
-  '/emergencia': typeof EmergenciaRoute
-  '/perfil': typeof PerfilRouteWithChildren
-  '/inicio/agendar': typeof InicioAgendarRoute
-  '/inicio/lista-do-dia': typeof InicioListaDoDiaRoute
-  '/inicio/orientacao': typeof InicioOrientacaoRoute
-  '/inicio/resultado': typeof InicioResultadoRoute
-  '/inicio/sucesso': typeof InicioSucessoRoute
-  '/inicio/ubs': typeof InicioUbsRoute
-  '/perfil/editar': typeof PerfilEditarRoute
+  '/cidadao/agendar': typeof CidadaoAgendarRoute
+  '/cidadao/avisos': typeof CidadaoAvisosRoute
+  '/cidadao/consultas': typeof CidadaoConsultasRoute
+  '/cidadao/emergencia': typeof CidadaoEmergenciaRoute
+  '/cidadao/inicio': typeof CidadaoInicioRoute
+  '/cidadao/lista-do-dia': typeof CidadaoListaDoDiaRoute
+  '/cidadao/orientacao': typeof CidadaoOrientacaoRoute
+  '/cidadao/perfil': typeof CidadaoPerfilRoute
+  '/cidadao/resultado': typeof CidadaoResultadoRoute
+  '/cidadao/sucesso': typeof CidadaoSucessoRoute
+  '/cidadao/ubs': typeof CidadaoUbsRoute
   '/recepcao/agenda': typeof RecepcaoAgendaRoute
   '/recepcao/indicadores': typeof RecepcaoIndicadoresRoute
   '/recepcao/lista-do-dia': typeof RecepcaoListaDoDiaRoute
   '/recepcao/pendentes': typeof RecepcaoPendentesRoute
-  '/inicio': typeof InicioIndexRoute
+  '/cidadao': typeof CidadaoIndexRoute
   '/recepcao': typeof RecepcaoIndexRoute
-  '/inicio/ubs/$cdUnidade': typeof InicioUbsCdUnidadeRoute
+  '/cidadao/perfil/editar': typeof CidadaoPerfilEditarRoute
+  '/cidadao/ubs/$cdUnidade': typeof CidadaoUbsCdUnidadeRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/avisos': typeof AvisosRoute
-  '/consultas': typeof ConsultasRoute
-  '/emergencia': typeof EmergenciaRoute
-  '/perfil': typeof PerfilRouteWithChildren
-  '/inicio/agendar': typeof InicioAgendarRoute
-  '/inicio/lista-do-dia': typeof InicioListaDoDiaRoute
-  '/inicio/orientacao': typeof InicioOrientacaoRoute
-  '/inicio/resultado': typeof InicioResultadoRoute
-  '/inicio/sucesso': typeof InicioSucessoRoute
-  '/inicio/ubs': typeof InicioUbsRoute
-  '/perfil/editar': typeof PerfilEditarRoute
+  '/cidadao': typeof CidadaoRouteWithChildren
+  '/recepcao': typeof RecepcaoRouteWithChildren
+  '/cidadao/agendar': typeof CidadaoAgendarRoute
+  '/cidadao/avisos': typeof CidadaoAvisosRoute
+  '/cidadao/consultas': typeof CidadaoConsultasRoute
+  '/cidadao/emergencia': typeof CidadaoEmergenciaRoute
+  '/cidadao/inicio': typeof CidadaoInicioRoute
+  '/cidadao/lista-do-dia': typeof CidadaoListaDoDiaRoute
+  '/cidadao/orientacao': typeof CidadaoOrientacaoRoute
+  '/cidadao/perfil': typeof CidadaoPerfilRoute
+  '/cidadao/resultado': typeof CidadaoResultadoRoute
+  '/cidadao/sucesso': typeof CidadaoSucessoRoute
+  '/cidadao/ubs': typeof CidadaoUbsRoute
   '/recepcao/agenda': typeof RecepcaoAgendaRoute
   '/recepcao/indicadores': typeof RecepcaoIndicadoresRoute
   '/recepcao/lista-do-dia': typeof RecepcaoListaDoDiaRoute
   '/recepcao/pendentes': typeof RecepcaoPendentesRoute
-  '/inicio/': typeof InicioIndexRoute
+  '/cidadao/': typeof CidadaoIndexRoute
   '/recepcao/': typeof RecepcaoIndexRoute
-  '/inicio/ubs_/$cdUnidade': typeof InicioUbsCdUnidadeRoute
+  '/cidadao/perfil_/editar': typeof CidadaoPerfilEditarRoute
+  '/cidadao/ubs_/$cdUnidade': typeof CidadaoUbsCdUnidadeRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/avisos'
-    | '/consultas'
-    | '/emergencia'
-    | '/perfil'
-    | '/inicio/agendar'
-    | '/inicio/lista-do-dia'
-    | '/inicio/orientacao'
-    | '/inicio/resultado'
-    | '/inicio/sucesso'
-    | '/inicio/ubs'
-    | '/perfil/editar'
+    | '/cidadao'
+    | '/recepcao'
+    | '/cidadao/agendar'
+    | '/cidadao/avisos'
+    | '/cidadao/consultas'
+    | '/cidadao/emergencia'
+    | '/cidadao/inicio'
+    | '/cidadao/lista-do-dia'
+    | '/cidadao/orientacao'
+    | '/cidadao/perfil'
+    | '/cidadao/resultado'
+    | '/cidadao/sucesso'
+    | '/cidadao/ubs'
     | '/recepcao/agenda'
     | '/recepcao/indicadores'
     | '/recepcao/lista-do-dia'
     | '/recepcao/pendentes'
-    | '/inicio/'
+    | '/cidadao/'
     | '/recepcao/'
-    | '/inicio/ubs/$cdUnidade'
+    | '/cidadao/perfil/editar'
+    | '/cidadao/ubs/$cdUnidade'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/avisos'
-    | '/consultas'
-    | '/emergencia'
-    | '/perfil'
-    | '/inicio/agendar'
-    | '/inicio/lista-do-dia'
-    | '/inicio/orientacao'
-    | '/inicio/resultado'
-    | '/inicio/sucesso'
-    | '/inicio/ubs'
-    | '/perfil/editar'
+    | '/cidadao/agendar'
+    | '/cidadao/avisos'
+    | '/cidadao/consultas'
+    | '/cidadao/emergencia'
+    | '/cidadao/inicio'
+    | '/cidadao/lista-do-dia'
+    | '/cidadao/orientacao'
+    | '/cidadao/perfil'
+    | '/cidadao/resultado'
+    | '/cidadao/sucesso'
+    | '/cidadao/ubs'
     | '/recepcao/agenda'
     | '/recepcao/indicadores'
     | '/recepcao/lista-do-dia'
     | '/recepcao/pendentes'
-    | '/inicio'
+    | '/cidadao'
     | '/recepcao'
-    | '/inicio/ubs/$cdUnidade'
+    | '/cidadao/perfil/editar'
+    | '/cidadao/ubs/$cdUnidade'
   id:
     | '__root__'
     | '/'
-    | '/avisos'
-    | '/consultas'
-    | '/emergencia'
-    | '/perfil'
-    | '/inicio/agendar'
-    | '/inicio/lista-do-dia'
-    | '/inicio/orientacao'
-    | '/inicio/resultado'
-    | '/inicio/sucesso'
-    | '/inicio/ubs'
-    | '/perfil/editar'
+    | '/cidadao'
+    | '/recepcao'
+    | '/cidadao/agendar'
+    | '/cidadao/avisos'
+    | '/cidadao/consultas'
+    | '/cidadao/emergencia'
+    | '/cidadao/inicio'
+    | '/cidadao/lista-do-dia'
+    | '/cidadao/orientacao'
+    | '/cidadao/perfil'
+    | '/cidadao/resultado'
+    | '/cidadao/sucesso'
+    | '/cidadao/ubs'
     | '/recepcao/agenda'
     | '/recepcao/indicadores'
     | '/recepcao/lista-do-dia'
     | '/recepcao/pendentes'
-    | '/inicio/'
+    | '/cidadao/'
     | '/recepcao/'
-    | '/inicio/ubs_/$cdUnidade'
+    | '/cidadao/perfil_/editar'
+    | '/cidadao/ubs_/$cdUnidade'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AvisosRoute: typeof AvisosRoute
-  ConsultasRoute: typeof ConsultasRoute
-  EmergenciaRoute: typeof EmergenciaRoute
-  PerfilRoute: typeof PerfilRouteWithChildren
-  InicioAgendarRoute: typeof InicioAgendarRoute
-  InicioListaDoDiaRoute: typeof InicioListaDoDiaRoute
-  InicioOrientacaoRoute: typeof InicioOrientacaoRoute
-  InicioResultadoRoute: typeof InicioResultadoRoute
-  InicioSucessoRoute: typeof InicioSucessoRoute
-  InicioUbsRoute: typeof InicioUbsRoute
-  RecepcaoAgendaRoute: typeof RecepcaoAgendaRoute
-  RecepcaoIndicadoresRoute: typeof RecepcaoIndicadoresRoute
-  RecepcaoListaDoDiaRoute: typeof RecepcaoListaDoDiaRoute
-  RecepcaoPendentesRoute: typeof RecepcaoPendentesRoute
-  InicioIndexRoute: typeof InicioIndexRoute
-  RecepcaoIndexRoute: typeof RecepcaoIndexRoute
-  InicioUbsCdUnidadeRoute: typeof InicioUbsCdUnidadeRoute
+  CidadaoRoute: typeof CidadaoRouteWithChildren
+  RecepcaoRoute: typeof RecepcaoRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -285,165 +302,217 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/avisos': {
-      id: '/avisos'
+    '/cidadao': {
+      id: '/cidadao'
+      path: '/cidadao'
+      fullPath: '/cidadao'
+      preLoaderRoute: typeof CidadaoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/recepcao': {
+      id: '/recepcao'
+      path: '/recepcao'
+      fullPath: '/recepcao'
+      preLoaderRoute: typeof RecepcaoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cidadao/': {
+      id: '/cidadao/'
+      path: '/'
+      fullPath: '/cidadao/'
+      preLoaderRoute: typeof CidadaoIndexRouteImport
+      parentRoute: typeof CidadaoRoute
+    }
+    '/cidadao/agendar': {
+      id: '/cidadao/agendar'
+      path: '/agendar'
+      fullPath: '/cidadao/agendar'
+      preLoaderRoute: typeof CidadaoAgendarRouteImport
+      parentRoute: typeof CidadaoRoute
+    }
+    '/cidadao/avisos': {
+      id: '/cidadao/avisos'
       path: '/avisos'
-      fullPath: '/avisos'
-      preLoaderRoute: typeof AvisosRouteImport
-      parentRoute: typeof rootRouteImport
+      fullPath: '/cidadao/avisos'
+      preLoaderRoute: typeof CidadaoAvisosRouteImport
+      parentRoute: typeof CidadaoRoute
     }
-    '/consultas': {
-      id: '/consultas'
+    '/cidadao/consultas': {
+      id: '/cidadao/consultas'
       path: '/consultas'
-      fullPath: '/consultas'
-      preLoaderRoute: typeof ConsultasRouteImport
-      parentRoute: typeof rootRouteImport
+      fullPath: '/cidadao/consultas'
+      preLoaderRoute: typeof CidadaoConsultasRouteImport
+      parentRoute: typeof CidadaoRoute
     }
-    '/emergencia': {
-      id: '/emergencia'
+    '/cidadao/emergencia': {
+      id: '/cidadao/emergencia'
       path: '/emergencia'
-      fullPath: '/emergencia'
-      preLoaderRoute: typeof EmergenciaRouteImport
-      parentRoute: typeof rootRouteImport
+      fullPath: '/cidadao/emergencia'
+      preLoaderRoute: typeof CidadaoEmergenciaRouteImport
+      parentRoute: typeof CidadaoRoute
     }
-    '/perfil': {
-      id: '/perfil'
-      path: '/perfil'
-      fullPath: '/perfil'
-      preLoaderRoute: typeof PerfilRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/inicio/': {
-      id: '/inicio/'
+    '/cidadao/inicio': {
+      id: '/cidadao/inicio'
       path: '/inicio'
-      fullPath: '/inicio/'
-      preLoaderRoute: typeof InicioIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      fullPath: '/cidadao/inicio'
+      preLoaderRoute: typeof CidadaoInicioRouteImport
+      parentRoute: typeof CidadaoRoute
     }
-    '/inicio/agendar': {
-      id: '/inicio/agendar'
-      path: '/inicio/agendar'
-      fullPath: '/inicio/agendar'
-      preLoaderRoute: typeof InicioAgendarRouteImport
-      parentRoute: typeof rootRouteImport
+    '/cidadao/lista-do-dia': {
+      id: '/cidadao/lista-do-dia'
+      path: '/lista-do-dia'
+      fullPath: '/cidadao/lista-do-dia'
+      preLoaderRoute: typeof CidadaoListaDoDiaRouteImport
+      parentRoute: typeof CidadaoRoute
     }
-    '/inicio/lista-do-dia': {
-      id: '/inicio/lista-do-dia'
-      path: '/inicio/lista-do-dia'
-      fullPath: '/inicio/lista-do-dia'
-      preLoaderRoute: typeof InicioListaDoDiaRouteImport
-      parentRoute: typeof rootRouteImport
+    '/cidadao/orientacao': {
+      id: '/cidadao/orientacao'
+      path: '/orientacao'
+      fullPath: '/cidadao/orientacao'
+      preLoaderRoute: typeof CidadaoOrientacaoRouteImport
+      parentRoute: typeof CidadaoRoute
     }
-    '/inicio/orientacao': {
-      id: '/inicio/orientacao'
-      path: '/inicio/orientacao'
-      fullPath: '/inicio/orientacao'
-      preLoaderRoute: typeof InicioOrientacaoRouteImport
-      parentRoute: typeof rootRouteImport
+    '/cidadao/perfil': {
+      id: '/cidadao/perfil'
+      path: '/perfil'
+      fullPath: '/cidadao/perfil'
+      preLoaderRoute: typeof CidadaoPerfilRouteImport
+      parentRoute: typeof CidadaoRoute
     }
-    '/inicio/resultado': {
-      id: '/inicio/resultado'
-      path: '/inicio/resultado'
-      fullPath: '/inicio/resultado'
-      preLoaderRoute: typeof InicioResultadoRouteImport
-      parentRoute: typeof rootRouteImport
+    '/cidadao/resultado': {
+      id: '/cidadao/resultado'
+      path: '/resultado'
+      fullPath: '/cidadao/resultado'
+      preLoaderRoute: typeof CidadaoResultadoRouteImport
+      parentRoute: typeof CidadaoRoute
     }
-    '/inicio/sucesso': {
-      id: '/inicio/sucesso'
-      path: '/inicio/sucesso'
-      fullPath: '/inicio/sucesso'
-      preLoaderRoute: typeof InicioSucessoRouteImport
-      parentRoute: typeof rootRouteImport
+    '/cidadao/sucesso': {
+      id: '/cidadao/sucesso'
+      path: '/sucesso'
+      fullPath: '/cidadao/sucesso'
+      preLoaderRoute: typeof CidadaoSucessoRouteImport
+      parentRoute: typeof CidadaoRoute
     }
-    '/inicio/ubs': {
-      id: '/inicio/ubs'
-      path: '/inicio/ubs'
-      fullPath: '/inicio/ubs'
-      preLoaderRoute: typeof InicioUbsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/perfil/editar': {
-      id: '/perfil/editar'
-      path: '/editar'
-      fullPath: '/perfil/editar'
-      preLoaderRoute: typeof PerfilEditarRouteImport
-      parentRoute: typeof PerfilRoute
+    '/cidadao/ubs': {
+      id: '/cidadao/ubs'
+      path: '/ubs'
+      fullPath: '/cidadao/ubs'
+      preLoaderRoute: typeof CidadaoUbsRouteImport
+      parentRoute: typeof CidadaoRoute
     }
     '/recepcao/': {
       id: '/recepcao/'
-      path: '/recepcao'
+      path: '/'
       fullPath: '/recepcao/'
       preLoaderRoute: typeof RecepcaoIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof RecepcaoRoute
     }
     '/recepcao/agenda': {
       id: '/recepcao/agenda'
-      path: '/recepcao/agenda'
+      path: '/agenda'
       fullPath: '/recepcao/agenda'
       preLoaderRoute: typeof RecepcaoAgendaRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof RecepcaoRoute
     }
     '/recepcao/indicadores': {
       id: '/recepcao/indicadores'
-      path: '/recepcao/indicadores'
+      path: '/indicadores'
       fullPath: '/recepcao/indicadores'
       preLoaderRoute: typeof RecepcaoIndicadoresRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof RecepcaoRoute
     }
     '/recepcao/lista-do-dia': {
       id: '/recepcao/lista-do-dia'
-      path: '/recepcao/lista-do-dia'
+      path: '/lista-do-dia'
       fullPath: '/recepcao/lista-do-dia'
       preLoaderRoute: typeof RecepcaoListaDoDiaRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof RecepcaoRoute
     }
     '/recepcao/pendentes': {
       id: '/recepcao/pendentes'
-      path: '/recepcao/pendentes'
+      path: '/pendentes'
       fullPath: '/recepcao/pendentes'
       preLoaderRoute: typeof RecepcaoPendentesRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof RecepcaoRoute
     }
-    '/inicio/ubs_/$cdUnidade': {
-      id: '/inicio/ubs_/$cdUnidade'
-      path: '/inicio/ubs/$cdUnidade'
-      fullPath: '/inicio/ubs/$cdUnidade'
-      preLoaderRoute: typeof InicioUbsCdUnidadeRouteImport
-      parentRoute: typeof rootRouteImport
+    '/cidadao/perfil_/editar': {
+      id: '/cidadao/perfil_/editar'
+      path: '/perfil/editar'
+      fullPath: '/cidadao/perfil/editar'
+      preLoaderRoute: typeof CidadaoPerfilEditarRouteImport
+      parentRoute: typeof CidadaoRoute
+    }
+    '/cidadao/ubs_/$cdUnidade': {
+      id: '/cidadao/ubs_/$cdUnidade'
+      path: '/ubs/$cdUnidade'
+      fullPath: '/cidadao/ubs/$cdUnidade'
+      preLoaderRoute: typeof CidadaoUbsCdUnidadeRouteImport
+      parentRoute: typeof CidadaoRoute
     }
   }
 }
 
-interface PerfilRouteChildren {
-  PerfilEditarRoute: typeof PerfilEditarRoute
+interface CidadaoRouteChildren {
+  CidadaoAgendarRoute: typeof CidadaoAgendarRoute
+  CidadaoAvisosRoute: typeof CidadaoAvisosRoute
+  CidadaoConsultasRoute: typeof CidadaoConsultasRoute
+  CidadaoEmergenciaRoute: typeof CidadaoEmergenciaRoute
+  CidadaoInicioRoute: typeof CidadaoInicioRoute
+  CidadaoListaDoDiaRoute: typeof CidadaoListaDoDiaRoute
+  CidadaoOrientacaoRoute: typeof CidadaoOrientacaoRoute
+  CidadaoPerfilRoute: typeof CidadaoPerfilRoute
+  CidadaoResultadoRoute: typeof CidadaoResultadoRoute
+  CidadaoSucessoRoute: typeof CidadaoSucessoRoute
+  CidadaoUbsRoute: typeof CidadaoUbsRoute
+  CidadaoIndexRoute: typeof CidadaoIndexRoute
+  CidadaoPerfilEditarRoute: typeof CidadaoPerfilEditarRoute
+  CidadaoUbsCdUnidadeRoute: typeof CidadaoUbsCdUnidadeRoute
 }
 
-const PerfilRouteChildren: PerfilRouteChildren = {
-  PerfilEditarRoute: PerfilEditarRoute,
+const CidadaoRouteChildren: CidadaoRouteChildren = {
+  CidadaoAgendarRoute: CidadaoAgendarRoute,
+  CidadaoAvisosRoute: CidadaoAvisosRoute,
+  CidadaoConsultasRoute: CidadaoConsultasRoute,
+  CidadaoEmergenciaRoute: CidadaoEmergenciaRoute,
+  CidadaoInicioRoute: CidadaoInicioRoute,
+  CidadaoListaDoDiaRoute: CidadaoListaDoDiaRoute,
+  CidadaoOrientacaoRoute: CidadaoOrientacaoRoute,
+  CidadaoPerfilRoute: CidadaoPerfilRoute,
+  CidadaoResultadoRoute: CidadaoResultadoRoute,
+  CidadaoSucessoRoute: CidadaoSucessoRoute,
+  CidadaoUbsRoute: CidadaoUbsRoute,
+  CidadaoIndexRoute: CidadaoIndexRoute,
+  CidadaoPerfilEditarRoute: CidadaoPerfilEditarRoute,
+  CidadaoUbsCdUnidadeRoute: CidadaoUbsCdUnidadeRoute,
 }
 
-const PerfilRouteWithChildren =
-  PerfilRoute._addFileChildren(PerfilRouteChildren)
+const CidadaoRouteWithChildren =
+  CidadaoRoute._addFileChildren(CidadaoRouteChildren)
 
-const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
-  AvisosRoute: AvisosRoute,
-  ConsultasRoute: ConsultasRoute,
-  EmergenciaRoute: EmergenciaRoute,
-  PerfilRoute: PerfilRouteWithChildren,
-  InicioAgendarRoute: InicioAgendarRoute,
-  InicioListaDoDiaRoute: InicioListaDoDiaRoute,
-  InicioOrientacaoRoute: InicioOrientacaoRoute,
-  InicioResultadoRoute: InicioResultadoRoute,
-  InicioSucessoRoute: InicioSucessoRoute,
-  InicioUbsRoute: InicioUbsRoute,
+interface RecepcaoRouteChildren {
+  RecepcaoAgendaRoute: typeof RecepcaoAgendaRoute
+  RecepcaoIndicadoresRoute: typeof RecepcaoIndicadoresRoute
+  RecepcaoListaDoDiaRoute: typeof RecepcaoListaDoDiaRoute
+  RecepcaoPendentesRoute: typeof RecepcaoPendentesRoute
+  RecepcaoIndexRoute: typeof RecepcaoIndexRoute
+}
+
+const RecepcaoRouteChildren: RecepcaoRouteChildren = {
   RecepcaoAgendaRoute: RecepcaoAgendaRoute,
   RecepcaoIndicadoresRoute: RecepcaoIndicadoresRoute,
   RecepcaoListaDoDiaRoute: RecepcaoListaDoDiaRoute,
   RecepcaoPendentesRoute: RecepcaoPendentesRoute,
-  InicioIndexRoute: InicioIndexRoute,
   RecepcaoIndexRoute: RecepcaoIndexRoute,
-  InicioUbsCdUnidadeRoute: InicioUbsCdUnidadeRoute,
+}
+
+const RecepcaoRouteWithChildren = RecepcaoRoute._addFileChildren(
+  RecepcaoRouteChildren,
+)
+
+const rootRouteChildren: RootRouteChildren = {
+  IndexRoute: IndexRoute,
+  CidadaoRoute: CidadaoRouteWithChildren,
+  RecepcaoRoute: RecepcaoRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
