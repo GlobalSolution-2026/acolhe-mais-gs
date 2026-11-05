@@ -9,18 +9,22 @@ export interface EstadoSimulador {
   horarios: Horario[];
   cidadaos: Cidadao[];
   consultas: Consulta[];
+  perfil: Perfil;
+  cdUnidadeRecepcao: number;
 }
+
+export type Perfil = "CIDADAO" | "RECEPCAO";
 
 const CHAVE = "acolhe-plus:simulador";
 
 function estadoInicial(): EstadoSimulador {
-  return { unidades: unidadesIniciais, horarios: gerarHorariosIniciais(), cidadaos: [], consultas: [] };
+  return { unidades: unidadesIniciais, horarios: gerarHorariosIniciais(), cidadaos: [], consultas: [], perfil: "CIDADAO", cdUnidadeRecepcao: 1 };
 }
 
 function lerStorage(): EstadoSimulador | null {
   try {
     const bruto = localStorage.getItem(CHAVE);
-    return bruto ? (JSON.parse(bruto) as EstadoSimulador) : null;
+    return bruto ? { ...estadoInicial(), ...(JSON.parse(bruto) as Partial<EstadoSimulador>) } : null;
   } catch {
     return null;
   }
@@ -40,6 +44,8 @@ interface SimuladorValor {
   obterEstado: () => EstadoSimulador;
   atualizarEstado: (fn: (atual: EstadoSimulador) => EstadoSimulador) => void;
   reiniciarDemonstracao: () => void;
+  trocarPerfil: (perfil: Perfil) => void;
+  selecionarUnidadeRecepcao: (cdUnidade: number) => void;
 }
 
 const SimuladorContext = createContext<SimuladorValor | null>(null);
@@ -78,8 +84,20 @@ export function SimuladorProvider({ children }: { children: ReactNode }) {
     setEstado(novo);
   }, []);
 
+  const trocarPerfil = useCallback(
+    (perfil: Perfil) => atualizarEstado((e) => ({ ...e, perfil })),
+    [atualizarEstado],
+  );
+
+  const selecionarUnidadeRecepcao = useCallback(
+    (cdUnidade: number) => atualizarEstado((e) => ({ ...e, cdUnidadeRecepcao: cdUnidade })),
+    [atualizarEstado],
+  );
+
   return (
-    <SimuladorContext.Provider value={{ estado, obterEstado, atualizarEstado, reiniciarDemonstracao }}>
+    <SimuladorContext.Provider
+      value={{ estado, obterEstado, atualizarEstado, reiniciarDemonstracao, trocarPerfil, selecionarUnidadeRecepcao }}
+    >
       {children}
     </SimuladorContext.Provider>
   );

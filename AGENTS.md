@@ -29,5 +29,5 @@ use the editor.
 - **Secrets.** Lovable manages them. Do not put secret values in the repo.
 <!-- LOVABLE:END -->
 
-- Pages live in src/pages and route files in src/routes only wire them (head + component), so the UI can be moved to a react-router-dom front later. Why: the project is a prototype to be migrated.
+- Pages live in src/pages and route files in src/routes only wire them (head + component), so the screens can be reused by a separate site/simulator project later. This project is only the Acolhe+ app: AppShell (in __root) renders a profile-dependent top bar and bottom nav; the current profile lives in SimuladorContext state. Why: app screens are reused elsewhere.
 - All data access goes through src/services/api.ts (one function per future Java REST endpoint) backed by SimuladorContext mock state persisted in localStorage. Why: no backend in the prototype.
