@@ -4,7 +4,7 @@ interface Props {
   id: string;
   label: string;
   registro: UseFormRegisterReturn;
-  erro?: FieldError;
+  erro?: FieldError | undefined;
   tipo?: string;
   multilinha?: boolean;
   placeholder?: string;
