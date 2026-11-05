@@ -158,6 +158,12 @@ export function Resultado() {
         <>
           <h1 className="text-2xl font-extrabold">Vá a um pronto-socorro agora</h1>
           <ListaSinais sinais={res.sinaisMarcados} />
+          <p className="rounded-[12px] bg-mentaSuave p-4 font-extrabold text-primaria">
+            Se não tiver como chegar com segurança, ou se piorar no caminho, ligue 192
+          </p>
+          <a href="tel:192" className="btn bg-primaria text-branco hover:bg-primariaEscura">
+            <FiPhoneCall /> Ligar para o 192
+          </a>
         </>
       )}
       {res.dsCor === "AMARELO" && <Amarelo atual={atual} res={res} />}
