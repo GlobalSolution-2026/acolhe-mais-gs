@@ -1,10 +1,10 @@
 # Tarefas
 
-- [ ] Pós-teste: dias com atendimento e exemplos dentro da janela em qualquer dia
-- [ ] Pós-teste: Pendentes e sino com o mesmo critério e ordem
-- [ ] Pós-teste: 80 cidadãos, consulta diária única, entradas e reaproveitamento coerentes
-- [ ] Pós-teste: indicadores, plurais, datas e telefones
-- [ ] Pós-teste: executar testes e conferir fluxo no navegador
+- [x] Pós-teste: dias com atendimento e exemplos dentro da janela em qualquer dia
+- [x] Pós-teste: Pendentes e sino com o mesmo critério e ordem
+- [x] Pós-teste: 80 cidadãos, consulta diária única, entradas e reaproveitamento coerentes
+- [x] Pós-teste: indicadores, plurais, datas e telefones
+- [x] Pós-teste: executar testes e conferir fluxo no navegador (237 testes passando)
 
 - [x] MVP: ofertas elegíveis, repasse e vencimento global
 - [x] MVP: simulação pura com alcance e resumo

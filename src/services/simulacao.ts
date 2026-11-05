@@ -1,3 +1,4 @@
+import { chaveDia, proximosDiasAtendimento } from "@/lib/datas";
 import type { EstadoSimulador } from "@/context/SimuladorContext";
 import { escolherDestinatarioOferta, horarioOferecivel, dispensadaConfirmacao, temContatoValido, segundosRestantesOferta } from "./regrasAgendamento";
 
@@ -34,11 +35,12 @@ export function vencerOfertas(estado: EstadoSimulador, agora: Date, todas = fals
 /** Avança apenas o prazo das consultas no alcance, mantendo o relógio das vagas real. */
 export function simularPrazo(estado: EstadoSimulador, agora: Date): { novoEstado: EstadoSimulador; resumo: ResumoSimulacao } {
   const resumo: ResumoSimulacao = { consultasLiberadas: 0, vagasOferecidas: 0, vagasDeVoltaNaAgenda: 0, mantidasSemContato: 0 };
+  const dias = proximosDiasAtendimento(estado.horarios, estado.cdUnidadeRecepcao, agora);
   const alvo = estado.consultas.filter((c) => {
     const t = new Date(c.dtHorario).getTime();
     const unidade = estado.horarios.find((h) => h.cdHorario === c.cdHorario)?.cdUnidade;
     return c.dsStatus === "AGENDADA" && !dispensadaConfirmacao(c) &&
-      ((unidade === estado.cdUnidadeRecepcao && t >= agora.getTime() && t <= agora.getTime() + 3 * 86_400_000) || c.cdCidadao === estado.cdCidadaoAtual);
+      ((unidade === estado.cdUnidadeRecepcao && t >= agora.getTime() && dias.includes(chaveDia(c.dtHorario))) || c.cdCidadao === estado.cdCidadaoAtual);
   });
   let novoEstado = estado;
   for (const c of alvo) {

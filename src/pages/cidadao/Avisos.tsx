@@ -76,7 +76,7 @@ export function Avisos() {
           <article key={c.cdConsulta} className="flex flex-col gap-2 rounded-[12px] border border-borda bg-branco p-4 shadow-leve">
             <p className="font-extrabold">Confirme sua consulta na {c.nmUnidade}</p>
             <p className="font-semibold">{fmtDiaHora(c.dtHorario)}</p>
-            {prazo && <p className="text-sm font-semibold text-gravidade-laranja">Prazo: até {fmtDiaHora(prazo.toISOString())}.</p>}
+            {prazo && <p className="text-sm font-semibold text-gravidade-laranja">Prazo: até {fmtDiaHora(prazo.toISOString(), false)}.</p>}
             <button onClick={() => void confirmar(c.cdConsulta)} disabled={confirmando}
               className="btn bg-primaria text-branco hover:bg-primariaEscura disabled:opacity-60">
               <FiCheck /> {confirmando ? "Confirmando..." : "Confirmar presença"}

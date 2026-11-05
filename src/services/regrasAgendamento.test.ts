@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { Cidadao, Consulta, EntradaListaDoDia } from "@/types";
 import {
   calcularIndicadores,
+  listarPendentesConfirmacao,
   deveLiberar,
   dispensadaConfirmacao,
   inicioPedidoConfirmacao,
@@ -169,4 +170,19 @@ describe("indicadores", () => {
     expect(calcularIndicadores([...passadas, ...outras], [], base).taxaAbsenteismo).toBe(.5);
     expect(calcularIndicadores(outras, [], base).taxaAbsenteismo).toBeNull();
   });
+});
+
+describe("pendentes e sino", () => {
+  it("somente janela atual, ALTO primeiro e prazo depois, da UBS selecionada", () => {
+    const c = (id: number, horas: number, risco: "ALTO" | "BAIXO" = "BAIXO", status: Consulta["dsStatus"] = "AGENDADA") => consulta({ cdConsulta: id, cdHorario: id, dtHorario: new Date(base.getTime() + horas * HORA).toISOString(), dsRiscoFalta: risco, dsStatus: status });
+    const consultas = [c(1, 30), c(2, 60, "ALTO"), c(3, 40, "ALTO"), c(4, 90), c(5, 10), c(6, 30, "BAIXO", "CONFIRMADA"), c(7, 30)];
+    const horarios = consultas.map((c) => ({ cdHorario: c.cdHorario, cdUnidade: c.cdConsulta === 7 ? 2 : 1, dtHorario: c.dtHorario, flOcupado: true, nrDuracaoMin: 20 }));
+    expect(listarPendentesConfirmacao(consultas, horarios, 1, base).map((c) => c.cdConsulta)).toEqual([3, 2, 1]);
+  });
+});
+it("comparecimento após orientação exclui futuras, liberadas e não encerradas", () => {
+  const passado = new Date(base.getTime() - HORA).toISOString();
+  const consultas = [consulta({ dsStatus: "REALIZADA", cdOrientacao: 1, dtHorario: passado }), consulta({ dsStatus: "FALTA", cdOrientacao: 2, dtHorario: passado }), consulta({ dsStatus: "LIBERADA", cdOrientacao: 3, dtHorario: passado }), consulta({ dsStatus: "REALIZADA", cdOrientacao: 4 }), consulta({ dsStatus: "FALTA", cdOrientacao: 5 }), consulta({ dsStatus: "AGENDADA", cdOrientacao: 6, dtHorario: passado }), consulta({ dsStatus: "REALIZADA", dtHorario: passado })];
+  expect(calcularIndicadores(consultas, [], base).comparecimentoAposOrientacao).toBe(.5);
+  expect(calcularIndicadores(consultas.slice(2), [], base).comparecimentoAposOrientacao).toBeNull();
 });

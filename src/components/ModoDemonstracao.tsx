@@ -13,6 +13,8 @@ export function ModoDemonstracao({ onConcluir }: { onConcluir?: () => void }) {
   const { pathname } = useLocation();
   const cidadao = !pathname.startsWith("/recepcao");
 
+  const plural = (n: number, singular: string, plural: string) => `${n} ${n === 1 ? singular : plural}`;
+
   const trocar = () => {
     if (cidadao) {
       void navigate({ to: "/recepcao/agenda" });
@@ -52,9 +54,9 @@ export function ModoDemonstracao({ onConcluir }: { onConcluir?: () => void }) {
                 <FiClock /> Simular passagem do prazo
               </button>
               <p className="mt-1 text-sm text-textoSuave">
-                Libera as consultas não confirmadas da UBS selecionada nos próximos 3 dias, mais as do cidadão do app em qualquer data. Consultas marcadas com menos de 24 h e pacientes sem contato são mantidos.
+                Libera as consultas não confirmadas da UBS selecionada nos próximos 3 dias com atendimento (dias que têm horários), mais as do cidadão do app em qualquer data. Consultas marcadas com menos de 24 h e pacientes sem contato são mantidos.
                 {resumo && <strong className="mt-2 block text-primaria" role="status">
-                  {resumo.consultasLiberadas + resumo.mantidasSemContato === 0 ? "Nenhuma consulta não confirmada no período." : `${resumo.consultasLiberadas} consultas liberadas · ${resumo.vagasOferecidas} vagas oferecidas à lista do dia · ${resumo.vagasDeVoltaNaAgenda} voltou para a agenda · ${resumo.mantidasSemContato} mantida (paciente sem contato)`}
+                  {resumo.consultasLiberadas + resumo.mantidasSemContato === 0 ? "Nenhuma consulta não confirmada no período." : `${plural(resumo.consultasLiberadas, "consulta liberada", "consultas liberadas")} · ${plural(resumo.vagasOferecidas, "vaga oferecida", "vagas oferecidas")} à lista do dia · ${plural(resumo.vagasDeVoltaNaAgenda, "vaga voltou", "vagas voltaram")} para a agenda · ${plural(resumo.mantidasSemContato, "consulta mantida (paciente sem contato)", "consultas mantidas (pacientes sem contato)")}`}
                 </strong>}
               </p>
             </div>

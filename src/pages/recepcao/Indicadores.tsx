@@ -33,7 +33,7 @@ export function Indicadores() {
       <Card titulo="Não encaixados hoje" valor={String(i.naoEncaixadas)}
         explicacao="Pessoas ainda aguardando uma vaga na lista do dia." />
       <Card titulo="Comparecimento após orientação" valor={pct(i.comparecimentoAposOrientacao)}
-        explicacao="Consultas realizadas entre as que vieram de uma orientação do app." />
+        explicacao="Consultas realizadas entre as realizadas e faltas após orientação do app, somente as que já aconteceram." />
     </div>
   );
 }

@@ -52,7 +52,7 @@ export function Agendar({ cdHorario, cdOferta }: { cdHorario: number; cdOferta: 
     <div className="flex flex-col gap-4">
       <h1 className="text-2xl font-extrabold text-primaria">Seus dados para agendar</h1>
       <p className="rounded-[12px] bg-mentaSuave p-3 font-semibold">
-        {unidade.nmUnidade} · {fmtDiaHora(horario.dtHorario)}
+        {unidade.nmUnidade} · {fmtDiaHora(horario.dtHorario, false)}
       </p>
       {cadastro && (
         <p className="text-base text-textoSuave">

@@ -37,3 +37,6 @@ use the editor.
 
 - Offer selection, expiry, handoff and deadline simulation use pure service helpers; the Provider owns the global expiry timer, while booking validates and consumes an offer within the API store update. Why: all screens share the same lifecycle and stale offers cannot book.
 - Generate the daily demo through the seeded data generators and persist its date with the versioned state; use shared date/day helpers in both scheduling views. Why: occupancy and displayed days remain consistent.
+
+- Use the shared pure pending-confirmation selector for the reception list and bell, and derive simulation days from actual schedules. Why: criteria must stay identical across views and weekends.
+- Reserve seed confirmation examples and track active person/day keys before assigning appointments; seed revision invalidates outdated saved demonstrations. Why: generated scenarios remain coherent after rule changes.

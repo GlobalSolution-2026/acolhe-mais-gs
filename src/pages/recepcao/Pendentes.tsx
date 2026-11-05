@@ -5,7 +5,7 @@ import { MensagemErro } from "@/components/MensagemErro";
 import { useSimulador } from "@/context/SimuladorContext";
 import { fmtDiaHora } from "@/lib/datas";
 import { confirmarConsulta } from "@/services/api";
-import { prazoConfirmacao, temContatoValido } from "@/services/regrasAgendamento";
+import { listarPendentesConfirmacao, prazoConfirmacao, temContatoValido } from "@/services/regrasAgendamento";
 import type { CanalConfirmacao } from "@/types";
 
 export function Pendentes() {
@@ -14,13 +14,7 @@ export function Pendentes() {
   const [erro, setErro] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
 
-  const pendentes = estado.consultas
-    .filter((c) => {
-      if (c.dsStatus !== "AGENDADA") return false;
-      const h = estado.horarios.find((x) => x.cdHorario === c.cdHorario);
-      return h?.cdUnidade === cdUnidade && prazoConfirmacao(c) !== null;
-    })
-    .sort((a, b) => (prazoConfirmacao(a)?.getTime() ?? 0) - (prazoConfirmacao(b)?.getTime() ?? 0));
+  const pendentes = listarPendentesConfirmacao(estado.consultas, estado.horarios, cdUnidade, new Date());
 
   const confirmar = async (cdConsulta: number, canal: CanalConfirmacao) => {
     setEnviando(true);
@@ -52,7 +46,7 @@ export function Pendentes() {
               </span>
             </div>
             <p className="font-semibold">{fmtDiaHora(c.dtHorario)}</p>
-            {prazo && <p className="text-sm font-semibold text-gravidade-laranja">Prazo para confirmar: {fmtDiaHora(prazo.toISOString())}</p>}
+            {prazo && <p className="text-sm font-semibold text-gravidade-laranja">Prazo para confirmar: {fmtDiaHora(prazo.toISOString(), false)}</p>}
             {cidadao?.nrCelular && <p className="text-sm">Celular: {cidadao.nrCelular}</p>}
             {cidadao?.nmContatoRecado && (
               <p className="text-sm">Recado: {cidadao.nmContatoRecado} · {cidadao.nrContatoRecado}</p>

@@ -6,7 +6,7 @@ import {
 } from "react-icons/fi";
 import { useSimulador } from "@/context/SimuladorContext";
 import { rotaPai } from "@/services/navegacao";
-import { ofertasDoCidadao, precisaConfirmar } from "@/services/regrasAgendamento";
+import { listarPendentesConfirmacao, ofertasDoCidadao, precisaConfirmar } from "@/services/regrasAgendamento";
 import { ModoDemonstracao } from "./ModoDemonstracao";
 
 export function Aba({ to, label, icone: Icone }: { to: NonNullable<LinkProps["to"]>; label: string; icone: IconType }) {
@@ -50,11 +50,7 @@ export function LayoutCompartilhado({ cidadao, barra }: { cidadao: boolean; barr
   const avisos = cidadao
     ? estado.consultas.filter((c) => c.cdCidadao === estado.cdCidadaoAtual && precisaConfirmar(c, agora)).length +
       ofertasDoCidadao(estado.ofertas, estado.listaDoDia).length
-    : estado.consultas.filter(
-        (c) =>
-          c.dsStatus === "AGENDADA" &&
-          estado.horarios.some((h) => h.cdHorario === c.cdHorario && h.cdUnidade === estado.cdUnidadeRecepcao),
-      ).length;
+    : listarPendentesConfirmacao(estado.consultas, estado.horarios, estado.cdUnidadeRecepcao, agora).length;
   const ubs = estado.unidades.filter((u) => u.tpUnidade === "UBS");
 
   return (
