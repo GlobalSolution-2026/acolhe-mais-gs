@@ -5,9 +5,11 @@ import { unidadesIniciais } from "@/data/unidades";
 import { gerarHorariosIniciais } from "@/data/horarios";
 import { gerarSemente } from "@/data/consultasIniciais";
 import { conectarStore } from "@/services/api";
-import { deveLiberar, ordenarListaDoDia } from "@/services/regrasAgendamento";
+import { oferecerHorario, finalizarOferta, simularPrazo, vencerOfertas, type ResumoSimulacao } from "@/services/simulacao";
+import { chaveDia } from "@/lib/datas";
 
 export interface EstadoSimulador {
+  dtSemente: string;
   unidades: Unidade[];
   horarios: Horario[];
   cidadaos: Cidadao[];
@@ -21,11 +23,13 @@ export interface EstadoSimulador {
   cdCidadaoAtual: number | null;
 }
 
-const CHAVE = "acolhe-plus:simulador";
+const CHAVE = "acolhe-plus:simulador:v2";
 
 function estadoInicial(): EstadoSimulador {
-  const semente = gerarSemente(gerarHorariosIniciais());
+  const agora = new Date();
+  const semente = gerarSemente(gerarHorariosIniciais(agora), agora);
   return {
+    dtSemente: chaveDia(agora.toISOString()),
     unidades: unidadesIniciais,
     horarios: semente.horarios,
     cidadaos: semente.cidadaos,
@@ -33,7 +37,7 @@ function estadoInicial(): EstadoSimulador {
     cdUnidadeRecepcao: 1,
     orientacoes: semente.orientacoes,
     orientacaoAtual: null,
-    listaDoDia: [],
+    listaDoDia: semente.listaDoDia,
     ofertas: [],
     cdCidadaoAtual: null,
   };
@@ -44,6 +48,7 @@ function lerStorage(): EstadoSimulador | null {
     const bruto = localStorage.getItem(CHAVE);
     if (!bruto) return null;
     const { perfil: _perfilAntigo, ...salvo } = JSON.parse(bruto) as Partial<EstadoSimulador> & { perfil?: unknown };
+    if (salvo.dtSemente !== chaveDia(new Date().toISOString())) return null;
     return { ...estadoInicial(), ...salvo };
   } catch {
     return null;
@@ -75,7 +80,8 @@ interface SimuladorValor {
   oferecerVaga: (cdHorario: number) => void;
   responderOferta: (cdOferta: number, resposta: "ACEITA" | "RECUSADA" | "EXPIRADA") => void;
   /** DEMONSTRAÇÃO: libera consultas não confirmadas e oferece as vagas à lista do dia. */
-  simularPassagemPrazo: () => void;
+  simularPassagemPrazo: () => ResumoSimulacao;
+  vencerPrazoOfertas: () => void;
   /** DEMONSTRAÇÃO: quem não foi encaixado ganha prioridade no próximo dia. */
   encerrarDia: () => void;
 }
@@ -171,7 +177,7 @@ export function SimuladorProvider({ children }: { children: ReactNode }) {
   );
 
   const definirCidadaoAtual = useCallback(
-    (cdCidadao: number) => atualizarEstado((e) => ({ ...e, cdCidadaoAtual: cdCidadao })),
+    (cdCidadao: number) => atualizarEstado((e) => ({ ...e, cdCidadaoAtual: cdCidadao, listaDoDia: e.listaDoDia.map((x) => x.flCidadao ? { ...x, cdCidadao, nmCidadao: e.cidadaos.find((c) => c.cdCidadao === cdCidadao)?.nmCidadao ?? x.nmCidadao } : x) })),
     [atualizarEstado],
   );
 
@@ -183,6 +189,7 @@ export function SimuladorProvider({ children }: { children: ReactNode }) {
         const entrada: EntradaListaDoDia = {
           cdEntrada: Math.max(0, ...e.listaDoDia.map((x) => x.cdEntrada)) + 1,
           cdUnidade,
+          cdCidadao: e.cdCidadaoAtual,
           nmCidadao: nome,
           dsCor,
           dtEntrada: new Date().toISOString(),
@@ -196,86 +203,33 @@ export function SimuladorProvider({ children }: { children: ReactNode }) {
   );
 
   const oferecerVaga = useCallback(
-    (cdHorario: number) =>
-      atualizarEstado((e) => {
-        const horario = e.horarios.find((h) => h.cdHorario === cdHorario);
-        if (!horario || horario.flOcupado) return e;
-        const fila = ordenarListaDoDia(e.listaDoDia.filter((x) => x.cdUnidade === horario.cdUnidade));
-        const primeiro = fila[0];
-        if (!primeiro) return e;
-        if (e.ofertas.some((o) => o.cdEntrada === primeiro.cdEntrada && o.status === "PENDENTE")) return e;
-        const oferta: OfertaVaga = {
-          cdOferta: Math.max(0, ...e.ofertas.map((o) => o.cdOferta)) + 1,
-          cdHorario,
-          cdUnidade: horario.cdUnidade,
-          cdEntrada: primeiro.cdEntrada,
-          nmCidadao: primeiro.nmCidadao,
-          dtCriacao: new Date().toISOString(),
-          status: "PENDENTE",
-        };
-        return { ...e, ofertas: [...e.ofertas, oferta] };
-      }),
+    (cdHorario: number) => atualizarEstado((e) => oferecerHorario(e, cdHorario, new Date())),
     [atualizarEstado],
   );
 
   const responderOferta = useCallback(
     (cdOferta: number, resposta: "ACEITA" | "RECUSADA" | "EXPIRADA") =>
-      atualizarEstado((e) => ({
-        ...e,
-        ofertas: e.ofertas.map((o) => (o.cdOferta === cdOferta ? { ...o, status: resposta } : o)),
-        listaDoDia:
-          resposta === "ACEITA"
-            ? e.listaDoDia.map((x) =>
-                x.cdEntrada === e.ofertas.find((o) => o.cdOferta === cdOferta)?.cdEntrada ? { ...x, status: "ENCERRADA" } : x,
-              )
-            : e.listaDoDia,
-      })),
+      atualizarEstado((e) => finalizarOferta(e, cdOferta, resposta, new Date())),
     [atualizarEstado],
   );
 
-  const simularPassagemPrazo = useCallback(
-    () =>
-      atualizarEstado((e) => {
-        // DEMONSTRAÇÃO: simula "agora" 10 dias no futuro para estourar os prazos.
-        const agora = new Date(Date.now() + 10 * 86_400_000);
-        const liberadas = e.consultas.filter((c) =>
-          deveLiberar(c, e.cidadaos.find((x) => x.cdCidadao === c.cdCidadao), agora),
-        );
-        if (liberadas.length === 0) return e;
-        const horariosLiberados = new Set(liberadas.map((c) => c.cdHorario));
-        let novo: EstadoSimulador = {
-          ...e,
-          consultas: e.consultas.map((c) => (horariosLiberados.has(c.cdHorario) ? { ...c, dsStatus: "LIBERADA" as const } : c)),
-          horarios: e.horarios.map((h) => (horariosLiberados.has(h.cdHorario) ? { ...h, flOcupado: false } : h)),
-        };
-        // Oferece cada vaga liberada ao primeiro da lista do dia daquela UBS.
-        for (const c of liberadas) {
-          const horario = novo.horarios.find((h) => h.cdHorario === c.cdHorario);
-          if (!horario) continue;
-          const fila = ordenarListaDoDia(novo.listaDoDia.filter((x) => x.cdUnidade === horario.cdUnidade));
-          const primeiro = fila[0];
-          if (!primeiro) continue;
-          if (novo.ofertas.some((o) => o.cdEntrada === primeiro.cdEntrada && o.status === "PENDENTE")) continue;
-          novo = {
-            ...novo,
-            ofertas: [
-              ...novo.ofertas,
-              {
-                cdOferta: Math.max(0, ...novo.ofertas.map((o) => o.cdOferta)) + 1,
-                cdHorario: c.cdHorario,
-                cdUnidade: horario.cdUnidade,
-                cdEntrada: primeiro.cdEntrada,
-                nmCidadao: primeiro.nmCidadao,
-                dtCriacao: new Date().toISOString(),
-                status: "PENDENTE" as const,
-              },
-            ],
-          };
-        }
-        return novo;
-      }),
-    [atualizarEstado],
+  const simularPassagemPrazo = useCallback(() => {
+    const { novoEstado, resumo } = simularPrazo(ref.current, new Date());
+    atualizarEstado(() => novoEstado);
+    return resumo;
+  }, [atualizarEstado]);
+
+  const vencerPrazoOfertas = useCallback(
+    () => atualizarEstado((e) => vencerOfertas(e, new Date(), true)), [atualizarEstado],
   );
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const novo = vencerOfertas(ref.current, new Date());
+      if (novo !== ref.current) atualizarEstado(() => novo);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [atualizarEstado]);
 
   const encerrarDia = useCallback(
     () =>
@@ -291,7 +245,7 @@ export function SimuladorProvider({ children }: { children: ReactNode }) {
       value={{
         estado, obterEstado, atualizarEstado, reiniciarDemonstracao, selecionarUnidadeRecepcao,
         iniciarOrientacao, trocarQueixa, responder, voltarPergunta, definirResultado,
-        definirCidadaoAtual, entrarNaListaDoDia, oferecerVaga, responderOferta, simularPassagemPrazo, encerrarDia,
+        definirCidadaoAtual, entrarNaListaDoDia, oferecerVaga, responderOferta, simularPassagemPrazo, vencerPrazoOfertas, encerrarDia,
       }}
     >
       {children}

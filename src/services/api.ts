@@ -6,7 +6,7 @@
 import type { EstadoSimulador } from "@/context/SimuladorContext";
 import type { CanalConfirmacao, Cidadao, CidadaoEntrada, Consulta, ErroResponse, Horario, Unidade } from "@/types";
 import type { Orientacao, VerificacaoUrgenciaEntrada } from "@/types/orientacao";
-import { temContatoValido } from "./regrasAgendamento";
+import { segundosRestantesOferta, temContatoValido } from "./regrasAgendamento";
 
 export const API_URL = import.meta.env["VITE_API_URL"] as string | undefined;
 
@@ -157,11 +157,12 @@ export async function agendarConsulta(dados: { cdHorario: number; cdCidadao: num
     nmUnidade: unidade?.nmUnidade ?? "",
     dtHorario: horario.dtHorario,
   };
-  s.atualizarEstado((atual) => ({
-    ...atual,
-    horarios: atual.horarios.map((h) => (h.cdHorario === dados.cdHorario ? { ...h, flOcupado: true } : h)),
-    consultas: [...atual.consultas, consulta],
-  }));
+  s.atualizarEstado((atual) => {
+    if (atual.horarios.some((h) => h.cdHorario === dados.cdHorario && h.flOcupado)) falhar({ status: 409, erro: "Este horário acabou de ser ocupado. Escolha outro." });
+    const nova = { ...consulta, cdConsulta: Math.max(0, ...atual.consultas.map((c) => c.cdConsulta)) + 1 };
+    consulta.cdConsulta = nova.cdConsulta;
+    return { ...atual, horarios: atual.horarios.map((h) => h.cdHorario === dados.cdHorario ? { ...h, flOcupado: true } : h), consultas: [...atual.consultas, nova] };
+  });
   return consulta;
 }
 
@@ -211,4 +212,15 @@ export async function verificarUrgencia(dados: VerificacaoUrgenciaEntrada): Prom
   // return res.json();
   await esperar();
   return { urgente: dados.nrDor >= 7 && dados.idade >= 65 };
+}
+
+/** DEMONSTRAÇÃO: valida o aceite e utiliza o endpoint Java de agendamento. */
+export async function aceitarOfertaPorTelefone(cdOferta: number): Promise<Consulta> {
+  const e = getStore().obterEstado();
+  const oferta = e.ofertas.find((o) => o.cdOferta === cdOferta && o.status === "PENDENTE");
+  const entrada = e.listaDoDia.find((x) => x.cdEntrada === oferta?.cdEntrada);
+  if (!oferta || segundosRestantesOferta(oferta, new Date()) === 0 || !entrada || entrada.cdCidadao === null) falhar({ status: 409, erro: "Oferta indisponível." });
+  const consulta = await agendarConsulta({ cdHorario: oferta.cdHorario, cdCidadao: entrada.cdCidadao, cdOrientacao: null });
+  getStore().atualizarEstado((atual) => ({ ...atual, ofertas: atual.ofertas.map((o) => o.cdOferta === cdOferta ? { ...o, status: "ACEITA" } : o), listaDoDia: atual.listaDoDia.map((x) => x.cdEntrada === entrada.cdEntrada ? { ...x, status: "ENCERRADA" } : x) }));
+  return consulta;
 }
