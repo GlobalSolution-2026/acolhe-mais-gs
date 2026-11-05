@@ -6,7 +6,7 @@
 import type { EstadoSimulador } from "@/context/SimuladorContext";
 import type { Cidadao, CidadaoEntrada, Consulta, ErroResponse, Horario, Unidade } from "@/types";
 
-export const API_URL = import.meta.env.VITE_API_URL;
+export const API_URL = import.meta.env["VITE_API_URL"] as string | undefined;
 
 type Store = {
   obterEstado: () => EstadoSimulador;
