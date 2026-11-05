@@ -10,246 +10,33 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as ContatoRouteImport } from './routes/contato'
-import { Route as FaqRouteImport } from './routes/faq'
-import { Route as SimuladorRouteImport } from './routes/simulador'
-import { Route as SobreRouteImport } from './routes/sobre'
-import { Route as SolucaoRouteImport } from './routes/solucao'
-import { Route as IntegrantesIndexRouteImport } from './routes/integrantes.index'
-import { Route as IntegrantesRmRouteImport } from './routes/integrantes.$rm'
-import { Route as SimuladorIndexRouteImport } from './routes/simulador.index'
-import { Route as SimuladorCidadaoRouteImport } from './routes/simulador.cidadao'
-import { Route as SimuladorRecepcaoRouteImport } from './routes/simulador.recepcao'
-import { Route as SimuladorStatusApiRouteImport } from './routes/simulador.status-api'
-import { Route as SimuladorCidadaoIndexRouteImport } from './routes/simulador.cidadao.index'
-import { Route as SimuladorCidadaoAvisosRouteImport } from './routes/simulador.cidadao.avisos'
-import { Route as SimuladorCidadaoConsultasRouteImport } from './routes/simulador.cidadao.consultas'
-import { Route as SimuladorCidadaoEmergenciaRouteImport } from './routes/simulador.cidadao.emergencia'
-import { Route as SimuladorCidadaoInicioRouteImport } from './routes/simulador.cidadao.inicio'
-import { Route as SimuladorCidadaoPerfilRouteImport } from './routes/simulador.cidadao.perfil'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ContatoRoute = ContatoRouteImport.update({
-  id: '/contato',
-  path: '/contato',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const FaqRoute = FaqRouteImport.update({
-  id: '/faq',
-  path: '/faq',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SimuladorRoute = SimuladorRouteImport.update({
-  id: '/simulador',
-  path: '/simulador',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SobreRoute = SobreRouteImport.update({
-  id: '/sobre',
-  path: '/sobre',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SolucaoRoute = SolucaoRouteImport.update({
-  id: '/solucao',
-  path: '/solucao',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const IntegrantesIndexRoute = IntegrantesIndexRouteImport.update({
-  id: '/integrantes/',
-  path: '/integrantes/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const IntegrantesRmRoute = IntegrantesRmRouteImport.update({
-  id: '/integrantes/$rm',
-  path: '/integrantes/$rm',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SimuladorIndexRoute = SimuladorIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => SimuladorRoute,
-} as any)
-const SimuladorCidadaoRoute = SimuladorCidadaoRouteImport.update({
-  id: '/cidadao',
-  path: '/cidadao',
-  getParentRoute: () => SimuladorRoute,
-} as any)
-const SimuladorRecepcaoRoute = SimuladorRecepcaoRouteImport.update({
-  id: '/recepcao',
-  path: '/recepcao',
-  getParentRoute: () => SimuladorRoute,
-} as any)
-const SimuladorStatusApiRoute = SimuladorStatusApiRouteImport.update({
-  id: '/status-api',
-  path: '/status-api',
-  getParentRoute: () => SimuladorRoute,
-} as any)
-const SimuladorCidadaoIndexRoute = SimuladorCidadaoIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => SimuladorCidadaoRoute,
-} as any)
-const SimuladorCidadaoAvisosRoute = SimuladorCidadaoAvisosRouteImport.update({
-  id: '/avisos',
-  path: '/avisos',
-  getParentRoute: () => SimuladorCidadaoRoute,
-} as any)
-const SimuladorCidadaoConsultasRoute =
-  SimuladorCidadaoConsultasRouteImport.update({
-    id: '/consultas',
-    path: '/consultas',
-    getParentRoute: () => SimuladorCidadaoRoute,
-  } as any)
-const SimuladorCidadaoEmergenciaRoute =
-  SimuladorCidadaoEmergenciaRouteImport.update({
-    id: '/emergencia',
-    path: '/emergencia',
-    getParentRoute: () => SimuladorCidadaoRoute,
-  } as any)
-const SimuladorCidadaoInicioRoute = SimuladorCidadaoInicioRouteImport.update({
-  id: '/inicio',
-  path: '/inicio',
-  getParentRoute: () => SimuladorCidadaoRoute,
-} as any)
-const SimuladorCidadaoPerfilRoute = SimuladorCidadaoPerfilRouteImport.update({
-  id: '/perfil',
-  path: '/perfil',
-  getParentRoute: () => SimuladorCidadaoRoute,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/contato': typeof ContatoRoute
-  '/faq': typeof FaqRoute
-  '/simulador': typeof SimuladorRouteWithChildren
-  '/sobre': typeof SobreRoute
-  '/solucao': typeof SolucaoRoute
-  '/integrantes/$rm': typeof IntegrantesRmRoute
-  '/simulador/cidadao': typeof SimuladorCidadaoRouteWithChildren
-  '/simulador/recepcao': typeof SimuladorRecepcaoRoute
-  '/simulador/status-api': typeof SimuladorStatusApiRoute
-  '/integrantes/': typeof IntegrantesIndexRoute
-  '/simulador/': typeof SimuladorIndexRoute
-  '/simulador/cidadao/avisos': typeof SimuladorCidadaoAvisosRoute
-  '/simulador/cidadao/consultas': typeof SimuladorCidadaoConsultasRoute
-  '/simulador/cidadao/emergencia': typeof SimuladorCidadaoEmergenciaRoute
-  '/simulador/cidadao/inicio': typeof SimuladorCidadaoInicioRoute
-  '/simulador/cidadao/perfil': typeof SimuladorCidadaoPerfilRoute
-  '/simulador/cidadao/': typeof SimuladorCidadaoIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/contato': typeof ContatoRoute
-  '/faq': typeof FaqRoute
-  '/sobre': typeof SobreRoute
-  '/solucao': typeof SolucaoRoute
-  '/integrantes/$rm': typeof IntegrantesRmRoute
-  '/simulador/recepcao': typeof SimuladorRecepcaoRoute
-  '/simulador/status-api': typeof SimuladorStatusApiRoute
-  '/integrantes': typeof IntegrantesIndexRoute
-  '/simulador': typeof SimuladorIndexRoute
-  '/simulador/cidadao/avisos': typeof SimuladorCidadaoAvisosRoute
-  '/simulador/cidadao/consultas': typeof SimuladorCidadaoConsultasRoute
-  '/simulador/cidadao/emergencia': typeof SimuladorCidadaoEmergenciaRoute
-  '/simulador/cidadao/inicio': typeof SimuladorCidadaoInicioRoute
-  '/simulador/cidadao/perfil': typeof SimuladorCidadaoPerfilRoute
-  '/simulador/cidadao': typeof SimuladorCidadaoIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/contato': typeof ContatoRoute
-  '/faq': typeof FaqRoute
-  '/simulador': typeof SimuladorRouteWithChildren
-  '/sobre': typeof SobreRoute
-  '/solucao': typeof SolucaoRoute
-  '/integrantes/$rm': typeof IntegrantesRmRoute
-  '/simulador/cidadao': typeof SimuladorCidadaoRouteWithChildren
-  '/simulador/recepcao': typeof SimuladorRecepcaoRoute
-  '/simulador/status-api': typeof SimuladorStatusApiRoute
-  '/integrantes/': typeof IntegrantesIndexRoute
-  '/simulador/': typeof SimuladorIndexRoute
-  '/simulador/cidadao/avisos': typeof SimuladorCidadaoAvisosRoute
-  '/simulador/cidadao/consultas': typeof SimuladorCidadaoConsultasRoute
-  '/simulador/cidadao/emergencia': typeof SimuladorCidadaoEmergenciaRoute
-  '/simulador/cidadao/inicio': typeof SimuladorCidadaoInicioRoute
-  '/simulador/cidadao/perfil': typeof SimuladorCidadaoPerfilRoute
-  '/simulador/cidadao/': typeof SimuladorCidadaoIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths:
-    | '/'
-    | '/contato'
-    | '/faq'
-    | '/simulador'
-    | '/sobre'
-    | '/solucao'
-    | '/integrantes/$rm'
-    | '/simulador/cidadao'
-    | '/simulador/recepcao'
-    | '/simulador/status-api'
-    | '/integrantes/'
-    | '/simulador/'
-    | '/simulador/cidadao/avisos'
-    | '/simulador/cidadao/consultas'
-    | '/simulador/cidadao/emergencia'
-    | '/simulador/cidadao/inicio'
-    | '/simulador/cidadao/perfil'
-    | '/simulador/cidadao/'
+  fullPaths: '/'
   fileRoutesByTo: FileRoutesByTo
-  to:
-    | '/'
-    | '/contato'
-    | '/faq'
-    | '/sobre'
-    | '/solucao'
-    | '/integrantes/$rm'
-    | '/simulador/recepcao'
-    | '/simulador/status-api'
-    | '/integrantes'
-    | '/simulador'
-    | '/simulador/cidadao/avisos'
-    | '/simulador/cidadao/consultas'
-    | '/simulador/cidadao/emergencia'
-    | '/simulador/cidadao/inicio'
-    | '/simulador/cidadao/perfil'
-    | '/simulador/cidadao'
-  id:
-    | '__root__'
-    | '/'
-    | '/contato'
-    | '/faq'
-    | '/simulador'
-    | '/sobre'
-    | '/solucao'
-    | '/integrantes/$rm'
-    | '/simulador/cidadao'
-    | '/simulador/recepcao'
-    | '/simulador/status-api'
-    | '/integrantes/'
-    | '/simulador/'
-    | '/simulador/cidadao/avisos'
-    | '/simulador/cidadao/consultas'
-    | '/simulador/cidadao/emergencia'
-    | '/simulador/cidadao/inicio'
-    | '/simulador/cidadao/perfil'
-    | '/simulador/cidadao/'
+  to: '/'
+  id: '__root__' | '/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  ContatoRoute: typeof ContatoRoute
-  FaqRoute: typeof FaqRoute
-  SimuladorRoute: typeof SimuladorRouteWithChildren
-  SobreRoute: typeof SobreRoute
-  SolucaoRoute: typeof SolucaoRoute
-  IntegrantesRmRoute: typeof IntegrantesRmRoute
-  IntegrantesIndexRoute: typeof IntegrantesIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -261,176 +48,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/contato': {
-      id: '/contato'
-      path: '/contato'
-      fullPath: '/contato'
-      preLoaderRoute: typeof ContatoRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/faq': {
-      id: '/faq'
-      path: '/faq'
-      fullPath: '/faq'
-      preLoaderRoute: typeof FaqRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/simulador': {
-      id: '/simulador'
-      path: '/simulador'
-      fullPath: '/simulador'
-      preLoaderRoute: typeof SimuladorRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/sobre': {
-      id: '/sobre'
-      path: '/sobre'
-      fullPath: '/sobre'
-      preLoaderRoute: typeof SobreRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/solucao': {
-      id: '/solucao'
-      path: '/solucao'
-      fullPath: '/solucao'
-      preLoaderRoute: typeof SolucaoRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/integrantes/': {
-      id: '/integrantes/'
-      path: '/integrantes'
-      fullPath: '/integrantes/'
-      preLoaderRoute: typeof IntegrantesIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/integrantes/$rm': {
-      id: '/integrantes/$rm'
-      path: '/integrantes/$rm'
-      fullPath: '/integrantes/$rm'
-      preLoaderRoute: typeof IntegrantesRmRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/simulador/': {
-      id: '/simulador/'
-      path: '/'
-      fullPath: '/simulador/'
-      preLoaderRoute: typeof SimuladorIndexRouteImport
-      parentRoute: typeof SimuladorRoute
-    }
-    '/simulador/cidadao': {
-      id: '/simulador/cidadao'
-      path: '/cidadao'
-      fullPath: '/simulador/cidadao'
-      preLoaderRoute: typeof SimuladorCidadaoRouteImport
-      parentRoute: typeof SimuladorRoute
-    }
-    '/simulador/recepcao': {
-      id: '/simulador/recepcao'
-      path: '/recepcao'
-      fullPath: '/simulador/recepcao'
-      preLoaderRoute: typeof SimuladorRecepcaoRouteImport
-      parentRoute: typeof SimuladorRoute
-    }
-    '/simulador/status-api': {
-      id: '/simulador/status-api'
-      path: '/status-api'
-      fullPath: '/simulador/status-api'
-      preLoaderRoute: typeof SimuladorStatusApiRouteImport
-      parentRoute: typeof SimuladorRoute
-    }
-    '/simulador/cidadao/': {
-      id: '/simulador/cidadao/'
-      path: '/'
-      fullPath: '/simulador/cidadao/'
-      preLoaderRoute: typeof SimuladorCidadaoIndexRouteImport
-      parentRoute: typeof SimuladorCidadaoRoute
-    }
-    '/simulador/cidadao/avisos': {
-      id: '/simulador/cidadao/avisos'
-      path: '/avisos'
-      fullPath: '/simulador/cidadao/avisos'
-      preLoaderRoute: typeof SimuladorCidadaoAvisosRouteImport
-      parentRoute: typeof SimuladorCidadaoRoute
-    }
-    '/simulador/cidadao/consultas': {
-      id: '/simulador/cidadao/consultas'
-      path: '/consultas'
-      fullPath: '/simulador/cidadao/consultas'
-      preLoaderRoute: typeof SimuladorCidadaoConsultasRouteImport
-      parentRoute: typeof SimuladorCidadaoRoute
-    }
-    '/simulador/cidadao/emergencia': {
-      id: '/simulador/cidadao/emergencia'
-      path: '/emergencia'
-      fullPath: '/simulador/cidadao/emergencia'
-      preLoaderRoute: typeof SimuladorCidadaoEmergenciaRouteImport
-      parentRoute: typeof SimuladorCidadaoRoute
-    }
-    '/simulador/cidadao/inicio': {
-      id: '/simulador/cidadao/inicio'
-      path: '/inicio'
-      fullPath: '/simulador/cidadao/inicio'
-      preLoaderRoute: typeof SimuladorCidadaoInicioRouteImport
-      parentRoute: typeof SimuladorCidadaoRoute
-    }
-    '/simulador/cidadao/perfil': {
-      id: '/simulador/cidadao/perfil'
-      path: '/perfil'
-      fullPath: '/simulador/cidadao/perfil'
-      preLoaderRoute: typeof SimuladorCidadaoPerfilRouteImport
-      parentRoute: typeof SimuladorCidadaoRoute
-    }
   }
 }
 
-interface SimuladorCidadaoRouteChildren {
-  SimuladorCidadaoAvisosRoute: typeof SimuladorCidadaoAvisosRoute
-  SimuladorCidadaoConsultasRoute: typeof SimuladorCidadaoConsultasRoute
-  SimuladorCidadaoEmergenciaRoute: typeof SimuladorCidadaoEmergenciaRoute
-  SimuladorCidadaoInicioRoute: typeof SimuladorCidadaoInicioRoute
-  SimuladorCidadaoPerfilRoute: typeof SimuladorCidadaoPerfilRoute
-  SimuladorCidadaoIndexRoute: typeof SimuladorCidadaoIndexRoute
-}
-
-const SimuladorCidadaoRouteChildren: SimuladorCidadaoRouteChildren = {
-  SimuladorCidadaoAvisosRoute: SimuladorCidadaoAvisosRoute,
-  SimuladorCidadaoConsultasRoute: SimuladorCidadaoConsultasRoute,
-  SimuladorCidadaoEmergenciaRoute: SimuladorCidadaoEmergenciaRoute,
-  SimuladorCidadaoInicioRoute: SimuladorCidadaoInicioRoute,
-  SimuladorCidadaoPerfilRoute: SimuladorCidadaoPerfilRoute,
-  SimuladorCidadaoIndexRoute: SimuladorCidadaoIndexRoute,
-}
-
-const SimuladorCidadaoRouteWithChildren =
-  SimuladorCidadaoRoute._addFileChildren(SimuladorCidadaoRouteChildren)
-
-interface SimuladorRouteChildren {
-  SimuladorCidadaoRoute: typeof SimuladorCidadaoRouteWithChildren
-  SimuladorRecepcaoRoute: typeof SimuladorRecepcaoRoute
-  SimuladorStatusApiRoute: typeof SimuladorStatusApiRoute
-  SimuladorIndexRoute: typeof SimuladorIndexRoute
-}
-
-const SimuladorRouteChildren: SimuladorRouteChildren = {
-  SimuladorCidadaoRoute: SimuladorCidadaoRouteWithChildren,
-  SimuladorRecepcaoRoute: SimuladorRecepcaoRoute,
-  SimuladorStatusApiRoute: SimuladorStatusApiRoute,
-  SimuladorIndexRoute: SimuladorIndexRoute,
-}
-
-const SimuladorRouteWithChildren = SimuladorRoute._addFileChildren(
-  SimuladorRouteChildren,
-)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  ContatoRoute: ContatoRoute,
-  FaqRoute: FaqRoute,
-  SimuladorRoute: SimuladorRouteWithChildren,
-  SobreRoute: SobreRoute,
-  SolucaoRoute: SolucaoRoute,
-  IntegrantesRmRoute: IntegrantesRmRoute,
-  IntegrantesIndexRoute: IntegrantesIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
