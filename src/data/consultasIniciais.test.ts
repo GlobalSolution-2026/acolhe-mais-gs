@@ -43,6 +43,7 @@ for (const data of ["2026-11-05T10:30:00", "2026-11-07T00:00:01", "2026-11-08T23
         expect(c.dsRiscoFalta).toBe(antecedencia >= 7 ? "ALTO" : "BAIXO");
         expect(c.vlProbFalta).toBeGreaterThanOrEqual(c.dsRiscoFalta === "ALTO" ? .5 : .05);
         expect(c.vlProbFalta).toBeLessThanOrEqual(c.dsRiscoFalta === "ALTO" ? .95 : .45);
+        if (c.dsStatus === "CONFIRMADA") { expect(c.dtConfirmacao).not.toBeNull(); expect(c.dsCanalConfirmacao).not.toBeNull(); }
         if (c.dtConfirmacao) {
           expect(new Date(c.dtConfirmacao).getTime()).toBeGreaterThanOrEqual(inicioPedidoConfirmacao(c)?.getTime() ?? Infinity);
           expect(new Date(c.dtConfirmacao).getTime()).toBeLessThanOrEqual(prazoConfirmacao(c)?.getTime() ?? -Infinity);
