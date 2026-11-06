@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { gerarHorariosIniciais } from "./horarios";
 import { gerarSemente } from "./consultasIniciais";
-import { chaveDia, listarDiasUnidade } from "@/lib/datas";
+import { chaveDia, ehDiaUtil, listarDiasUnidade } from "@/lib/datas";
 import { inicioPedidoConfirmacao, prazoConfirmacao, precisaConfirmar, temContatoValido } from "@/services/regrasAgendamento";
 
 for (const data of ["2026-11-05T10:30:00", "2026-11-07T00:00:01", "2026-11-08T23:30:00", "2026-11-06T23:52:00"]) {
@@ -9,11 +9,12 @@ for (const data of ["2026-11-05T10:30:00", "2026-11-07T00:00:01", "2026-11-08T23
     const agora = new Date(data);
     const horarios = gerarHorariosIniciais(agora);
     const s = gerarSemente(horarios, agora);
-    it("reproduz a mesma distribuição e inclui hoje, 8 dias passados e 10 futuros", () => {
+    it("reproduz a mesma distribuição, só com dias úteis: 8 passados, hoje (se útil) e 10 futuros", () => {
       expect(gerarSemente(horarios, agora)).toEqual(s);
-      expect(listarDiasUnidade(horarios, 1).length).toBeGreaterThanOrEqual(19);
-      expect(listarDiasUnidade(horarios, 1)).toContain(chaveDia(agora.toISOString()));
-      expect(horarios.length).toBe(listarDiasUnidade(horarios, 1).length * 3 * 7);
+      const hojeUtil = ehDiaUtil(agora);
+      expect(listarDiasUnidade(horarios, 1)).toHaveLength(hojeUtil ? 19 : 18);
+      if (hojeUtil) expect(listarDiasUnidade(horarios, 1)).toContain(chaveDia(agora.toISOString()));
+      expect(horarios.every((h) => ehDiaUtil(new Date(h.dtHorario)))).toBe(true);
     });
     it("nunca realizada/falta futura e unidade sempre preenchida", () => {
       for (const c of s.consultas) {

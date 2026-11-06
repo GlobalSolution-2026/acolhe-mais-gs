@@ -19,10 +19,10 @@ export function Sucesso({ cdConsulta }: { cdConsulta: number }) {
   }
 
   const explicacao = dispensadaConfirmacao(consulta)
-    ? "Como a consulta é em menos de 24 horas, você não precisa confirmar."
+    ? "Como a consulta foi marcada com menos de 1 dia útil de antecedência, você não precisa confirmar."
     : consulta.dsRiscoFalta === "ALTO"
-      ? "Vamos pedir a confirmação 72 horas antes, com um lembrete adicional. Confirme até 24 horas antes da consulta, senão a vaga é oferecida a outra pessoa."
-      : "Vamos pedir a confirmação 48 horas antes. Confirme até 24 horas antes da consulta, senão a vaga é oferecida a outra pessoa.";
+      ? "Vamos pedir a confirmação 3 dias úteis antes, com um lembrete adicional. Confirme até 1 dia útil antes da consulta, senão a vaga é oferecida a outra pessoa."
+      : "Vamos pedir a confirmação 2 dias úteis antes. Confirme até 1 dia útil antes da consulta, senão a vaga é oferecida a outra pessoa.";
 
   return (
     <div className="flex flex-col gap-4">

@@ -31,7 +31,7 @@ function estadoInicial(): EstadoSimulador {
   const semente = gerarSemente(gerarHorariosIniciais(agora), agora);
   return {
     dtSemente: chaveDia(agora.toISOString()),
-    versaoSemente: 2,
+    versaoSemente: 3,
     unidades: unidadesIniciais,
     horarios: semente.horarios,
     cidadaos: semente.cidadaos,
@@ -50,7 +50,7 @@ function lerStorage(): EstadoSimulador | null {
     const bruto = localStorage.getItem(CHAVE);
     if (!bruto) return null;
     const { perfil: _perfilAntigo, ...salvo } = JSON.parse(bruto) as Partial<EstadoSimulador> & { perfil?: unknown };
-    if (salvo.versaoSemente !== 2 || salvo.dtSemente !== chaveDia(new Date().toISOString())) return null;
+    if (salvo.versaoSemente !== 3|| salvo.dtSemente !== chaveDia(new Date().toISOString())) return null;
     return { ...estadoInicial(), ...salvo };
   } catch {
     return null;

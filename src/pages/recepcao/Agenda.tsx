@@ -32,7 +32,7 @@ export function Agenda() {
   const assinaturaDias = dias.join(",");
   useEffect(() => {
     const hoje = chaveDia(new Date().toISOString());
-    setDia(dias.includes(hoje) ? hoje : dias[0] ?? "");
+    setDia(dias.find((d) => d >= hoje) ?? dias[dias.length - 1] ?? "");
   }, [assinaturaDias, cdUnidade]);
 
   const horariosDia = useMemo(

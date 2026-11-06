@@ -6,35 +6,39 @@ import {
   ANTECEDENCIA_MINIMA_LISTA_DIA_MIN,
   ESCALA_DEMO_SEGUNDOS_POR_MIN,
   PRAZO_ACEITAR_OFERTA_MIN,
-  CONFIRMACAO_RISCO_ALTO_H,
-  CONFIRMACAO_RISCO_BAIXO_H,
-  PRAZO_FINAL_CONFIRMACAO_H,
+  CONFIRMACAO_RISCO_ALTO_DIAS_UTEIS,
+  CONFIRMACAO_RISCO_BAIXO_DIAS_UTEIS,
+  PRAZO_FINAL_CONFIRMACAO_DIAS_UTEIS,
 } from "@/data/configuracoes";
+import { subtrairDiasUteis } from "@/lib/datas";
 import type { Cidadao, Consulta, EntradaListaDoDia, OfertaVaga, Horario } from "@/types";
-
-const HORA_MS = 3_600_000;
 
 /** Contato válido: celular ou telefone de recado preenchido. */
 export function temContatoValido(c: Pick<Cidadao, "nrCelular" | "nrContatoRecado">): boolean {
   return Boolean(c.nrCelular.trim() || c.nrContatoRecado.trim());
 }
 
-/** Consultas marcadas com menos de 24 h de antecedência dispensam confirmação. */
-export function dispensadaConfirmacao(c: Pick<Consulta, "dtAgendamento" | "dtHorario">): boolean {
-  return new Date(c.dtHorario).getTime() - new Date(c.dtAgendamento).getTime() < PRAZO_FINAL_CONFIRMACAO_H * HORA_MS;
+/** Prazo final sem a regra de dispensa: 1 dia útil antes da consulta. */
+function prazoFinal(dtHorario: string): Date {
+  return subtrairDiasUteis(new Date(dtHorario), PRAZO_FINAL_CONFIRMACAO_DIAS_UTEIS);
 }
 
-/** Momento em que o pedido de confirmação é enviado: 48 h antes (BAIXO) ou 72 h antes com lembrete (ALTO). */
+/** Consultas marcadas depois do prazo final (menos de 1 dia útil de antecedência) dispensam confirmação. */
+export function dispensadaConfirmacao(c: Pick<Consulta, "dtAgendamento" | "dtHorario">): boolean {
+  return new Date(c.dtAgendamento) > prazoFinal(c.dtHorario);
+}
+
+/** Momento em que o pedido de confirmação é enviado: 2 dias úteis antes (BAIXO) ou 3 com lembrete (ALTO). */
 export function inicioPedidoConfirmacao(c: Pick<Consulta, "dtAgendamento" | "dtHorario" | "dsRiscoFalta">): Date | null {
   if (dispensadaConfirmacao(c)) return null;
-  const horas = c.dsRiscoFalta === "ALTO" ? CONFIRMACAO_RISCO_ALTO_H : CONFIRMACAO_RISCO_BAIXO_H;
-  return new Date(new Date(c.dtHorario).getTime() - horas * HORA_MS);
+  const dias = c.dsRiscoFalta === "ALTO" ? CONFIRMACAO_RISCO_ALTO_DIAS_UTEIS : CONFIRMACAO_RISCO_BAIXO_DIAS_UTEIS;
+  return subtrairDiasUteis(new Date(c.dtHorario), dias);
 }
 
-/** Prazo final para confirmar: 24 h antes da consulta. */
+/** Prazo final para confirmar: 1 dia útil antes da consulta. */
 export function prazoConfirmacao(c: Pick<Consulta, "dtAgendamento" | "dtHorario">): Date | null {
   if (dispensadaConfirmacao(c)) return null;
-  return new Date(new Date(c.dtHorario).getTime() - PRAZO_FINAL_CONFIRMACAO_H * HORA_MS);
+  return prazoFinal(c.dtHorario);
 }
 
 /** A consulta está na janela em que o cidadão precisa confirmar presença. */

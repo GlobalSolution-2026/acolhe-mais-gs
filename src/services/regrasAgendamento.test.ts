@@ -12,6 +12,7 @@ import {
   precisaConfirmar,
   temContatoValido,
 } from "./regrasAgendamento";
+import { ehDiaUtil, subtrairDiasUteis } from "@/lib/datas";
 
 const HORA = 3_600_000;
 const base = new Date("2026-11-10T12:00:00.000Z");
@@ -38,21 +39,39 @@ const comContato: Pick<Cidadao, "nrCelular" | "nrContatoRecado"> = { nrCelular: 
 const semContato: Pick<Cidadao, "nrCelular" | "nrContatoRecado"> = { nrCelular: "", nrContatoRecado: "" };
 
 describe("prazo de confirmação por risco", () => {
-  it("risco BAIXO: pedido 48 h antes e prazo final 24 h antes", () => {
-    const c = consulta({ dsRiscoFalta: "BAIXO" });
-    const horario = new Date(c.dtHorario).getTime();
-    expect(inicioPedidoConfirmacao(c)?.getTime()).toBe(horario - 48 * HORA);
-    expect(prazoConfirmacao(c)?.getTime()).toBe(horario - 24 * HORA);
+  it("risco BAIXO, consulta de terça: pedido na sexta (2 dias úteis) e prazo na segunda (1 dia útil)", () => {
+    const c = consulta({ dsRiscoFalta: "BAIXO", dtHorario: new Date("2026-11-17T09:00:00").toISOString() });
+    expect(inicioPedidoConfirmacao(c)?.getTime()).toBe(new Date("2026-11-13T09:00:00").getTime());
+    expect(prazoConfirmacao(c)?.getTime()).toBe(new Date("2026-11-16T09:00:00").getTime());
   });
 
-  it("risco ALTO: pedido 72 h antes (com lembrete) e prazo final 24 h antes", () => {
-    const c = consulta({ dsRiscoFalta: "ALTO" });
-    const horario = new Date(c.dtHorario).getTime();
-    expect(inicioPedidoConfirmacao(c)?.getTime()).toBe(horario - 72 * HORA);
-    expect(prazoConfirmacao(c)?.getTime()).toBe(horario - 24 * HORA);
+  it("risco ALTO, consulta de segunda: pedido na quarta (3 dias úteis, com lembrete) e prazo na sexta", () => {
+    const c = consulta({ dsRiscoFalta: "ALTO", dtHorario: new Date("2026-11-16T09:00:00").toISOString() });
+    expect(inicioPedidoConfirmacao(c)?.getTime()).toBe(new Date("2026-11-11T09:00:00").getTime());
+    expect(prazoConfirmacao(c)?.getTime()).toBe(new Date("2026-11-13T09:00:00").getTime());
   });
 
-  it("consulta marcada com menos de 24 h dispensa confirmação", () => {
+  it("nenhum pedido nem prazo cai no fim de semana", () => {
+    for (const dia of [16, 17, 18, 19, 20]) for (const risco of ["BAIXO", "ALTO"] as const) {
+      const c = consulta({ dsRiscoFalta: risco, dtHorario: new Date(`2026-11-${dia}T14:00:00`).toISOString() });
+      expect(ehDiaUtil(inicioPedidoConfirmacao(c) ?? new Date(0))).toBe(true);
+      expect(ehDiaUtil(prazoConfirmacao(c) ?? new Date(0))).toBe(true);
+    }
+  });
+
+  it("subtrairDiasUteis pula o fim de semana e mantém o horário", () => {
+    expect(subtrairDiasUteis(new Date("2026-11-16T09:00:00"), 1).getTime()).toBe(new Date("2026-11-13T09:00:00").getTime());
+    expect(subtrairDiasUteis(new Date("2026-11-18T15:30:00"), 3).getTime()).toBe(new Date("2026-11-13T15:30:00").getTime());
+    expect(subtrairDiasUteis(new Date("2026-11-13T09:00:00"), 0).getTime()).toBe(new Date("2026-11-13T09:00:00").getTime());
+  });
+
+  it("consulta marcada depois do prazo final dispensa confirmação (segunda 10:00 para terça 09:00)", () => {
+    const c = consulta({ dtAgendamento: new Date("2026-11-16T10:00:00").toISOString(), dtHorario: new Date("2026-11-17T09:00:00").toISOString() });
+    expect(dispensadaConfirmacao(c)).toBe(true);
+    expect(dispensadaConfirmacao({ ...c, dtAgendamento: new Date("2026-11-16T08:00:00").toISOString() })).toBe(false);
+  });
+
+  it("consulta marcada com menos de 1 dia útil de antecedência dispensa confirmação", () => {
     const c = consulta({
       dtAgendamento: base.toISOString(),
       dtHorario: new Date(base.getTime() + 12 * HORA).toISOString(),
@@ -64,9 +83,9 @@ describe("prazo de confirmação por risco", () => {
   });
 
   it("precisaConfirmar só dentro da janela entre o pedido e o prazo", () => {
-    const c = consulta({ dsRiscoFalta: "BAIXO" }); // horário daqui a 5 dias
-    const dentroDaJanela = new Date(new Date(c.dtHorario).getTime() - 30 * HORA);
-    const depoisDoPrazo = new Date(new Date(c.dtHorario).getTime() - 12 * HORA);
+    const c = consulta({ dsRiscoFalta: "BAIXO", dtHorario: new Date("2026-11-17T09:00:00").toISOString() }); // terça
+    const dentroDaJanela = new Date("2026-11-14T12:00:00"); // sábado, entre o pedido (sexta) e o prazo (segunda)
+    const depoisDoPrazo = new Date("2026-11-16T10:00:00");
     expect(precisaConfirmar(c, base)).toBe(false); // pedido ainda não enviado
     expect(precisaConfirmar(c, dentroDaJanela)).toBe(true);
     expect(precisaConfirmar(c, depoisDoPrazo)).toBe(false);

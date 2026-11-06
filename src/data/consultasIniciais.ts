@@ -1,7 +1,8 @@
 import type { Cidadao, Consulta, EntradaListaDoDia, Horario } from "@/types";
 import type { Orientacao } from "@/types/orientacao";
 import { unidadesIniciais } from "./unidades";
-import { chaveDia } from "@/lib/datas";
+import { CONFIRMACAO_RISCO_BAIXO_DIAS_UTEIS, PRAZO_FINAL_CONFIRMACAO_DIAS_UTEIS } from "./configuracoes";
+import { chaveDia, subtrairDiasUteis } from "@/lib/datas";
 import { inicioPedidoConfirmacao, prazoConfirmacao } from "@/services/regrasAgendamento";
 
 export interface Semente {
@@ -44,10 +45,14 @@ export function gerarSemente(horariosBase: Horario[], agora: Date = new Date()):
   const hoje = chaveDia(agora.toISOString());
   // Reservar pessoas para a lista de hoje: elas não recebem consultas hoje.
   const filaIds = [19, 20, 21, 22, 23, 24, 25, 26, 28, 30, 7, 8];
+  const naJanela = (dtHorario: string) =>
+    subtrairDiasUteis(new Date(dtHorario), CONFIRMACAO_RISCO_BAIXO_DIAS_UTEIS).getTime() <= now && !prazoPassou(dtHorario);
+  const prazoPassou = (dtHorario: string) => subtrairDiasUteis(new Date(dtHorario), PRAZO_FINAL_CONFIRMACAO_DIAS_UTEIS).getTime() < now;
   // Reservar quatro exemplos na janela por UBS, com ambos riscos e tipos de contato.
   const exemplos = new Map<number, { id: number; alto: boolean }>();
   for (const unidade of [1, 2, 3]) {
-    const slots = horarios.filter((h) => h.cdUnidade === unidade && new Date(h.dtHorario).getTime() >= now + 24 * H && new Date(h.dtHorario).getTime() <= now + 48 * H).slice(0, 4);
+    // Janela do risco BAIXO (de 2 dias úteis antes até 1 dia útil antes); vale também para o ALTO.
+    const slots = horarios.filter((h) => h.cdUnidade === unidade && naJanela(h.dtHorario)).slice(0, 4);
     const ids = unidade === 1 ? [3, 33, 1, 4] : unidade === 2 ? [27, 37, 2, 5] : [29, 39, 6, 9];
     slots.forEach((h, i) => exemplos.set(h.cdHorario, { id: ids[i] ?? 1, alto: i % 2 === 0 }));
   }
@@ -83,7 +88,7 @@ export function gerarSemente(horariosBase: Horario[], agora: Date = new Date()):
     const t = new Date(h.dtHorario).getTime(), delta = t - now;
     const exemplo = exemplos.get(h.cdHorario);
     const liberarPassada = delta < 0 && reutilizadas < 6 && h.cdUnidade === 1;
-    const ocupar = !livresHoje.has(h.cdHorario) && (exemplo || liberarPassada || rand() < (delta < 0 ? .9 : delta <= 24 * H ? .96 : .85));
+    const ocupar = !livresHoje.has(h.cdHorario) && (exemplo || liberarPassada || rand() < (delta < 0 ? .9 : prazoPassou(h.dtHorario) ? .96 : .85));
     if (!ocupar) continue;
     let candidatos = cidadaos.filter((c) => chaveDia(h.dtHorario) !== hoje || !filaIds.includes(c.cdCidadao));
     const dia = chaveDia(h.dtHorario);
@@ -92,8 +97,8 @@ export function gerarSemente(horariosBase: Horario[], agora: Date = new Date()):
     if (!pessoa) continue;
     const id = exemplo?.id ?? pessoa.cdCidadao;
     const alto = exemplo?.alto ?? rand() < .45;
-    const curta = delta >= 0 && delta < 24 * H && rand() < .15;
-    const status: Consulta["dsStatus"] = exemplo ? "AGENDADA" : delta < 0 ? (rand() < (alto ? .32 : .13) ? "FALTA" : "REALIZADA") : delta < 24 * H ? (curta ? "AGENDADA" : "CONFIRMADA") : delta <= 72 * H ? (rand() < .65 ? "AGENDADA" : "CONFIRMADA") : "AGENDADA";
+    const curta = delta >= 0 && prazoPassou(h.dtHorario) && rand() < .15;
+    const status: Consulta["dsStatus"] = exemplo ? "AGENDADA" : delta < 0 ? (rand() < (alto ? .32 : .13) ? "FALTA" : "REALIZADA") : prazoPassou(h.dtHorario) ? (curta ? "AGENDADA" : "CONFIRMADA") : naJanela(h.dtHorario) ? (rand() < .65 ? "AGENDADA" : "CONFIRMADA") : "AGENDADA";
     if (liberarPassada) {
       const perdida = criar(h, id, "LIBERADA", true);
       if (reutilizadas < 4) {

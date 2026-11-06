@@ -29,7 +29,7 @@ function CardConsulta({ consulta, onConfirmar, confirmando }: { consulta: Consul
       </div>
       <p className="flex items-center gap-2 font-bold"><FiMapPin className="shrink-0" />{consulta.nmUnidade}</p>
       <p className="font-semibold">{fmtDiaHora(consulta.dtHorario)}</p>
-      {consulta.dsStatus === "AGENDADA" && dispensadaConfirmacao(consulta) && <p className="text-sm">Não precisa confirmar: consulta marcada com menos de 24 h.</p>}
+      {consulta.dsStatus === "AGENDADA" && dispensadaConfirmacao(consulta) && <p className="text-sm">Não precisa confirmar: consulta marcada com menos de 1 dia útil de antecedência.</p>}
       {consulta.dsStatus === "AGENDADA" && inicio && prazo && new Date() < inicio && <p className="text-sm">
         Vamos pedir a confirmação em {fmtDiaHora(inicio.toISOString(), false)}. Você terá até {fmtDiaHora(prazo.toISOString(), false)} para confirmar.
       </p>}

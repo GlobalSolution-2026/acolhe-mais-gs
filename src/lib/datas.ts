@@ -21,6 +21,22 @@ export function fmtDiaHora(iso: string, abreFrase = true): string {
   return `${fmtDia(iso, abreFrase)} às ${fmtHora(iso)}`;
 }
 
+/** Segunda a sexta. */
+export function ehDiaUtil(data: Date): boolean {
+  return data.getDay() !== 0 && data.getDay() !== 6;
+}
+
+/** Volta N dias úteis a partir da data, mantendo o horário (ex.: seg. 09:00 menos 1 = sex. 09:00). */
+export function subtrairDiasUteis(data: Date, quantidade: number): Date {
+  const resultado = new Date(data);
+  let restantes = quantidade;
+  while (restantes > 0) {
+    resultado.setDate(resultado.getDate() - 1);
+    if (ehDiaUtil(resultado)) restantes--;
+  }
+  return resultado;
+}
+
 /** Chave de dia (aaaa-mm-dd) para agrupar horários. */
 export function chaveDia(iso: string): string {
   const d = new Date(iso);

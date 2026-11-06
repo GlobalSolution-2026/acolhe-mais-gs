@@ -68,7 +68,7 @@ describe("simulação do prazo", () => {
     const e = estado(); e.listaDoDia = [];
     expect(simularPrazo(e, agora).resumo).toMatchObject({ vagasOferecidas: 0, vagasDeVoltaNaAgenda: 2 });
   });
-  it("confirmada e marcada em menos de 24 horas são mantidas", () => {
+  it("confirmada e marcada com menos de 1 dia útil de antecedência são mantidas", () => {
     const e = estado(); e.consultas = e.consultas.map((c, i) => i === 0 ? { ...c, dsStatus: "CONFIRMADA" } : { ...c, dtAgendamento: iso(47) });
     expect(simularPrazo(e, agora).resumo.consultasLiberadas).toBe(0);
   });
