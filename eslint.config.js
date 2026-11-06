@@ -37,4 +37,6 @@ export default tseslint.config(
     },
   },
   eslintPluginPrettier,
+  // O Lovable gera código sem passar pelo Prettier; formatação não é erro de lint.
+  { rules: { "prettier/prettier": "off" } },
 );
