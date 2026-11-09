@@ -66,13 +66,26 @@ export interface ResultadoFinal extends ResultadoOrientacao {
   flElevadaModelo: boolean;
 }
 
+export interface EnderecoCep {
+  dsLogradouro: string;
+  dsBairro: string;
+  nmCidade: string;
+  sgUf: string;
+}
+
 export interface OrientacaoEmAndamento {
   cdQueixa: CodigoQueixa;
   nrCep: string;
+  /** Dados do ViaCEP; ausentes se a consulta falhou (o CEP sozinho basta). */
+  endereco?: EnderecoCep | null;
+  nrEndereco?: string;
+  dsComplemento?: string;
   respostas: Respostas;
   ordem: string[];
   resultado: ResultadoFinal | null;
 }
+
+export type LocalOrientacao = Pick<OrientacaoEmAndamento, "endereco" | "nrEndereco" | "dsComplemento">;
 
 export interface VerificacaoUrgenciaEntrada {
   idade: number;

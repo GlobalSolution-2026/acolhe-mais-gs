@@ -9,6 +9,7 @@ import { useSimulador } from "@/context/SimuladorContext";
 import { obterQueixa } from "@/data/queixas";
 import { orientacoesUbs } from "@/data/orientacoesUbs";
 import { listarUnidades } from "@/services/api";
+import { enderecoParaLigacao } from "@/services/cep";
 import { concluirOrientacao, upaMaisProxima } from "@/services/orientacao";
 import type { Unidade } from "@/types";
 import type { OrientacaoEmAndamento, ResultadoFinal } from "@/types/orientacao";
@@ -31,7 +32,7 @@ function Vermelho({ atual, res }: { atual: OrientacaoEmAndamento; res: Resultado
       <a href="tel:192" className="btn min-h-14 bg-gravidade-vermelho text-xl text-branco"><FiPhoneCall /> Ligar para o 192</a>
       <section className="flex flex-col gap-3 rounded-[12px] border border-borda bg-branco p-4">
         <h2 className="text-lg font-extrabold text-primaria">O que falar na ligação</h2>
-        <p><strong>Endereço:</strong> CEP {atual.nrCep}</p>
+        <p><strong>Endereço:</strong> {enderecoParaLigacao(atual.nrCep, atual)}</p>
         <div className="flex flex-col gap-1">
           <label htmlFor="ref" className="font-semibold">Ponto de referência</label>
           <input id="ref" value={referencia} onChange={(e) => setReferencia(e.target.value.slice(0, 120))}

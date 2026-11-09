@@ -217,6 +217,9 @@ export async function verificarUrgencia(dados: VerificacaoUrgenciaEntrada): Prom
   return { urgente: dados.nrDor >= 7 && dados.idade >= 65 };
 }
 
+// GET viacep.com.br/ws/{cep}/json/ (API externa, chamada real pelo front)
+export { buscarEndereco } from "./cep";
+
 /** DEMONSTRAÇÃO: valida o aceite e utiliza o endpoint Java de agendamento. */
 export async function aceitarOfertaPorTelefone(cdOferta: number): Promise<Consulta> {
   const e = getStore().obterEstado();

@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import type { Cidadao, Consulta, EntradaListaDoDia, Horario, OfertaVaga, Unidade } from "@/types";
-import type { CodigoQueixa, Orientacao, OrientacaoEmAndamento, Resposta, ResultadoFinal } from "@/types/orientacao";
+import type { CodigoQueixa, LocalOrientacao, Orientacao, OrientacaoEmAndamento, Resposta, ResultadoFinal } from "@/types/orientacao";
 import { unidadesIniciais } from "@/data/unidades";
 import { gerarHorariosIniciais } from "@/data/horarios";
 import { gerarSemente } from "@/data/consultasIniciais";
@@ -72,7 +72,7 @@ interface SimuladorValor {
   atualizarEstado: (fn: (atual: EstadoSimulador) => EstadoSimulador) => void;
   reiniciarDemonstracao: () => void;
   selecionarUnidadeRecepcao: (cdUnidade: number) => void;
-  iniciarOrientacao: (cdQueixa: CodigoQueixa, nrCep: string) => void;
+  iniciarOrientacao: (cdQueixa: CodigoQueixa, nrCep: string, local?: LocalOrientacao) => void;
   trocarQueixa: (cdQueixa: CodigoQueixa) => void;
   responder: (codigo: string, valor: Resposta) => void;
   voltarPergunta: () => void;
@@ -142,8 +142,8 @@ export function SimuladorProvider({ children }: { children: ReactNode }) {
   );
 
   const iniciarOrientacao = useCallback(
-    (cdQueixa: CodigoQueixa, nrCep: string) =>
-      atualizarEstado((e) => ({ ...e, orientacaoAtual: { cdQueixa, nrCep, respostas: {}, ordem: [], resultado: null } })),
+    (cdQueixa: CodigoQueixa, nrCep: string, local: LocalOrientacao = {}) =>
+      atualizarEstado((e) => ({ ...e, orientacaoAtual: { cdQueixa, nrCep, ...local, respostas: {}, ordem: [], resultado: null } })),
     [atualizarEstado],
   );
 
