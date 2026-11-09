@@ -2,7 +2,7 @@ import { Link, Outlet, useLocation, type LinkProps } from "@tanstack/react-route
 import { useState, type ReactNode } from "react";
 import type { IconType } from "react-icons";
 import {
-  FiBell, FiChevronLeft, FiX,
+  FiBell, FiChevronLeft, FiRepeat, FiX,
 } from "react-icons/fi";
 import { useSimulador } from "@/context/SimuladorContext";
 import { rotaPai } from "@/services/navegacao";
@@ -67,10 +67,11 @@ export function LayoutCompartilhado({ cidadao, barra }: { cidadao: boolean; barr
           <span className="text-xl font-extrabold">Acolhe<span className="text-menta">+</span></span>
           <button
             onClick={() => setDemoAberto(true)}
-            className="ml-2 rounded-full bg-menta px-3 py-1 text-xs font-extrabold text-primariaEscura"
-            aria-label="Perfil atual — abrir modo demonstração"
+            className="ml-2 flex items-center gap-1 rounded-full bg-menta px-3 py-1 text-xs font-extrabold text-primariaEscura"
+            aria-label="Perfil atual — trocar de perfil (modo demonstração)"
           >
             {cidadao ? "Cidadão" : "Recepção UBS"}
+            <FiRepeat size={12} aria-hidden />
           </button>
           <Link
             to={cidadao ? "/cidadao/avisos" : "/recepcao/pendentes"}
