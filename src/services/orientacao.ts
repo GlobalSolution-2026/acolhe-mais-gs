@@ -4,6 +4,11 @@ import type { CodigoQueixa, Respostas, ResultadoFinal } from "@/types/orientacao
 import { salvarOrientacao, verificarUrgencia } from "./api";
 import { calcularOrientacao, DESTINO_POR_COR } from "./regrasOrientacao";
 
+const SINAIS_ESTADO_MENTAL = ["P4", "D3a", "C3", "U1"];
+
+/** Falso se alguma pergunta de confusão, sonolência ou desmaio foi respondida com Sim. */
+export const estadoMentalAlerta = (r: Respostas): boolean => !SINAIS_ESTADO_MENTAL.some((c) => r[c] === "SIM");
+
 /** Aplica as regras, chama a verificação de IA (só eleva) e salva a orientação. */
 export async function concluirOrientacao(queixa: CodigoQueixa, respostas: Respostas): Promise<ResultadoFinal> {
   const regras = calcularOrientacao(queixa, respostas);
@@ -18,7 +23,7 @@ export async function concluirOrientacao(queixa: CodigoQueixa, respostas: Respos
       sexo,
       trauma: respostas["C5"] === "SIM",
       nrDor: nrDor ?? 0,
-      estadoMentalAlerta: !["P4", "D3", "C3", "U1"].some((c) => respostas[c] === "SIM"),
+      estadoMentalAlerta: estadoMentalAlerta(respostas),
     });
     if (urgente) {
       dsCor = "AMARELO";

@@ -17,9 +17,14 @@ describe("Síndrome gripal", () => {
   it("VERDE direto para 60+", () => {
     expect(calcularOrientacao("GRIPAL", perfil({ PF2: 65 })).dsCor).toBe("VERDE");
   });
-  it("VERDE com comorbidade, AZUL sem febre", () => {
+  it("VERDE com comorbidade; sem comorbidade, febre na P0 decide VERDE ou AZUL", () => {
     expect(calcularOrientacao("GRIPAL", perfil({ P9: "SIM" })).dsCor).toBe("VERDE");
-    expect(calcularOrientacao("GRIPAL", perfil({ P9: "NAO", P10: "NAO" }))).toMatchObject({ dsCor: "AZUL", dsDestino: "UBS" });
+    expect(calcularOrientacao("GRIPAL", perfil({ P0: ["FEBRE", "TOSSE"], P9: "NAO" })).dsCor).toBe("VERDE");
+    expect(calcularOrientacao("GRIPAL", perfil({ P0: ["TOSSE", "CORIZA"], P9: "NAO" }))).toMatchObject({ dsCor: "AZUL", dsDestino: "UBS" });
+  });
+  it("não pergunta febre de novo depois da P9", () => {
+    const r = perfil({ P0: ["TOSSE", "CORIZA"], P1: "NAO", P2: "NAO", P3: "NAO", P4: "NAO", P5: "NAO", P6: "NAO", P7: "NAO", P8: "NAO", P9: "NAO" });
+    expect(proximoPasso("GRIPAL", r).tipo).toBe("RESULTADO");
   });
   it("menor de 18 encerra o fluxo", () => {
     expect(proximoPasso("GRIPAL", { PF1: "PARA_MIM", PF2: 15 }).tipo).toBe("MENOR_IDADE");
@@ -110,7 +115,7 @@ describe("Perfil: sexo e gestação", () => {
 
   it("grupo de risco leva a VERDE na gripe e na urina", () => {
     expect(calcularOrientacao("GRIPAL", perfil({ PF3: "GRAVIDA_ATE_5M" })).dsCor).toBe("VERDE");
-    expect(calcularOrientacao("GRIPAL", perfil({ PF3: "POS_PARTO_6SEM", P9: "NAO", P10: "NAO" })).dsCor).toBe("AZUL");
+    expect(calcularOrientacao("GRIPAL", perfil({ PF3: "POS_PARTO_6SEM", P9: "NAO" })).dsCor).toBe("AZUL");
     const urina = perfil({ U2: "NAO", U3: "NAO", U4: "NAO", U7: "NAO" });
     expect(calcularOrientacao("URINA", { ...urina, PF3: "POS_PARTO_2SEM" }).dsCor).toBe("VERDE");
     expect(calcularOrientacao("URINA", { ...urina, PF3: "POS_PARTO_6SEM" }).dsCor).toBe("AZUL");
@@ -199,6 +204,19 @@ describe("Instabilidade e prioridade dos alarmes", () => {
       : perfil({ D3a: "NAO", D5: "NAO", D1: "SIM", D2: "NAO", D3b: "NAO" });
     expect(proximoPasso(queixa, r)).toMatchObject({ tipo: "PERGUNTA", pergunta: { codigo: "INST" } });
     for (const inst of ["NAO", "SIM", "NAO_SEI"]) expect(proximoPasso(queixa, { ...r, INST: inst }).tipo).toBe("RESULTADO");
+  });
+  it.each([
+    ["GRIPAL", perfil({ P0: ["FEBRE", "TOSSE"], P1: "NAO", P2: "NAO", P3: "NAO", P4: "NAO", P5: "SIM" }),
+      "Além disso, está com tontura forte ou com a pele fria e muito pálida?", "Tontura forte ou pele fria e muito pálida"],
+    ["DIARREIA", perfil({ D3a: "NAO", D5: "NAO", D1: "SIM", D2: "NAO", D3b: "NAO" }),
+      "Além disso, está com tontura forte, a ponto de quase desmaiar ao ficar de pé?", "Tontura forte ao ficar de pé"],
+  ] as const)("%s usa o texto e o sinal próprios da INST", (queixa, r, texto, sinalInst) => {
+    expect(proximoPasso(queixa, r)).toMatchObject({ pergunta: { codigo: "INST", dsPergunta: texto } });
+    expect(calcularOrientacao(queixa, { ...r, INST: "SIM" }).sinaisMarcados).toContain(sinalInst);
+  });
+  it.each(["GRIPAL", "GARGANTA", "DIARREIA", "CABECA", "URINA"] as const)("códigos únicos nas perguntas de %s", (queixa) => {
+    const codigos = perguntasDaQueixa(queixa).map((p) => p.codigo);
+    expect(new Set(codigos).size).toBe(codigos.length);
   });
   it("INST não aparece sem sinal elegível", () => {
     expect(proximoPasso("DIARREIA", perfil({ D3a: "NAO", D5: "NAO", D1: "NAO", D2: "NAO", D3b: "NAO" })))

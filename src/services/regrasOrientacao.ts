@@ -37,8 +37,10 @@ function precisaInstabilidade(queixa: CodigoQueixa, r: Respostas): boolean {
     (queixa === "DIARREIA" && (["D1", "D2", "D3b"].some((c) => sim(r, c)) || entre(num(r, "DOR"), 8, 10)));
 }
 
-function sinal(codigo: string): string {
-  const p = perguntas.find((x) => x.codigo === codigo);
+/** Busca a pergunta comum ou a da queixa (a INST tem uma versão por queixa). */
+function sinal(codigo: string, queixa: CodigoQueixa): string {
+  const cd = obterQueixa(queixa).cdQueixa;
+  const p = perguntas.find((x) => x.codigo === codigo && (x.cdQueixa === null || x.cdQueixa === cd));
   return p?.dsSinal ?? p?.dsPergunta ?? codigo;
 }
 
@@ -49,13 +51,13 @@ export function calcularOrientacao(queixa: CodigoQueixa, respostas: Respostas): 
   const sinais: string[] = [];
   const marcar = (codigos: string[], teste: (c: string) => boolean) => {
     const marcados = codigos.filter(teste);
-    marcados.forEach((c) => sinais.push(sinal(c)));
+    marcados.forEach((c) => sinais.push(sinal(c, queixa)));
     return marcados.length > 0;
   };
   const fim = (dsCor: Cor): ResultadoOrientacao => ({ dsCor, dsDestino: DESTINO_POR_COR[dsCor], sinaisMarcados: sinais });
   const comInstabilidade = (): ResultadoOrientacao => {
     if (simOuNaoSei(r, "INST")) {
-      sinais.push(sinal("INST"));
+      sinais.push(sinal("INST", queixa));
       return fim("VERMELHO");
     }
     return fim("LARANJA");
@@ -68,7 +70,8 @@ export function calcularOrientacao(queixa: CodigoQueixa, respostas: Respostas): 
       if (marcar(["P6", "P7", "P8", "P8a", "P8b"], (c) => simOuNaoSei(r, c))) return fim("AMARELO");
       if (idade >= 60 || grupoRiscoGestacao(r)) return fim("VERDE");
       if (simOuNaoSei(r, "P9")) return fim("VERDE");
-      return fim(sim(r, "P10") ? "VERDE" : "AZUL");
+      const febre = Array.isArray(r["P0"]) && r["P0"].includes("FEBRE");
+      return fim(febre ? "VERDE" : "AZUL");
     }
     case "GARGANTA": {
       if (marcar(["G1"], (c) => sim(r, c))) return fim("VERMELHO");
@@ -104,7 +107,7 @@ export function calcularOrientacao(queixa: CodigoQueixa, respostas: Respostas): 
       const dorForte = entre(dor, 8, 10);
       if (dorForte) sinais.push(`Dor muito forte (nota ${dor})`);
       const combinada = simOuNaoSei(r, "U2") && sim(r, "U3");
-      if (combinada) sinais.push(sinal("U2"), sinal("U3"));
+      if (combinada) sinais.push(sinal("U2", queixa), sinal("U3", queixa));
       if (u4 || dorForte || combinada) return fim("AMARELO");
       const verde = sim(r, "U3") || grupoRiscoGestacao(r) || idade >= 60 || r["SX"] === "M" || simOuNaoSei(r, "U7");
       return fim(verde ? "VERDE" : "AZUL");

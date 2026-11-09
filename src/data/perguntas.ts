@@ -57,7 +57,9 @@ export const perguntas: Pergunta[] = [
   }),
   q(null, "DOR", 4, "PERFIL", "ESCALA_DOR", "De 0 a 10, qual a nota da dor principal agora? (0 = sem dor)"),
 
-  q(null, "INST", 1000, "LARANJA", SNS, "Além disso, está com tontura forte ou desmaiou, confuso, com falta de ar ou com a pele fria e muito pálida?", { cor: "VERMELHO", sinal: "Tontura forte, desmaio, confusão, falta de ar ou pele fria e muito pálida" }),
+  // INST: uma versão por queixa, perguntando só o que os alarmes anteriores não cobriram.
+  q(GRIPAL, "INST", 1000, "LARANJA", SNS, "Além disso, está com tontura forte ou com a pele fria e muito pálida?", { cor: "VERMELHO", sinal: "Tontura forte ou pele fria e muito pálida" }),
+  q(DIARREIA, "INST", 1000, "LARANJA", SNS, "Além disso, está com tontura forte, a ponto de quase desmaiar ao ficar de pé?", { cor: "VERMELHO", sinal: "Tontura forte ao ficar de pé" }),
 
   // SÍNDROME GRIPAL
   q(GRIPAL, "P0", 10, "ENTRADA", "MULTIPLA", "Quais destes sintomas {voce} tem?", {
@@ -90,7 +92,6 @@ export const perguntas: Pergunta[] = [
       { tipo: "RESPOSTA_DIFERENTE", codigo: "PF3", valor: "GRAVIDA_5M_MAIS" },
       { tipo: "RESPOSTA_DIFERENTE", codigo: "PF3", valor: "POS_PARTO_2SEM" },
     ] } }),
-  q(GRIPAL, "P10", 22, "CLASSIFICACAO", SN, "{Voce} está com febre?", { cor: "VERDE", cond: { tipo: "RESPOSTA_EM", codigo: "P9", valores: ["NAO"] } }),
 
   // DOR DE GARGANTA
   q(GARGANTA, "G0", 30, "ENTRADA", SN, "Além da dor de garganta, {voce} está com tosse ou coriza?"),
