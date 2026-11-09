@@ -24,6 +24,14 @@ const simOuNaoSei = (r: Respostas, c: string) => sim(r, c) || r[c] === "NAO_SEI"
 const num = (r: Respostas, c: string): number | null => (typeof r[c] === "number" ? (r[c] as number) : null);
 const entre = (v: number | null, min: number, max: number) => v !== null && v >= min && v <= max;
 
+/** Gestação ou pós-parto recente: grupo de risco para gripe e infecção urinária. */
+export const grupoRiscoGestacao = (r: Respostas): boolean =>
+  ["GRAVIDA_ATE_5M", "GRAVIDA_5M_MAIS", "POS_PARTO_2SEM"].includes(String(r["PF3"]));
+
+/** Gravidez a partir de 5 meses ou pós-parto até 6 semanas: alarme na dor de cabeça. */
+export const alarmeGestacaoCabeca = (r: Respostas): boolean =>
+  ["GRAVIDA_5M_MAIS", "POS_PARTO_2SEM", "POS_PARTO_6SEM"].includes(String(r["PF3"]));
+
 function precisaInstabilidade(queixa: CodigoQueixa, r: Respostas): boolean {
   return (queixa === "GRIPAL" && sim(r, "P5")) ||
     (queixa === "DIARREIA" && (["D1", "D2", "D3b"].some((c) => sim(r, c)) || entre(num(r, "DOR"), 8, 10)));
@@ -58,7 +66,7 @@ export function calcularOrientacao(queixa: CodigoQueixa, respostas: Respostas): 
       if (marcar(["P1", "P2", "P3", "P4"], (c) => sim(r, c))) return fim("VERMELHO");
       if (marcar(["P5"], (c) => sim(r, c))) return comInstabilidade();
       if (marcar(["P6", "P7", "P8", "P8a", "P8b"], (c) => simOuNaoSei(r, c))) return fim("AMARELO");
-      if (idade >= 60 || sim(r, "PF3")) return fim("VERDE");
+      if (idade >= 60 || grupoRiscoGestacao(r)) return fim("VERDE");
       if (simOuNaoSei(r, "P9")) return fim("VERDE");
       return fim(sim(r, "P10") ? "VERDE" : "AZUL");
     }
@@ -84,7 +92,10 @@ export function calcularOrientacao(queixa: CodigoQueixa, respostas: Respostas): 
     case "CABECA": {
       if (marcar(["C1", "C2", "C3", "C4"], (c) => sim(r, c))) return fim("VERMELHO");
       if (marcar(["C5"], (c) => sim(r, c))) return fim("LARANJA");
-      if (marcar(["C6", "C7", "C8", "C9", "C10"], (c) => simOuNaoSei(r, c))) return fim("AMARELO");
+      const urg = marcar(["C6", "C7", "C8", "C9"], (c) => simOuNaoSei(r, c));
+      const gestacao = alarmeGestacaoCabeca(r);
+      if (gestacao) sinais.push("Gravidez avançada ou pós-parto");
+      if (urg || gestacao) return fim("AMARELO");
       return fim(entre(dor, 5, 7) || sim(r, "C11") ? "VERDE" : "AZUL");
     }
     case "URINA": {
@@ -95,7 +106,7 @@ export function calcularOrientacao(queixa: CodigoQueixa, respostas: Respostas): 
       const combinada = simOuNaoSei(r, "U2") && sim(r, "U3");
       if (combinada) sinais.push(sinal("U2"), sinal("U3"));
       if (u4 || dorForte || combinada) return fim("AMARELO");
-      const verde = sim(r, "U3") || sim(r, "PF3") || idade >= 60 || r["U6"] === "M" || simOuNaoSei(r, "U7");
+      const verde = sim(r, "U3") || grupoRiscoGestacao(r) || idade >= 60 || r["SX"] === "M" || simOuNaoSei(r, "U7");
       return fim(verde ? "VERDE" : "AZUL");
     }
   }

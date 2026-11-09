@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { calcularOrientacao, perguntasDaQueixa, proximoPasso } from "./regrasOrientacao";
+import {
+  alarmeGestacaoCabeca, calcularOrientacao, grupoRiscoGestacao, perguntasDaQueixa, proximoPasso,
+} from "./regrasOrientacao";
 import type { CodigoQueixa, Respostas } from "@/types/orientacao";
 
-const perfil = (extra: Respostas = {}): Respostas => ({ PF1: "PARA_MIM", PF2: 30, PF3: "NAO", DOR: 2, ...extra });
+const perfil = (extra: Respostas = {}): Respostas => ({ PF1: "PARA_MIM", PF2: 30, SX: "F", PF3: "NAO", DOR: 2, ...extra });
 
 describe("Síndrome gripal", () => {
   it("VERMELHO/SAMU com falta de ar", () => {
@@ -73,7 +75,7 @@ describe("Dor de cabeça", () => {
 });
 
 describe("Ardência ao urinar", () => {
-  const base = perfil({ PF3: "NAO_SE_APLICA", U6: "F", U7: "NAO" });
+  const base = perfil({ U7: "NAO" });
   it("VERMELHO com confusão", () => {
     expect(calcularOrientacao("URINA", perfil({ U1: "SIM" })).dsCor).toBe("VERMELHO");
   });
@@ -85,8 +87,62 @@ describe("Ardência ao urinar", () => {
     expect(calcularOrientacao("URINA", { ...base, U2: "SIM", U3: "NAO" }).dsCor).toBe("AZUL");
   });
   it("VERDE para sexo masculino, AZUL para mulher jovem sem riscos", () => {
-    expect(calcularOrientacao("URINA", { ...base, U2: "NAO", U3: "NAO", U6: "M" }).dsCor).toBe("VERDE");
+    expect(calcularOrientacao("URINA", { ...base, U2: "NAO", U3: "NAO", SX: "M" }).dsCor).toBe("VERDE");
     expect(calcularOrientacao("URINA", { ...base, U2: "NAO", U3: "NAO", U4: "NAO" }).dsCor).toBe("AZUL");
+  });
+});
+
+describe("Perfil: sexo e gestação", () => {
+  const VALORES_PF3 = ["GRAVIDA_ATE_5M", "GRAVIDA_5M_MAIS", "POS_PARTO_2SEM", "POS_PARTO_6SEM", "NAO", undefined];
+  it.each([
+    ["GRAVIDA_ATE_5M", true, false],
+    ["GRAVIDA_5M_MAIS", true, true],
+    ["POS_PARTO_2SEM", true, true],
+    ["POS_PARTO_6SEM", false, true],
+    ["NAO", false, false],
+    [undefined, false, false],
+  ] as const)("PF3 = %s → grupoRisco %s, alarmeCabeca %s", (pf3, risco, alarme) => {
+    const r = perfil({ PF3: pf3 as string });
+    if (pf3 === undefined) delete r["PF3"];
+    expect(grupoRiscoGestacao(r)).toBe(risco);
+    expect(alarmeGestacaoCabeca(r)).toBe(alarme);
+  });
+
+  it("grupo de risco leva a VERDE na gripe e na urina", () => {
+    expect(calcularOrientacao("GRIPAL", perfil({ PF3: "GRAVIDA_ATE_5M" })).dsCor).toBe("VERDE");
+    expect(calcularOrientacao("GRIPAL", perfil({ PF3: "POS_PARTO_6SEM", P9: "NAO", P10: "NAO" })).dsCor).toBe("AZUL");
+    const urina = perfil({ U2: "NAO", U3: "NAO", U4: "NAO", U7: "NAO" });
+    expect(calcularOrientacao("URINA", { ...urina, PF3: "POS_PARTO_2SEM" }).dsCor).toBe("VERDE");
+    expect(calcularOrientacao("URINA", { ...urina, PF3: "POS_PARTO_6SEM" }).dsCor).toBe("AZUL");
+  });
+
+  it("gravidez avançada ou pós-parto leva a AMARELO na dor de cabeça", () => {
+    expect(calcularOrientacao("CABECA", perfil({ PF3: "POS_PARTO_6SEM" }))).toMatchObject({
+      dsCor: "AMARELO",
+      sinaisMarcados: ["Gravidez avançada ou pós-parto"],
+    });
+    expect(calcularOrientacao("CABECA", perfil({ PF3: "GRAVIDA_ATE_5M", C11: "NAO" })).dsCor).toBe("AZUL");
+  });
+
+  it("PF3 aparece depois da SX só para mulheres até 55 anos", () => {
+    const base = { PF1: "PARA_MIM", PF2: 30 };
+    expect(proximoPasso("GRIPAL", base)).toMatchObject({ tipo: "PERGUNTA", pergunta: { codigo: "SX" } });
+    expect(proximoPasso("GRIPAL", { ...base, SX: "F" })).toMatchObject({ tipo: "PERGUNTA", pergunta: { codigo: "PF3" } });
+    expect(proximoPasso("GRIPAL", { ...base, PF2: 55, SX: "F" })).toMatchObject({ pergunta: { codigo: "PF3" } });
+    expect(proximoPasso("GRIPAL", { ...base, PF2: 56, SX: "F" })).toMatchObject({ pergunta: { codigo: "DOR" } });
+    expect(proximoPasso("GRIPAL", { ...base, SX: "M" })).toMatchObject({ pergunta: { codigo: "DOR" } });
+  });
+
+  it.each(VALORES_PF3)("P9 fica escondida exatamente para o grupo de risco (PF3 = %s)", (pf3) => {
+    const r = perfil({ P0: ["FEBRE", "TOSSE"], P1: "NAO", P2: "NAO", P3: "NAO", P4: "NAO", P5: "NAO", P6: "NAO", P7: "NAO", P8: "NAO" });
+    if (pf3 === undefined) {
+      // PF3 não perguntada (sexo masculino).
+      delete r["PF3"];
+      r["SX"] = "M";
+    } else r["PF3"] = pf3;
+    const passo = proximoPasso("GRIPAL", r);
+    if (grupoRiscoGestacao(r)) expect(passo.tipo).toBe("RESULTADO");
+    else expect(passo).toMatchObject({ tipo: "PERGUNTA", pergunta: { codigo: "P9" } });
   });
 });
 

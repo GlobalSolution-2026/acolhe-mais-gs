@@ -42,8 +42,18 @@ export const perguntas: Pergunta[] = [
     opcoes: [{ valor: "PARA_MIM", rotulo: "Para mim" }, { valor: "OUTRA_PESSOA", rotulo: "Para outra pessoa" }],
   }),
   q(null, "PF2", 2, "PERFIL", "NUMERO", "Qual a idade?"),
-  q(null, "PF3", 3, "PERFIL", "OPCOES", "Está grávida, ou teve bebê ou perdeu uma gestação nas últimas 2 semanas?", {
-    opcoes: [{ valor: "SIM", rotulo: "Sim" }, { valor: "NAO", rotulo: "Não" }, { valor: "NAO_SE_APLICA", rotulo: "Não se aplica" }],
+  q(null, "SX", 2.5, "PERFIL", "OPCOES", "Qual o sexo biológico?", {
+    opcoes: [{ valor: "F", rotulo: "Feminino" }, { valor: "M", rotulo: "Masculino" }],
+  }),
+  q(null, "PF3", 3, "PERFIL", "OPCOES", "Está grávida, ou teve bebê ou perdeu uma gestação recentemente?", {
+    opcoes: [
+      { valor: "GRAVIDA_ATE_5M", rotulo: "Grávida, até 5 meses" },
+      { valor: "GRAVIDA_5M_MAIS", rotulo: "Grávida, de 5 meses ou mais" },
+      { valor: "POS_PARTO_2SEM", rotulo: "Teve bebê ou perdeu uma gestação há até 2 semanas" },
+      { valor: "POS_PARTO_6SEM", rotulo: "Teve bebê há 3 a 6 semanas" },
+      { valor: "NAO", rotulo: "Não" },
+    ],
+    cond: { tipo: "TODAS", condicoes: [{ tipo: "RESPOSTA_EM", codigo: "SX", valores: ["F"] }, { tipo: "IDADE_MAX", valor: 55 }] },
   }),
   q(null, "DOR", 4, "PERFIL", "ESCALA_DOR", "De 0 a 10, qual a nota da dor principal agora? (0 = sem dor)"),
 
@@ -73,7 +83,13 @@ export const perguntas: Pergunta[] = [
   q(GRIPAL, "P8b", 20, "URGENCIA", SNS, "{Voce} parou de comer ou está comendo muito menos?", { cor: "AMARELO", cond: { tipo: "IDADE_MIN", valor: 60 }, sinal: "Parou de comer" }),
   q(GRIPAL, "P9", 21, "CLASSIFICACAO", SNS,
     "Tem asma ou outra doença do pulmão, tuberculose, doença do coração (pressão alta sozinha não conta), diabetes, doença dos rins ou do fígado, anemia falciforme, baixa imunidade ou obesidade grave?",
-    { cor: "VERDE", cond: { tipo: "TODAS", condicoes: [{ tipo: "IDADE_MAX", valor: 59 }, { tipo: "RESPOSTA_DIFERENTE", codigo: "PF3", valor: "SIM" }] } }),
+    // Escondida para o grupo de risco da gestação (mesmos valores de grupoRiscoGestacao).
+    { cor: "VERDE", cond: { tipo: "TODAS", condicoes: [
+      { tipo: "IDADE_MAX", valor: 59 },
+      { tipo: "RESPOSTA_DIFERENTE", codigo: "PF3", valor: "GRAVIDA_ATE_5M" },
+      { tipo: "RESPOSTA_DIFERENTE", codigo: "PF3", valor: "GRAVIDA_5M_MAIS" },
+      { tipo: "RESPOSTA_DIFERENTE", codigo: "PF3", valor: "POS_PARTO_2SEM" },
+    ] } }),
   q(GRIPAL, "P10", 22, "CLASSIFICACAO", SN, "{Voce} está com febre?", { cor: "VERDE", cond: { tipo: "RESPOSTA_EM", codigo: "P9", valores: ["NAO"] } }),
 
   // DOR DE GARGANTA
@@ -111,7 +127,6 @@ export const perguntas: Pergunta[] = [
   q(CABECA, "C7", 67, "URGENCIA", SNS, "Tem vômitos em jato, sem enjoo antes?", { cor: "AMARELO", sinal: "Vômitos em jato" }),
   q(CABECA, "C8", 68, "URGENCIA", SNS, "A dor é diferente das que costuma ter, ou está piorando nas últimas semanas?", { cor: "AMARELO", sinal: "Dor diferente ou piorando" }),
   q(CABECA, "C9", 69, "URGENCIA", SNS, "É a primeira vez com uma dor assim?", { cor: "AMARELO", cond: { tipo: "IDADE_MIN", valor: 50 }, sinal: "Primeira dor assim após os 50" }),
-  q(CABECA, "C10", 70, "URGENCIA", SNS, "Está grávida de 5 meses ou mais, ou teve bebê nas últimas 6 semanas?", { cor: "AMARELO", cond: { tipo: "RESPOSTA_DIFERENTE", codigo: "PF3", valor: "NAO_SE_APLICA" }, sinal: "Gravidez avançada ou pós-parto" }),
   q(CABECA, "C11", 71, "CLASSIFICACAO", SN, "{Voce} está com febre?", { cor: "VERDE" }),
 
   // ARDÊNCIA AO URINAR
@@ -119,8 +134,5 @@ export const perguntas: Pergunta[] = [
   q(URINA, "U2", 82, "URGENCIA", SNS, "Tem dor nas costas, na altura da cintura, de um lado só?", { sinal: "Dor nas costas de um lado" }),
   q(URINA, "U3", 83, "URGENCIA", SN, "{Voce} está com febre?", { sinal: "Febre" }),
   q(URINA, "U4", 84, "URGENCIA", SNS, "Está vomitando a ponto de não conseguir beber líquidos ou tomar remédio?", { cor: "AMARELO", sinal: "Vômitos que impedem beber líquidos" }),
-  q(URINA, "U6", 85, "CLASSIFICACAO", "OPCOES", "Qual o sexo biológico?", {
-    opcoes: [{ valor: "F", rotulo: "Feminino" }, { valor: "M", rotulo: "Masculino" }],
-  }),
   q(URINA, "U7", 86, "CLASSIFICACAO", SNS, "Tem diabetes, baixa imunidade ou usa sonda para urinar?", { cor: "VERDE" }),
 ];

@@ -12,7 +12,7 @@ export async function concluirOrientacao(queixa: CodigoQueixa, respostas: Respos
   let flElevadaModelo = false;
 
   if (dsCor === "VERDE" || dsCor === "AZUL") {
-    const sexo = respostas["U6"] === "M" ? "M" : respostas["U6"] === "F" ? "F" : null;
+    const sexo = respostas["SX"] === "M" ? "M" : respostas["SX"] === "F" ? "F" : null;
     const { urgente } = await verificarUrgencia({
       idade: typeof respostas["PF2"] === "number" ? respostas["PF2"] : 0,
       sexo,

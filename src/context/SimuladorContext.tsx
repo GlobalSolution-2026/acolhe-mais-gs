@@ -147,11 +147,11 @@ export function SimuladorProvider({ children }: { children: ReactNode }) {
     [atualizarEstado],
   );
 
-  /** Troca a queixa mantendo as respostas do perfil (PF1, PF2, PF3, DOR). */
+  /** Troca a queixa mantendo as respostas do perfil (PF1, PF2, SX, PF3, DOR). */
   const trocarQueixa = useCallback(
     (cdQueixa: CodigoQueixa) =>
       alterarOrientacao((o) => {
-        const perfil = ["PF1", "PF2", "PF3", "DOR"];
+        const perfil = ["PF1", "PF2", "SX", "PF3", "DOR"];
         const respostas = Object.fromEntries(Object.entries(o.respostas).filter(([k]) => perfil.includes(k)));
         return { ...o, cdQueixa, respostas, ordem: o.ordem.filter((c) => perfil.includes(c)), resultado: null };
       }),
