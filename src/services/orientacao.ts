@@ -4,10 +4,20 @@ import type { CodigoQueixa, Respostas, ResultadoFinal } from "@/types/orientacao
 import { salvarOrientacao, verificarUrgencia } from "./api";
 import { calcularOrientacao, DESTINO_POR_COR } from "./regrasOrientacao";
 
-const SINAIS_ESTADO_MENTAL = ["P4", "D3a", "C3", "U1"];
+/** Opções que indicam alteração do estado mental, por pergunta de marcar. */
+const SINAIS_ESTADO_MENTAL: Record<string, string[]> = {
+  P4: ["CONFUSO", "SONOLENTO", "DESMAIOU"],
+  D3a: ["CONFUSO", "SONOLENTO", "DESMAIOU"],
+  U1: ["CONFUSO", "SONOLENTO", "DESMAIOU"],
+  C3: ["CONFUSAO"],
+};
 
-/** Falso se alguma pergunta de confusão, sonolência ou desmaio foi respondida com Sim. */
-export const estadoMentalAlerta = (r: Respostas): boolean => !SINAIS_ESTADO_MENTAL.some((c) => r[c] === "SIM");
+/** Falso se foi marcada confusão, sonolência ou desmaio. */
+export const estadoMentalAlerta = (r: Respostas): boolean =>
+  !Object.entries(SINAIS_ESTADO_MENTAL).some(([c, valores]) => {
+    const marcadas = r[c];
+    return Array.isArray(marcadas) && valores.some((v) => marcadas.includes(v));
+  });
 
 /** Aplica as regras, chama a verificação de IA (só eleva) e salva a orientação. */
 export async function concluirOrientacao(queixa: CodigoQueixa, respostas: Respostas): Promise<ResultadoFinal> {

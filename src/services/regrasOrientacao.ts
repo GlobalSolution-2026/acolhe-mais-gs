@@ -19,8 +19,19 @@ export const DESTINO_POR_COR: Record<Cor, Destino> = {
 const PESO: Record<Cor, number> = { AZUL: 0, VERDE: 1, AMARELO: 2, LARANJA: 3, VERMELHO: 4 };
 
 const respostaAlarme = (c: string) => perguntas.find((p) => p.codigo === c)?.dsRespostaAlarme ?? "SIM";
-const sim = (r: Respostas, c: string) => r[c] === respostaAlarme(c);
-const simOuNaoSei = (r: Respostas, c: string) => sim(r, c) || r[c] === "NAO_SEI";
+
+/* Perguntas de marcar (MULTIPLA): "Nenhum destes" e "Não sei" são exclusivas e não são sinais. */
+const EXCLUSIVAS = ["NENHUM", "NAO_SEI"];
+const ehMultipla = (c: string) => perguntas.find((p) => p.codigo === c)?.tipoResposta === "MULTIPLA";
+const marcadas = (r: Respostas, c: string): string[] => (Array.isArray(r[c]) ? (r[c] as string[]) : []);
+/** Marcou algum sinal (equivale ao "Sim"). */
+const marcouSinal = (r: Respostas, c: string) => marcadas(r, c).some((v) => !EXCLUSIVAS.includes(v));
+/** Marcou algum sinal ou "Não sei" (equivale ao "Sim ou Não sei"). */
+const marcouSinalOuNaoSei = (r: Respostas, c: string) => marcouSinal(r, c) || marcadas(r, c).includes("NAO_SEI");
+
+const sim = (r: Respostas, c: string) => (ehMultipla(c) ? marcouSinal(r, c) : r[c] === respostaAlarme(c));
+const simOuNaoSei = (r: Respostas, c: string) =>
+  ehMultipla(c) ? marcouSinalOuNaoSei(r, c) : sim(r, c) || r[c] === "NAO_SEI";
 const num = (r: Respostas, c: string): number | null => (typeof r[c] === "number" ? (r[c] as number) : null);
 const entre = (v: number | null, min: number, max: number) => v !== null && v >= min && v <= max;
 
@@ -44,10 +55,22 @@ function precisaInstabilidade(queixa: CodigoQueixa, r: Respostas): boolean {
 }
 
 /** Busca a pergunta comum ou a da queixa (a INST tem uma versão por queixa). */
-function sinal(codigo: string, queixa: CodigoQueixa): string {
+function perguntaDaQueixa(codigo: string, queixa: CodigoQueixa): Pergunta | undefined {
   const cd = obterQueixa(queixa).cdQueixa;
-  const p = perguntas.find((x) => x.codigo === codigo && (x.cdQueixa === null || x.cdQueixa === cd));
+  return perguntas.find((x) => x.codigo === codigo && (x.cdQueixa === null || x.cdQueixa === cd));
+}
+
+function sinal(codigo: string, queixa: CodigoQueixa): string {
+  const p = perguntaDaQueixa(codigo, queixa);
   return p?.dsSinal ?? p?.dsPergunta ?? codigo;
+}
+
+/** Sinais de uma pergunta: nas de marcar, um por opção marcada; só com "Não sei", o sinal geral da pergunta. */
+function sinaisDe(codigo: string, queixa: CodigoQueixa, r: Respostas): string[] {
+  const p = perguntaDaQueixa(codigo, queixa);
+  if (p?.tipoResposta !== "MULTIPLA") return [sinal(codigo, queixa)];
+  const escolhidas = (p.opcoes ?? []).filter((o) => !EXCLUSIVAS.includes(o.valor) && marcadas(r, codigo).includes(o.valor));
+  return escolhidas.length > 0 ? escolhidas.map((o) => o.sinal ?? o.rotulo) : [sinal(codigo, queixa)];
 }
 
 export function calcularOrientacao(queixa: CodigoQueixa, respostas: Respostas): ResultadoOrientacao {
@@ -57,7 +80,7 @@ export function calcularOrientacao(queixa: CodigoQueixa, respostas: Respostas): 
   const sinais: string[] = [];
   const marcar = (codigos: string[], teste: (c: string) => boolean) => {
     const marcados = codigos.filter(teste);
-    marcados.forEach((c) => sinais.push(sinal(c, queixa)));
+    marcados.forEach((c) => sinais.push(...sinaisDe(c, queixa, r)));
     return marcados.length > 0;
   };
   const fim = (dsCor: Cor): ResultadoOrientacao => ({ dsCor, dsDestino: DESTINO_POR_COR[dsCor], sinaisMarcados: sinais });
@@ -183,6 +206,18 @@ export function proximoPasso(queixa: CodigoQueixa, r: Respostas): PassoOrientaca
   const pergunta = pendentes[0];
   if (!pergunta) return { tipo: "RESULTADO" };
   return { tipo: "PERGUNTA", pergunta, progresso: respondidas / (respondidas + pendentes.length) };
+}
+
+/** Marca ou desmarca uma opção de uma pergunta de marcar; "Nenhum destes" e "Não sei" são exclusivas. */
+export function alternarOpcao(marcados: string[], valor: string): string[] {
+  if (marcados.includes(valor)) return marcados.filter((v) => v !== valor);
+  if (EXCLUSIVAS.includes(valor)) return [valor];
+  return [...marcados.filter((v) => !EXCLUSIVAS.includes(v)), valor];
+}
+
+/** Perguntas com "Nenhum destes" exigem uma escolha (ninguém pula sem querer); a P0 aceita nada marcado. */
+export function podeContinuar(p: Pergunta, marcados: string[]): boolean {
+  return marcados.length > 0 || !(p.opcoes ?? []).some((o) => o.valor === "NENHUM");
 }
 
 export function textoPergunta(p: Pergunta, r: Respostas): string {

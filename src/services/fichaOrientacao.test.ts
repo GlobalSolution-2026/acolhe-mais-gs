@@ -24,8 +24,12 @@ describe("respostasDaFicha", () => {
   it("preenche idade e sexo pelo cadastro", () => {
     expect(daFicha("GARGANTA", null)).toEqual({ respostas: { PF2: 36, SX: "F" }, usados: ["idade", "sexo"] });
   });
-  it.each(["DIABETES", "PULMAO", "CORACAO", "RINS", "IMUNIDADE"] as const)("P9 = SIM na gripe com %s", (doenca) => {
-    expect(daFicha("GRIPAL", [doenca]).respostas["P9"]).toBe("SIM");
+  it.each(["DIABETES", "PULMAO", "CORACAO", "RINS", "IMUNIDADE"] as const)("P9 marca %s na gripe", (doenca) => {
+    expect(daFicha("GRIPAL", [doenca]).respostas["P9"]).toEqual([doenca]);
+  });
+  it("P9 e U7 recebem só as doenças da ficha que batem com as opções", () => {
+    expect(daFicha("GRIPAL", ["HIPERTENSAO", "DIABETES", "RINS", "OUTRA"]).respostas["P9"]).toEqual(["DIABETES", "RINS"]);
+    expect(daFicha("URINA", ["PULMAO", "DIABETES", "IMUNIDADE"]).respostas["U7"]).toEqual(["DIABETES", "IMUNIDADE"]);
   });
   it("hipertensão sozinha não preenche a P9", () => {
     const r = daFicha("GRIPAL", ["HIPERTENSAO"]);
@@ -80,7 +84,7 @@ describe("questionário com a ficha", () => {
   });
   const ateP8: Respostas = {
     PF1: "PARA_MIM", PF3: "NAO", DOR: 2, P0: ["FEBRE", "TOSSE"],
-    P1: "NAO", P2: "NAO", P3: "NAO", P4: "NAO", P5: "NAO", P6: "NAO", P7: "NAO", P8: "NAO",
+    P1: "NAO", P2: "NAO", P3: "NAO", P4: ["NENHUM"], P5: "NAO", P6: "NAO", P7: ["NENHUM"], P8: "NAO",
   };
 
   it("pula a P9 quando a ficha tem diabetes", () => {

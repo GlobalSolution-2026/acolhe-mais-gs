@@ -53,11 +53,13 @@ export function respostasDaFicha(
   r["SX"] = cidadao.dsSexo;
   usados.push("sexo");
 
-  const daQueixa = new Set(perguntasDaQueixa(queixa).map((p) => p.codigo));
+  const daQueixa = new Map(perguntasDaQueixa(queixa).map((p) => [p.codigo, p]));
   for (const [codigo, doencas] of Object.entries(DOENCAS_POR_PERGUNTA)) {
-    const presentes = daQueixa.has(codigo) ? doencas.filter((d) => ficha?.dsDoencasBase.includes(d)) : [];
+    const pergunta = daQueixa.get(codigo);
+    const presentes = pergunta ? doencas.filter((d) => ficha?.dsDoencasBase.includes(d)) : [];
     if (presentes.length === 0) continue;
-    r[codigo] = "SIM";
+    // Perguntas de marcar (P9, U7) recebem as doenças da ficha, que usam os mesmos valores das opções.
+    r[codigo] = pergunta?.tipoResposta === "MULTIPLA" ? presentes : "SIM";
     for (const d of presentes) {
       const nome = NOME_DOENCA[d];
       if (nome && !usados.includes(nome)) usados.push(nome);

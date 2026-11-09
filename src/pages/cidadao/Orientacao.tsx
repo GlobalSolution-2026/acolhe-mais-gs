@@ -7,7 +7,7 @@ import { EstadoVazio } from "@/components/EstadoVazio";
 import { useSimulador } from "@/context/SimuladorContext";
 import { obterQueixa } from "@/data/queixas";
 import { respostasEfetivas, textoAvisoFicha } from "@/services/fichaOrientacao";
-import { proximoPasso, textoPergunta } from "@/services/regrasOrientacao";
+import { alternarOpcao, podeContinuar, proximoPasso, textoPergunta } from "@/services/regrasOrientacao";
 import type { Pergunta, Resposta } from "@/types/orientacao";
 
 const BOTAO = "btn w-full border-2 border-borda bg-branco text-lg text-texto hover:border-primaria";
@@ -28,9 +28,10 @@ function CampoNumero({ onResponder }: { onResponder: (v: number) => void }) {
   );
 }
 
-function Multipla({ pergunta, onResponder }: { pergunta: Pergunta; onResponder: (v: string[]) => void }) {
+export function Multipla({ pergunta, onResponder }: { pergunta: Pergunta; onResponder: (v: string[]) => void }) {
   const [marcados, setMarcados] = useState<string[]>([]);
-  const alternar = (v: string) => setMarcados((m) => (m.includes(v) ? m.filter((x) => x !== v) : [...m, v]));
+  const alternar = (v: string) => setMarcados((m) => alternarOpcao(m, v));
+  const ok = podeContinuar(pergunta, marcados);
   return (
     <div className="flex flex-col gap-2">
       {pergunta.opcoes?.map((o) => {
@@ -45,7 +46,11 @@ function Multipla({ pergunta, onResponder }: { pergunta: Pergunta; onResponder: 
           </button>
         );
       })}
-      <button onClick={() => onResponder(marcados)} className="btn mt-2 bg-primaria text-branco hover:bg-primariaEscura">Continuar</button>
+      {!ok && <p className="text-sm text-textoSuave">Marque pelo menos uma opção.</p>}
+      <button onClick={() => onResponder(marcados)} disabled={!ok}
+        className="btn mt-2 bg-primaria text-branco hover:bg-primariaEscura disabled:cursor-not-allowed disabled:opacity-50">
+        Continuar
+      </button>
     </div>
   );
 }

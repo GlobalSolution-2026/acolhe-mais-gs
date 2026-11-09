@@ -20,6 +20,8 @@ export type CondicaoExibicao =
 export interface Opcao {
   valor: string;
   rotulo: string;
+  /** Texto na lista de sinais (perguntas de marcar); sem ele, usa o rótulo. */
+  sinal?: string;
 }
 
 export interface Pergunta {

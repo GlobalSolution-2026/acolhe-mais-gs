@@ -2,17 +2,22 @@ import { describe, expect, it } from "vitest";
 import { estadoMentalAlerta } from "./orientacao";
 
 describe("estadoMentalAlerta", () => {
-  it("D3a = Sim indica alteração do estado mental", () => {
-    expect(estadoMentalAlerta({ D3a: "SIM" })).toBe(false);
+  it.each(["P4", "D3a", "U1"])("%s com confusão, sonolência ou desmaio indica alteração do estado mental", (codigo) => {
+    for (const valor of ["CONFUSO", "SONOLENTO", "DESMAIOU"]) expect(estadoMentalAlerta({ [codigo]: [valor] })).toBe(false);
   });
-  it("o código antigo D3 não é considerado", () => {
-    expect(estadoMentalAlerta({ D3: "SIM" })).toBe(true);
+  it("C3 só conta a confusão", () => {
+    expect(estadoMentalAlerta({ C3: ["CONFUSAO"] })).toBe(false);
+    expect(estadoMentalAlerta({ C3: ["FALA", "BOCA", "VISAO", "FRAQUEZA_LADO"] })).toBe(true);
   });
-  it("sem respostas, o estado mental é alerta", () => {
+  it("pele fria na U1 não é estado mental", () => {
+    expect(estadoMentalAlerta({ U1: ["PELE_FRIA"] })).toBe(true);
+  });
+  it.each(["P4", "D3a", "C3", "U1"])("%s = Nenhum destes ou sem resposta: alerta", (codigo) => {
+    expect(estadoMentalAlerta({ [codigo]: ["NENHUM"] })).toBe(true);
     expect(estadoMentalAlerta({})).toBe(true);
   });
-  it.each(["P4", "C3", "U1"])("%s = Sim indica alteração do estado mental", (codigo) => {
-    expect(estadoMentalAlerta({ [codigo]: "SIM" })).toBe(false);
-    expect(estadoMentalAlerta({ [codigo]: "NAO" })).toBe(true);
+  it("respostas antigas em texto e o código D3 não são considerados", () => {
+    expect(estadoMentalAlerta({ D3a: "SIM" })).toBe(true);
+    expect(estadoMentalAlerta({ D3: ["CONFUSO"] })).toBe(true);
   });
 });
