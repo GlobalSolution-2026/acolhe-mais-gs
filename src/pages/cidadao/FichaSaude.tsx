@@ -79,7 +79,7 @@ function FormularioFicha({ cdCidadao }: { cdCidadao: number }) {
     void navigate({ to: "/cidadao/perfil" });
   };
 
-  const caixa = "h-5 w-5 accent-[var(--color-primaria)]";
+  const caixa = "h-5 w-5 accent-primaria";
 
   return (
     <div className="flex flex-col gap-4">

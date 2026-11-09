@@ -41,3 +41,4 @@ use the editor.
 - Use the shared pure pending-confirmation selector for the reception list and bell, and derive simulation days from actual schedules. Why: criteria must stay identical across views and weekends.
 - Reserve seed confirmation examples and track active person/day keys before assigning appointments; seed revision invalidates outdated saved demonstrations. Why: generated scenarios remain coherent after rule changes.
 - Keep the React simulator Context identity stable across module re-evaluations; retain only the Context object globally, never user state. Why: refreshed consumers must still match an already-mounted Provider without sharing SSR user data.
+- Citizen login and health record are mock-only (credentials/fichas in SimuladorContext state, accessed via api.ts entrar/criarConta/salvarFicha); cdCidadaoAtual is the session. Why: real auth will come from the Java API; no Cloud/Supabase.

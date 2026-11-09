@@ -21,7 +21,7 @@ export interface EstadoSimulador {
   orientacaoAtual: OrientacaoEmAndamento | null;
   listaDoDia: EntradaListaDoDia[];
   ofertas: OfertaVaga[];
-  /** Cadastro do cidadão que usa o app (null até o primeiro agendamento). */
+  /** Cadastro do cidadão que usa o app logado (null = sem login; mock até a API Java). */
   cdCidadaoAtual: number | null;
   /** Credenciais mock (login por CNS + senha). */
   credenciais?: CredencialCidadao[];
