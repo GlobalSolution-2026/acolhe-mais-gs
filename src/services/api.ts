@@ -4,7 +4,7 @@
  * No protótipo, lê/altera o estado mockado do Context e espera 400 ms.
  */
 import type { EstadoSimulador } from "@/context/SimuladorContext";
-import type { CanalConfirmacao, Cidadao, CidadaoEntrada, Consulta, ErroResponse, Horario, Unidade } from "@/types";
+import type { CanalConfirmacao, Cidadao, FichaSaude, CidadaoEntrada, Consulta, ErroResponse, Horario, Unidade } from "@/types";
 import type { Orientacao, VerificacaoUrgenciaEntrada } from "@/types/orientacao";
 import { segundosRestantesOferta, temContatoValido } from "./regrasAgendamento";
 
@@ -67,6 +67,59 @@ export async function cadastrarCidadao(dados: CidadaoEntrada): Promise<Cidadao> 
     return { ...e, cidadaos: [...e.cidadaos, novo] };
   });
   return novo;
+}
+
+// POST /auth/entrar — MOCK: a autenticação real será feita pela API Java.
+export async function entrar(nrCns: string, dsSenha: string): Promise<Cidadao> {
+  // const res = await fetch(`${API_URL}/auth/entrar`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ nrCns, dsSenha }) });
+  // if (!res.ok) { const erro: ErroResponse = await res.json(); throw new Error(erro.erro); }
+  // return res.json();
+  await esperar();
+  const s = getStore();
+  const e = s.obterEstado();
+  const cidadao = e.cidadaos.find((c) => c.nrCns === nrCns.replace(/\D/g, ""));
+  const credencial = cidadao && (e.credenciais ?? []).find((c) => c.cdCidadao === cidadao.cdCidadao);
+  if (!cidadao || !credencial || credencial.dsSenha !== dsSenha) falhar({ status: 401, erro: "Cartão SUS ou senha incorretos." });
+  return cidadao;
+}
+
+// POST /auth/sair — MOCK
+export async function sair(): Promise<void> {
+  await esperar(100);
+  getStore().atualizarEstado((e) => ({ ...e, cdCidadaoAtual: null }));
+}
+
+// POST /cidadaos (com senha) — MOCK de criação de conta
+export async function criarConta(dados: CidadaoEntrada, dsSenha: string): Promise<Cidadao> {
+  if (dsSenha.length < 6) falhar({ status: 400, erro: "A senha precisa ter pelo menos 6 caracteres." });
+  const s = getStore();
+  const existente = s.obterEstado().cidadaos.find((c) => c.nrCns === dados.nrCns);
+  // Cadastro feito antes pela recepção (sem senha) pode ganhar uma conta.
+  if (existente && (s.obterEstado().credenciais ?? []).some((c) => c.cdCidadao === existente.cdCidadao)) falhar({ status: 409, erro: "Já existe conta com este Cartão SUS. Use Entrar." });
+  const cidadao = existente ? await atualizarCidadao(existente.cdCidadao, dados) : await cadastrarCidadao(dados);
+  s.atualizarEstado((e) => ({ ...e, credenciais: [...(e.credenciais ?? []), { cdCidadao: cidadao.cdCidadao, dsSenha }] }));
+  return cidadao;
+}
+
+// GET /cidadaos/{cdCidadao}/ficha
+export async function buscarFicha(cdCidadao: number): Promise<FichaSaude | null> {
+  await esperar(150);
+  return (getStore().obterEstado().fichas ?? []).find((f) => f.cdCidadao === cdCidadao) ?? null;
+}
+
+// PUT /cidadaos/{cdCidadao}/ficha
+export async function salvarFicha(ficha: Omit<FichaSaude, "dtAtualizacao">): Promise<FichaSaude> {
+  if (!ficha.flConsentimento) falhar({ status: 400, erro: "Marque a autorização (LGPD) para salvar a ficha." });
+  await esperar();
+  const nova: FichaSaude = { ...ficha, dtAtualizacao: new Date().toISOString() };
+  getStore().atualizarEstado((e) => ({ ...e, fichas: [...(e.fichas ?? []).filter((f) => f.cdCidadao !== ficha.cdCidadao), nova] }));
+  return nova;
+}
+
+// DELETE /cidadaos/{cdCidadao}/ficha
+export async function apagarFicha(cdCidadao: number): Promise<void> {
+  await esperar();
+  getStore().atualizarEstado((e) => ({ ...e, fichas: (e.fichas ?? []).filter((f) => f.cdCidadao !== cdCidadao) }));
 }
 
 // PUT /cidadaos/{cdCidadao}

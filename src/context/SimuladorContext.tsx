@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
-import type { Cidadao, Consulta, EntradaListaDoDia, Horario, OfertaVaga, Unidade } from "@/types";
+import type { Cidadao, Consulta, CredencialCidadao, FichaSaude, EntradaListaDoDia, Horario, OfertaVaga, Unidade } from "@/types";
 import type { CodigoQueixa, LocalOrientacao, Orientacao, OrientacaoEmAndamento, Resposta, ResultadoFinal } from "@/types/orientacao";
 import { unidadesIniciais } from "@/data/unidades";
 import { gerarHorariosIniciais } from "@/data/horarios";
@@ -7,6 +7,7 @@ import { gerarSemente } from "@/data/consultasIniciais";
 import { conectarStore } from "@/services/api";
 import { oferecerHorario, finalizarOferta, simularPrazo, vencerOfertas, type ResumoSimulacao } from "@/services/simulacao";
 import { chaveDia } from "@/lib/datas";
+import { credenciaisIniciais, fichasIniciais } from "@/data/contaDemo";
 
 export interface EstadoSimulador {
   dtSemente: string;
@@ -22,6 +23,10 @@ export interface EstadoSimulador {
   ofertas: OfertaVaga[];
   /** Cadastro do cidadão que usa o app (null até o primeiro agendamento). */
   cdCidadaoAtual: number | null;
+  /** Credenciais mock (login por CNS + senha). */
+  credenciais?: CredencialCidadao[];
+  /** Fichas de saúde opcionais. */
+  fichas?: FichaSaude[];
 }
 
 const CHAVE = "acolhe-plus:simulador:v2";
@@ -42,6 +47,8 @@ function estadoInicial(): EstadoSimulador {
     listaDoDia: semente.listaDoDia,
     ofertas: [],
     cdCidadaoAtual: null,
+    credenciais: credenciaisIniciais,
+    fichas: fichasIniciais(agora),
   };
 }
 
