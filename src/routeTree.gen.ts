@@ -16,7 +16,9 @@ import { Route as CidadaoIndexRouteImport } from './routes/cidadao.index'
 import { Route as CidadaoAgendarRouteImport } from './routes/cidadao.agendar'
 import { Route as CidadaoAvisosRouteImport } from './routes/cidadao.avisos'
 import { Route as CidadaoConsultasRouteImport } from './routes/cidadao.consultas'
+import { Route as CidadaoCriarContaRouteImport } from './routes/cidadao.criar-conta'
 import { Route as CidadaoEmergenciaRouteImport } from './routes/cidadao.emergencia'
+import { Route as CidadaoEntrarRouteImport } from './routes/cidadao.entrar'
 import { Route as CidadaoInicioRouteImport } from './routes/cidadao.inicio'
 import { Route as CidadaoListaDoDiaRouteImport } from './routes/cidadao.lista-do-dia'
 import { Route as CidadaoOrientacaoRouteImport } from './routes/cidadao.orientacao'
@@ -30,6 +32,7 @@ import { Route as RecepcaoIndicadoresRouteImport } from './routes/recepcao.indic
 import { Route as RecepcaoListaDoDiaRouteImport } from './routes/recepcao.lista-do-dia'
 import { Route as RecepcaoPendentesRouteImport } from './routes/recepcao.pendentes'
 import { Route as CidadaoPerfilEditarRouteImport } from './routes/cidadao.perfil_.editar'
+import { Route as CidadaoPerfilFichaRouteImport } from './routes/cidadao.perfil_.ficha'
 import { Route as CidadaoUbsCdUnidadeRouteImport } from './routes/cidadao.ubs_.$cdUnidade'
 
 const IndexRoute = IndexRouteImport.update({
@@ -67,9 +70,19 @@ const CidadaoConsultasRoute = CidadaoConsultasRouteImport.update({
   path: '/consultas',
   getParentRoute: () => CidadaoRoute,
 } as any)
+const CidadaoCriarContaRoute = CidadaoCriarContaRouteImport.update({
+  id: '/criar-conta',
+  path: '/criar-conta',
+  getParentRoute: () => CidadaoRoute,
+} as any)
 const CidadaoEmergenciaRoute = CidadaoEmergenciaRouteImport.update({
   id: '/emergencia',
   path: '/emergencia',
+  getParentRoute: () => CidadaoRoute,
+} as any)
+const CidadaoEntrarRoute = CidadaoEntrarRouteImport.update({
+  id: '/entrar',
+  path: '/entrar',
   getParentRoute: () => CidadaoRoute,
 } as any)
 const CidadaoInicioRoute = CidadaoInicioRouteImport.update({
@@ -137,6 +150,11 @@ const CidadaoPerfilEditarRoute = CidadaoPerfilEditarRouteImport.update({
   path: '/perfil/editar',
   getParentRoute: () => CidadaoRoute,
 } as any)
+const CidadaoPerfilFichaRoute = CidadaoPerfilFichaRouteImport.update({
+  id: '/perfil_/ficha',
+  path: '/perfil/ficha',
+  getParentRoute: () => CidadaoRoute,
+} as any)
 const CidadaoUbsCdUnidadeRoute = CidadaoUbsCdUnidadeRouteImport.update({
   id: '/ubs_/$cdUnidade',
   path: '/ubs/$cdUnidade',
@@ -150,7 +168,9 @@ export interface FileRoutesByFullPath {
   '/cidadao/agendar': typeof CidadaoAgendarRoute
   '/cidadao/avisos': typeof CidadaoAvisosRoute
   '/cidadao/consultas': typeof CidadaoConsultasRoute
+  '/cidadao/criar-conta': typeof CidadaoCriarContaRoute
   '/cidadao/emergencia': typeof CidadaoEmergenciaRoute
+  '/cidadao/entrar': typeof CidadaoEntrarRoute
   '/cidadao/inicio': typeof CidadaoInicioRoute
   '/cidadao/lista-do-dia': typeof CidadaoListaDoDiaRoute
   '/cidadao/orientacao': typeof CidadaoOrientacaoRoute
@@ -165,6 +185,7 @@ export interface FileRoutesByFullPath {
   '/cidadao/': typeof CidadaoIndexRoute
   '/recepcao/': typeof RecepcaoIndexRoute
   '/cidadao/perfil/editar': typeof CidadaoPerfilEditarRoute
+  '/cidadao/perfil/ficha': typeof CidadaoPerfilFichaRoute
   '/cidadao/ubs/$cdUnidade': typeof CidadaoUbsCdUnidadeRoute
 }
 export interface FileRoutesByTo {
@@ -172,7 +193,9 @@ export interface FileRoutesByTo {
   '/cidadao/agendar': typeof CidadaoAgendarRoute
   '/cidadao/avisos': typeof CidadaoAvisosRoute
   '/cidadao/consultas': typeof CidadaoConsultasRoute
+  '/cidadao/criar-conta': typeof CidadaoCriarContaRoute
   '/cidadao/emergencia': typeof CidadaoEmergenciaRoute
+  '/cidadao/entrar': typeof CidadaoEntrarRoute
   '/cidadao/inicio': typeof CidadaoInicioRoute
   '/cidadao/lista-do-dia': typeof CidadaoListaDoDiaRoute
   '/cidadao/orientacao': typeof CidadaoOrientacaoRoute
@@ -187,6 +210,7 @@ export interface FileRoutesByTo {
   '/cidadao': typeof CidadaoIndexRoute
   '/recepcao': typeof RecepcaoIndexRoute
   '/cidadao/perfil/editar': typeof CidadaoPerfilEditarRoute
+  '/cidadao/perfil/ficha': typeof CidadaoPerfilFichaRoute
   '/cidadao/ubs/$cdUnidade': typeof CidadaoUbsCdUnidadeRoute
 }
 export interface FileRoutesById {
@@ -197,7 +221,9 @@ export interface FileRoutesById {
   '/cidadao/agendar': typeof CidadaoAgendarRoute
   '/cidadao/avisos': typeof CidadaoAvisosRoute
   '/cidadao/consultas': typeof CidadaoConsultasRoute
+  '/cidadao/criar-conta': typeof CidadaoCriarContaRoute
   '/cidadao/emergencia': typeof CidadaoEmergenciaRoute
+  '/cidadao/entrar': typeof CidadaoEntrarRoute
   '/cidadao/inicio': typeof CidadaoInicioRoute
   '/cidadao/lista-do-dia': typeof CidadaoListaDoDiaRoute
   '/cidadao/orientacao': typeof CidadaoOrientacaoRoute
@@ -212,6 +238,7 @@ export interface FileRoutesById {
   '/cidadao/': typeof CidadaoIndexRoute
   '/recepcao/': typeof RecepcaoIndexRoute
   '/cidadao/perfil_/editar': typeof CidadaoPerfilEditarRoute
+  '/cidadao/perfil_/ficha': typeof CidadaoPerfilFichaRoute
   '/cidadao/ubs_/$cdUnidade': typeof CidadaoUbsCdUnidadeRoute
 }
 export interface FileRouteTypes {
@@ -223,7 +250,9 @@ export interface FileRouteTypes {
     | '/cidadao/agendar'
     | '/cidadao/avisos'
     | '/cidadao/consultas'
+    | '/cidadao/criar-conta'
     | '/cidadao/emergencia'
+    | '/cidadao/entrar'
     | '/cidadao/inicio'
     | '/cidadao/lista-do-dia'
     | '/cidadao/orientacao'
@@ -238,6 +267,7 @@ export interface FileRouteTypes {
     | '/cidadao/'
     | '/recepcao/'
     | '/cidadao/perfil/editar'
+    | '/cidadao/perfil/ficha'
     | '/cidadao/ubs/$cdUnidade'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -245,7 +275,9 @@ export interface FileRouteTypes {
     | '/cidadao/agendar'
     | '/cidadao/avisos'
     | '/cidadao/consultas'
+    | '/cidadao/criar-conta'
     | '/cidadao/emergencia'
+    | '/cidadao/entrar'
     | '/cidadao/inicio'
     | '/cidadao/lista-do-dia'
     | '/cidadao/orientacao'
@@ -260,6 +292,7 @@ export interface FileRouteTypes {
     | '/cidadao'
     | '/recepcao'
     | '/cidadao/perfil/editar'
+    | '/cidadao/perfil/ficha'
     | '/cidadao/ubs/$cdUnidade'
   id:
     | '__root__'
@@ -269,7 +302,9 @@ export interface FileRouteTypes {
     | '/cidadao/agendar'
     | '/cidadao/avisos'
     | '/cidadao/consultas'
+    | '/cidadao/criar-conta'
     | '/cidadao/emergencia'
+    | '/cidadao/entrar'
     | '/cidadao/inicio'
     | '/cidadao/lista-do-dia'
     | '/cidadao/orientacao'
@@ -284,6 +319,7 @@ export interface FileRouteTypes {
     | '/cidadao/'
     | '/recepcao/'
     | '/cidadao/perfil_/editar'
+    | '/cidadao/perfil_/ficha'
     | '/cidadao/ubs_/$cdUnidade'
   fileRoutesById: FileRoutesById
 }
@@ -344,11 +380,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CidadaoConsultasRouteImport
       parentRoute: typeof CidadaoRoute
     }
+    '/cidadao/criar-conta': {
+      id: '/cidadao/criar-conta'
+      path: '/criar-conta'
+      fullPath: '/cidadao/criar-conta'
+      preLoaderRoute: typeof CidadaoCriarContaRouteImport
+      parentRoute: typeof CidadaoRoute
+    }
     '/cidadao/emergencia': {
       id: '/cidadao/emergencia'
       path: '/emergencia'
       fullPath: '/cidadao/emergencia'
       preLoaderRoute: typeof CidadaoEmergenciaRouteImport
+      parentRoute: typeof CidadaoRoute
+    }
+    '/cidadao/entrar': {
+      id: '/cidadao/entrar'
+      path: '/entrar'
+      fullPath: '/cidadao/entrar'
+      preLoaderRoute: typeof CidadaoEntrarRouteImport
       parentRoute: typeof CidadaoRoute
     }
     '/cidadao/inicio': {
@@ -442,6 +492,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CidadaoPerfilEditarRouteImport
       parentRoute: typeof CidadaoRoute
     }
+    '/cidadao/perfil_/ficha': {
+      id: '/cidadao/perfil_/ficha'
+      path: '/perfil/ficha'
+      fullPath: '/cidadao/perfil/ficha'
+      preLoaderRoute: typeof CidadaoPerfilFichaRouteImport
+      parentRoute: typeof CidadaoRoute
+    }
     '/cidadao/ubs_/$cdUnidade': {
       id: '/cidadao/ubs_/$cdUnidade'
       path: '/ubs/$cdUnidade'
@@ -456,7 +513,9 @@ interface CidadaoRouteChildren {
   CidadaoAgendarRoute: typeof CidadaoAgendarRoute
   CidadaoAvisosRoute: typeof CidadaoAvisosRoute
   CidadaoConsultasRoute: typeof CidadaoConsultasRoute
+  CidadaoCriarContaRoute: typeof CidadaoCriarContaRoute
   CidadaoEmergenciaRoute: typeof CidadaoEmergenciaRoute
+  CidadaoEntrarRoute: typeof CidadaoEntrarRoute
   CidadaoInicioRoute: typeof CidadaoInicioRoute
   CidadaoListaDoDiaRoute: typeof CidadaoListaDoDiaRoute
   CidadaoOrientacaoRoute: typeof CidadaoOrientacaoRoute
@@ -466,6 +525,7 @@ interface CidadaoRouteChildren {
   CidadaoUbsRoute: typeof CidadaoUbsRoute
   CidadaoIndexRoute: typeof CidadaoIndexRoute
   CidadaoPerfilEditarRoute: typeof CidadaoPerfilEditarRoute
+  CidadaoPerfilFichaRoute: typeof CidadaoPerfilFichaRoute
   CidadaoUbsCdUnidadeRoute: typeof CidadaoUbsCdUnidadeRoute
 }
 
@@ -473,7 +533,9 @@ const CidadaoRouteChildren: CidadaoRouteChildren = {
   CidadaoAgendarRoute: CidadaoAgendarRoute,
   CidadaoAvisosRoute: CidadaoAvisosRoute,
   CidadaoConsultasRoute: CidadaoConsultasRoute,
+  CidadaoCriarContaRoute: CidadaoCriarContaRoute,
   CidadaoEmergenciaRoute: CidadaoEmergenciaRoute,
+  CidadaoEntrarRoute: CidadaoEntrarRoute,
   CidadaoInicioRoute: CidadaoInicioRoute,
   CidadaoListaDoDiaRoute: CidadaoListaDoDiaRoute,
   CidadaoOrientacaoRoute: CidadaoOrientacaoRoute,
@@ -483,6 +545,7 @@ const CidadaoRouteChildren: CidadaoRouteChildren = {
   CidadaoUbsRoute: CidadaoUbsRoute,
   CidadaoIndexRoute: CidadaoIndexRoute,
   CidadaoPerfilEditarRoute: CidadaoPerfilEditarRoute,
+  CidadaoPerfilFichaRoute: CidadaoPerfilFichaRoute,
   CidadaoUbsCdUnidadeRoute: CidadaoUbsCdUnidadeRoute,
 }
 
