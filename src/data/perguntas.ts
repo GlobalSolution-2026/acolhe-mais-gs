@@ -104,12 +104,18 @@ export const perguntas: Pergunta[] = [
   q(GARGANTA, "G7", 37, "CLASSIFICACAO", SN, "{Voce} está com febre?", { cor: "VERDE" }),
 
   // DIARREIA E VÔMITO
-  q(DIARREIA, "D1", 43, "LARANJA", SN, "Está vomitando sangue ou algo parecido com borra de café?", { sinal: "Vômito com sangue" }),
-  q(DIARREIA, "D2", 44, "LARANJA", SN, "Hoje as fezes estão com sangue ou pretas como piche?", { sinal: "Fezes com sangue ou pretas" }),
+  q(DIARREIA, "D1", 43, "LARANJA", "OPCOES",
+    "Vomitou sangue (ou algo parecido com borra de café) ou teve fezes com sangue ou pretas como piche?", {
+      opcoes: [
+        { valor: "HOJE", rotulo: "Sim, hoje" },
+        { valor: "ULTIMOS_DIAS", rotulo: "Sim, nos últimos dias" },
+        { valor: "NAO", rotulo: "Não" },
+        { valor: "NAO_SEI", rotulo: "Não sei" },
+      ],
+    }),
   q(DIARREIA, "D3a", 41, "ALARME", SN, "Está confuso, muito sonolento ou desmaiou?", { cor: "VERMELHO", sinal: "Confusão, sonolência ou desmaio" }),
   q(DIARREIA, "D3b", 44.5, "LARANJA", SN, "Está sem urinar há muitas horas?", { sinal: "Sem urinar há muitas horas" }),
   q(DIARREIA, "D5", 42, "ALARME", SN, "Tem falta de ar, inchaço no rosto ou na garganta, ou pele fria e muito pálida?", { cor: "VERMELHO", sinal: "Falta de ar, inchaço ou pele fria" }),
-  q(DIARREIA, "D6", 45, "URGENCIA", SNS, "Nos últimos dias teve fezes pretas ou com sangue, ou vomitou sangue?", { cor: "AMARELO", sinal: "Sangue nos últimos dias" }),
   q(DIARREIA, "D7", 46, "URGENCIA", SNS, "Vomita tudo o que bebe?", { cor: "AMARELO", sinal: "Vomita tudo o que bebe" }),
   q(DIARREIA, "D8", 47, "URGENCIA", SNS, "Tem muita sede, boca seca, olhos fundos ou está urinando bem menos?", { cor: "AMARELO", sinal: "Sinais de desidratação" }),
   q(DIARREIA, "D10", 48, "URGENCIA", SNS, "Consegue repor os líquidos bebendo, mesmo com a diarreia?", { alarme: "NAO", cor: "AMARELO", sinal: "Diarreia sem conseguir repor líquidos" }),

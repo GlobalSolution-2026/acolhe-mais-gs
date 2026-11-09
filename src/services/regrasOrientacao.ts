@@ -32,9 +32,15 @@ export const grupoRiscoGestacao = (r: Respostas): boolean =>
 export const alarmeGestacaoCabeca = (r: Respostas): boolean =>
   ["GRAVIDA_5M_MAIS", "POS_PARTO_2SEM", "POS_PARTO_6SEM"].includes(String(r["PF3"]));
 
+/* D1 (diarreia): sangue no vômito ou nas fezes, com o sinal conforme a opção. */
+const SINAL_SANGUE_HOJE = "Sangue no vômito ou nas fezes hoje";
+const SINAL_SANGUE_RECENTE = "Sangue nos últimos dias";
+const sangueHoje = (r: Respostas) => r["D1"] === "HOJE";
+const sangueRecente = (r: Respostas) => r["D1"] === "ULTIMOS_DIAS" || r["D1"] === "NAO_SEI";
+
 function precisaInstabilidade(queixa: CodigoQueixa, r: Respostas): boolean {
   return (queixa === "GRIPAL" && sim(r, "P5")) ||
-    (queixa === "DIARREIA" && (["D1", "D2", "D3b"].some((c) => sim(r, c)) || entre(num(r, "DOR"), 8, 10)));
+    (queixa === "DIARREIA" && (sangueHoje(r) || sim(r, "D3b") || entre(num(r, "DOR"), 8, 10)));
 }
 
 /** Busca a pergunta comum ou a da queixa (a INST tem uma versão por queixa). */
@@ -84,12 +90,15 @@ export function calcularOrientacao(queixa: CodigoQueixa, respostas: Respostas): 
     }
     case "DIARREIA": {
       if (marcar(["D3a", "D5"], (c) => sim(r, c))) return fim("VERMELHO");
-      const laranja = marcar(["D1", "D2", "D3b"], (c) => sim(r, c));
+      if (sangueHoje(r)) sinais.push(SINAL_SANGUE_HOJE);
+      const d3b = marcar(["D3b"], (c) => sim(r, c));
       if (entre(dor, 8, 10)) sinais.push(`Dor muito forte (nota ${dor})`);
-      if (laranja || entre(dor, 8, 10)) return comInstabilidade();
-      const urg = marcar(["D6", "D7", "D8", "D10", "D11a"], (c) => simOuNaoSei(r, c));
+      if (sangueHoje(r) || d3b || entre(dor, 8, 10)) return comInstabilidade();
+      // Exceção: "Não sei" na D1 leva a AMARELO, não a LARANJA (sem sangramento evidente).
+      if (sangueRecente(r)) sinais.push(SINAL_SANGUE_RECENTE);
+      const urg = marcar(["D7", "D8", "D10", "D11a"], (c) => simOuNaoSei(r, c));
       if (entre(dor, 5, 7)) sinais.push(`Dor moderada (nota ${dor})`);
-      if (urg || entre(dor, 5, 7)) return fim("AMARELO");
+      if (sangueRecente(r) || urg || entre(dor, 5, 7)) return fim("AMARELO");
       return fim(sim(r, "D12") || sim(r, "D13") ? "VERDE" : "AZUL");
     }
     case "CABECA": {

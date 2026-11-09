@@ -57,6 +57,35 @@ describe("Diarreia e vômito", () => {
   it("AMARELO com diabetes e insulina", () => {
     expect(calcularOrientacao("DIARREIA", perfil({ D11: "SIM", D11a: "SIM" })).dsCor).toBe("AMARELO");
   });
+  it("D1 = Sim, hoje: LARANJA (sem instabilidade) com o sinal de sangue hoje", () => {
+    expect(calcularOrientacao("DIARREIA", perfil({ D1: "HOJE", INST: "NAO" }))).toMatchObject({
+      dsCor: "LARANJA",
+      sinaisMarcados: ["Sangue no vômito ou nas fezes hoje"],
+    });
+  });
+  it("D1 = Sim, nos últimos dias: AMARELO com o sinal de sangue recente", () => {
+    expect(calcularOrientacao("DIARREIA", perfil({ D1: "ULTIMOS_DIAS" }))).toMatchObject({
+      dsCor: "AMARELO",
+      sinaisMarcados: ["Sangue nos últimos dias"],
+    });
+  });
+  it("exceção da D1: 'Não sei' leva a AMARELO, não a LARANJA", () => {
+    expect(calcularOrientacao("DIARREIA", perfil({ D1: "NAO_SEI" }))).toMatchObject({
+      dsCor: "AMARELO",
+      sinaisMarcados: ["Sangue nos últimos dias"],
+    });
+    expect(proximoPasso("DIARREIA", perfil({ D3a: "NAO", D5: "NAO", D1: "NAO_SEI", D3b: "NAO" })))
+      .toMatchObject({ tipo: "PERGUNTA", pergunta: { codigo: "D7" } });
+  });
+  it("D1 = Não: AZUL sem sinais", () => {
+    expect(calcularOrientacao("DIARREIA", perfil({ D1: "NAO" }))).toMatchObject({ dsCor: "AZUL", sinaisMarcados: [] });
+  });
+  it("sangue nos últimos dias não pede INST, mas D3b ainda leva ao caminho laranja", () => {
+    const r = perfil({ D3a: "NAO", D5: "NAO", D1: "ULTIMOS_DIAS" });
+    expect(proximoPasso("DIARREIA", { ...r, D3b: "NAO" })).toMatchObject({ tipo: "PERGUNTA", pergunta: { codigo: "D7" } });
+    expect(proximoPasso("DIARREIA", { ...r, D3b: "SIM" })).toMatchObject({ tipo: "PERGUNTA", pergunta: { codigo: "INST" } });
+    expect(calcularOrientacao("DIARREIA", { ...r, D3b: "SIM", INST: "NAO" }).dsCor).toBe("LARANJA");
+  });
   it("VERDE com 14 dias ou mais, AZUL sem nada", () => {
     expect(calcularOrientacao("DIARREIA", perfil({ D12: "SIM" })).dsCor).toBe("VERDE");
     expect(calcularOrientacao("DIARREIA", perfil({ D12: "NAO", D13: "NAO" })).dsCor).toBe("AZUL");
@@ -167,7 +196,7 @@ describe("Instabilidade e prioridade dos alarmes", () => {
     const codigos = perguntasDaQueixa("GRIPAL").map((p) => p.codigo);
     expect(codigos.indexOf("P1")).toBeLessThan(codigos.indexOf("P5"));
   });
-  const sinais: Respostas[] = [{ D1: "SIM" }, { D2: "SIM" }, { D3b: "SIM" }, { DOR: 8 }, { DOR: 9 }, { DOR: 10 }];
+  const sinais: Respostas[] = [{ D1: "HOJE" }, { D3b: "SIM" }, { DOR: 8 }, { DOR: 9 }, { DOR: 10 }];
   for (const sinal of sinais) {
     it.each(["NAO", "SIM", "NAO_SEI"])(`diarreia ${JSON.stringify(sinal)} com INST = %s`, (inst) => {
       expect(calcularOrientacao("DIARREIA", perfil({ ...sinal, INST: inst }))).toMatchObject({
@@ -185,7 +214,7 @@ describe("Instabilidade e prioridade dos alarmes", () => {
   it.each([
     ["GRIPAL", { P6: "SIM", P7: "SIM", P8: "NAO_SEI" }],
     ["GARGANTA", { G5: "NAO_SEI", G6: "NAO" }],
-    ["DIARREIA", { D6: "SIM", D7: "SIM", D8: "SIM" }],
+    ["DIARREIA", { D1: "ULTIMOS_DIAS", D7: "SIM", D8: "SIM" }],
     ["CABECA", { C7: "SIM", C8: "SIM" }],
     ["URINA", { U2: "SIM", U3: "SIM", U4: "SIM" }],
   ] as [CodigoQueixa, Respostas][])("vários sinais amarelos em %s não elevam a cor", (queixa, respostas) => {
@@ -201,14 +230,14 @@ describe("Instabilidade e prioridade dos alarmes", () => {
   it.each(["GRIPAL", "DIARREIA"] as const)("%s pergunta INST após os laranjas e termina", (queixa) => {
     const r = queixa === "GRIPAL"
       ? perfil({ P0: ["FEBRE", "TOSSE"], P1: "NAO", P2: "NAO", P3: "NAO", P4: "NAO", P5: "SIM" })
-      : perfil({ D3a: "NAO", D5: "NAO", D1: "SIM", D2: "NAO", D3b: "NAO" });
+      : perfil({ D3a: "NAO", D5: "NAO", D1: "HOJE", D3b: "NAO" });
     expect(proximoPasso(queixa, r)).toMatchObject({ tipo: "PERGUNTA", pergunta: { codigo: "INST" } });
     for (const inst of ["NAO", "SIM", "NAO_SEI"]) expect(proximoPasso(queixa, { ...r, INST: inst }).tipo).toBe("RESULTADO");
   });
   it.each([
     ["GRIPAL", perfil({ P0: ["FEBRE", "TOSSE"], P1: "NAO", P2: "NAO", P3: "NAO", P4: "NAO", P5: "SIM" }),
       "Além disso, está com tontura forte ou com a pele fria e muito pálida?", "Tontura forte ou pele fria e muito pálida"],
-    ["DIARREIA", perfil({ D3a: "NAO", D5: "NAO", D1: "SIM", D2: "NAO", D3b: "NAO" }),
+    ["DIARREIA", perfil({ D3a: "NAO", D5: "NAO", D1: "HOJE", D3b: "NAO" }),
       "Além disso, está com tontura forte, a ponto de quase desmaiar ao ficar de pé?", "Tontura forte ao ficar de pé"],
   ] as const)("%s usa o texto e o sinal próprios da INST", (queixa, r, texto, sinalInst) => {
     expect(proximoPasso(queixa, r)).toMatchObject({ pergunta: { codigo: "INST", dsPergunta: texto } });
@@ -219,8 +248,8 @@ describe("Instabilidade e prioridade dos alarmes", () => {
     expect(new Set(codigos).size).toBe(codigos.length);
   });
   it("INST não aparece sem sinal elegível", () => {
-    expect(proximoPasso("DIARREIA", perfil({ D3a: "NAO", D5: "NAO", D1: "NAO", D2: "NAO", D3b: "NAO" })))
-      .toMatchObject({ tipo: "PERGUNTA", pergunta: { codigo: "D6" } });
+    expect(proximoPasso("DIARREIA", perfil({ D3a: "NAO", D5: "NAO", D1: "NAO", D3b: "NAO" })))
+      .toMatchObject({ tipo: "PERGUNTA", pergunta: { codigo: "D7" } });
   });
   it.each(["G2", "G3", "G4", "G5"])("%s termina sem INST", (codigo) => {
     expect(proximoPasso("GARGANTA", perfil({ G0: "NAO", G1: "NAO", [codigo]: codigo === "G2" ? "NAO" : "SIM" })).tipo).toBe("RESULTADO");
