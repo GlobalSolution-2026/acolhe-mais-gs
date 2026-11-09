@@ -31,6 +31,7 @@ use the editor.
 
 - Pages live in src/pages and route files in src/routes only wire them (head + component), so the screens can be reused by a separate site/simulator project later. This project is only the Acolhe+ app: the root renders only the Provider and Outlet, while /cidadao and /recepcao own separate layouts with a shared header; the URL alone defines the profile. Why: app screens are reused elsewhere.
 - All data access goes through src/services/api.ts (Java endpoints, separate Flask endpoints, and explicitly labeled front-only demo actions) backed by SimuladorContext mock state persisted in localStorage. Why: no backend in the prototype.
+- Exception: the orientation questionnaire reads the citizen's registration and health record (ficha) synchronously from the state (src/services/fichaOrientacao.ts), without api.buscarFicha. When migrating to the Java API, load the ficha into the state at login. Why: prefilled answers must be ready right after PF1, with no loading race.
 - Triage rules and the questionnaire engine live only in src/services/regrasOrientacao.ts (pure, unit-tested); questions are data in src/data/perguntas.ts. The AI check (verificarUrgencia) may only raise severity. Why: rules must be testable and never live in components.
 
 - Internal back navigation uses the pure rotaPai helper, never browser history; editing and UBS detail routes are unnested leaves so their parent screens cannot hide them. Why: deterministic navigation and correct independent rendering.

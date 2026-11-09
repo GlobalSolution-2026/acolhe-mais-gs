@@ -1,11 +1,12 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { FiAlertTriangle, FiArrowLeft, FiCheck } from "react-icons/fi";
+import { FiAlertTriangle, FiArrowLeft, FiCheck, FiInfo } from "react-icons/fi";
 import { CampoFormulario } from "@/components/CampoFormulario";
 import { EstadoVazio } from "@/components/EstadoVazio";
 import { useSimulador } from "@/context/SimuladorContext";
 import { obterQueixa } from "@/data/queixas";
+import { respostasEfetivas, textoAvisoFicha } from "@/services/fichaOrientacao";
 import { proximoPasso, textoPergunta } from "@/services/regrasOrientacao";
 import type { Pergunta, Resposta } from "@/types/orientacao";
 
@@ -100,13 +101,15 @@ export function Orientacao() {
   const { estado, responder, voltarPergunta, trocarQueixa } = useSimulador();
   const navigate = useNavigate();
   const atual = estado.orientacaoAtual;
-  const passo = atual ? proximoPasso(atual.cdQueixa, atual.respostas) : null;
+  // Respostas digitadas + as que vêm do cadastro e da ficha (só quando a orientação é PARA_MIM).
+  const efetivas = respostasEfetivas(estado, new Date());
+  const passo = atual && efetivas ? proximoPasso(atual.cdQueixa, efetivas.respostas) : null;
 
   useEffect(() => {
     if (passo?.tipo === "RESULTADO") void navigate({ to: "/cidadao/resultado", replace: true });
   }, [passo?.tipo, navigate]);
 
-  if (!atual || !passo) {
+  if (!atual || !efetivas || !passo) {
     return (
       <div className="flex flex-col gap-4">
         <EstadoVazio mensagem="Nenhuma orientação em andamento." />
@@ -124,13 +127,18 @@ export function Orientacao() {
   return (
     <div className="flex flex-col gap-5">
       <p className="text-base font-bold text-textoSuave">{obterQueixa(atual.cdQueixa).nmQueixa}</p>
+      {efetivas.usados.length > 0 && (
+        <p className="-mt-3 flex items-start gap-2 text-sm text-textoSuave">
+          <FiInfo className="mt-0.5 shrink-0" aria-hidden /> {textoAvisoFicha(efetivas.usados)}
+        </p>
+      )}
 
       {passo.tipo === "PERGUNTA" && (
         <>
           <div className="h-3 w-full overflow-hidden rounded-full bg-borda" role="progressbar" aria-valuenow={Math.round(passo.progresso * 100)} aria-valuemin={0} aria-valuemax={100}>
             <div className="h-full rounded-full bg-primaria transition-all" style={{ width: `${Math.max(4, passo.progresso * 100)}%` }} />
           </div>
-          <h1 className="text-2xl font-extrabold leading-snug">{textoPergunta(passo.pergunta, atual.respostas)}</h1>
+          <h1 className="text-2xl font-extrabold leading-snug">{textoPergunta(passo.pergunta, efetivas.respostas)}</h1>
           <Respostas key={passo.pergunta.codigo} pergunta={passo.pergunta} onResponder={(v) => responder(passo.pergunta.codigo, v)} />
         </>
       )}

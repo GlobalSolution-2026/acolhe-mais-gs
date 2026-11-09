@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FiAlertCircle, FiCalendar, FiMapPin, FiPhone, FiPhoneCall } from "react-icons/fi";
 import { Carregando } from "@/components/Carregando";
 import { EstadoVazio } from "@/components/EstadoVazio";
@@ -10,6 +10,7 @@ import { obterQueixa } from "@/data/queixas";
 import { orientacoesUbs } from "@/data/orientacoesUbs";
 import { listarUnidades } from "@/services/api";
 import { enderecoParaLigacao } from "@/services/cep";
+import { respostasEfetivas } from "@/services/fichaOrientacao";
 import { concluirOrientacao, upaMaisProxima } from "@/services/orientacao";
 import type { Unidade } from "@/types";
 import type { OrientacaoEmAndamento, ResultadoFinal } from "@/types/orientacao";
@@ -120,22 +121,27 @@ function Ubs({ atual }: { atual: OrientacaoEmAndamento }) {
 
 export function Resultado() {
   const { estado, definirResultado } = useSimulador();
-  const atual = estado.orientacaoAtual;
+  const { orientacaoAtual: atual, cidadaos, cdCidadaoAtual, fichas } = estado;
   const [erro, setErro] = useState<string | null>(null);
   const rodando = useRef(false);
+  // Mesmas respostas efetivas da tela de Orientação (digitadas + cadastro/ficha).
+  const respostas = useMemo(
+    () => respostasEfetivas({ orientacaoAtual: atual, cidadaos, cdCidadaoAtual, fichas }, new Date())?.respostas,
+    [atual, cidadaos, cdCidadaoAtual, fichas],
+  );
 
   const concluir = useCallback(async () => {
-    if (!atual || atual.resultado || rodando.current) return;
+    if (!atual || !respostas || atual.resultado || rodando.current) return;
     rodando.current = true;
     setErro(null);
     try {
-      definirResultado(await concluirOrientacao(atual.cdQueixa, atual.respostas));
+      definirResultado(await concluirOrientacao(atual.cdQueixa, respostas));
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Não foi possível concluir a orientação.");
     } finally {
       rodando.current = false;
     }
-  }, [atual, definirResultado]);
+  }, [atual, respostas, definirResultado]);
 
   useEffect(() => { void concluir(); }, [concluir]);
 

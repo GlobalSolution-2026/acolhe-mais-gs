@@ -91,8 +91,8 @@ export function Inicio() {
           </p>
         )}
         <div className="grid grid-cols-[1fr_2fr] gap-3">
-          <CampoFormulario id="nrEndereco" label="Número (opcional)" registro={register("nrEndereco", { maxLength: 10 })} />
-          <CampoFormulario id="dsComplemento" label="Complemento (opcional)" registro={register("dsComplemento", { maxLength: 60 })} />
+          <CampoFormulario id="nrEndereco" label="Número" placeholder="Opcional" registro={register("nrEndereco", { maxLength: 10 })} />
+          <CampoFormulario id="dsComplemento" label="Complemento" placeholder="Opcional" registro={register("dsComplemento", { maxLength: 60 })} />
         </div>
       </div>
       <div>

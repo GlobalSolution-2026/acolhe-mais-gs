@@ -6,6 +6,7 @@
 import type { EstadoSimulador } from "@/context/SimuladorContext";
 import type { CanalConfirmacao, Cidadao, FichaSaude, CidadaoEntrada, Consulta, ErroResponse, Horario, Unidade } from "@/types";
 import type { Orientacao, VerificacaoUrgenciaEntrada } from "@/types/orientacao";
+import { idadeEm } from "@/lib/datas";
 import { segundosRestantesOferta, temContatoValido } from "./regrasAgendamento";
 
 export const API_URL = import.meta.env["VITE_API_URL"] as string | undefined;
@@ -187,7 +188,7 @@ export async function agendarConsulta(dados: { cdHorario: number; cdCidadao: num
   const unidade = e.unidades.find((u) => u.cdUnidade === horario.cdUnidade);
 
   const antecedenciaDias = Math.max(0, Math.ceil((new Date(horario.dtHorario).getTime() - Date.now()) / 86_400_000));
-  const idade = Math.floor((Date.now() - new Date(cidadao.dtNascimento).getTime()) / (365.25 * 86_400_000));
+  const idade = idadeEm(cidadao.dtNascimento, new Date()) ?? 0;
   const previsao = await preverFalta({
     idade,
     sexo: cidadao.dsSexo,

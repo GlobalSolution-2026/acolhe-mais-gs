@@ -21,6 +21,18 @@ export function fmtDiaHora(iso: string, abreFrase = true): string {
   return `${fmtDia(iso, abreFrase)} às ${fmtHora(iso)}`;
 }
 
+/**
+ * Idade em anos completos em `hoje`. A data de nascimento ("AAAA-MM-DD") é lida como data local:
+ * new Date("AAAA-MM-DD") seria UTC e, no Brasil, anteciparia o aniversário em um dia.
+ */
+export function idadeEm(dtNascimento: string, hoje: Date): number | null {
+  const [a, m, d] = dtNascimento.slice(0, 10).split("-").map(Number);
+  if (!a || !m || !d) return null;
+  const mesHoje = hoje.getMonth() + 1;
+  const fezAniversario = mesHoje > m || (mesHoje === m && hoje.getDate() >= d);
+  return hoje.getFullYear() - a - (fezAniversario ? 0 : 1);
+}
+
 /** Segunda a sexta. */
 export function ehDiaUtil(data: Date): boolean {
   return data.getDay() !== 0 && data.getDay() !== 6;
