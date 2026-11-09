@@ -83,3 +83,29 @@ export interface ErroResponse {
   status: number;
   erro: string;
 }
+
+export type CodigoDoencaBase = "DIABETES" | "HIPERTENSAO" | "PULMAO" | "CORACAO" | "RINS" | "IMUNIDADE" | "OUTRA";
+export type TipoSanguineo = "A+" | "A-" | "B+" | "B-" | "AB+" | "AB-" | "O+" | "O-" | "NAO_SEI" | "";
+
+export interface MedicamentoContinuo {
+  nmMedicamento: string;
+  dsDose: string;
+}
+
+/** Ficha de saúde opcional do cidadão (dado sensível — LGPD, art. 11). */
+export interface FichaSaude {
+  cdCidadao: number;
+  dsDoencasBase: CodigoDoencaBase[];
+  dsOutraDoenca: string;
+  medicamentos: MedicamentoContinuo[];
+  dsAlergias: string;
+  dsTipoSanguineo: TipoSanguineo;
+  flConsentimento: boolean;
+  dtAtualizacao: string; // ISO
+}
+
+/** Credencial mock (a autenticação real será feita pela API Java). */
+export interface CredencialCidadao {
+  cdCidadao: number;
+  dsSenha: string;
+}

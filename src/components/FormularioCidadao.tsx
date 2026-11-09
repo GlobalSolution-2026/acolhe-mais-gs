@@ -10,19 +10,23 @@ export interface CidadaoForm {
   dsSexo: "F" | "M";
   nmContatoRecado: string;
   nrContatoRecado: string;
+  dsSenha?: string;
+  dsSenhaConfirmacao?: string;
 }
 
 interface Props {
   valoresIniciais: Partial<CidadaoForm>;
   nrCep: string;
-  aoEnviar: (dados: CidadaoEntrada) => void;
+  aoEnviar: (dados: CidadaoEntrada, dsSenha?: string) => void;
+  /** Criação de conta: pede senha e confirmação. */
+  pedirSenha?: boolean;
   textoBotao: string;
   enviando: boolean;
 }
 
 /** Formulário de cadastro do cidadão (usado no agendamento, no perfil e na recepção). */
-export function FormularioCidadao({ valoresIniciais, nrCep, aoEnviar, textoBotao, enviando }: Props) {
-  const { register, handleSubmit, formState: { errors } } = useForm<CidadaoForm>({ defaultValues: valoresIniciais });
+export function FormularioCidadao({ valoresIniciais, nrCep, aoEnviar, textoBotao, enviando, pedirSenha }: Props) {
+  const { register, handleSubmit, getValues, formState: { errors } } = useForm<CidadaoForm>({ defaultValues: valoresIniciais });
 
   const enviar = handleSubmit((v) => {
     aoEnviar({
@@ -34,7 +38,7 @@ export function FormularioCidadao({ valoresIniciais, nrCep, aoEnviar, textoBotao
       nmContatoRecado: v.nmContatoRecado.trim(),
       nrContatoRecado: v.nrContatoRecado.trim(),
       nrCep,
-    });
+    }, pedirSenha ? v.dsSenha : undefined);
   });
 
   return (
@@ -70,6 +74,14 @@ export function FormularioCidadao({ valoresIniciais, nrCep, aoEnviar, textoBotao
         registro={register("nrContatoRecado", {
           validate: (v) => !v.trim() || /^\d{10,11}$/.test(v.replace(/\D/g, "")) || "Telefone inválido: use DDD + número.",
         })} />
+      {pedirSenha && (
+        <>
+          <CampoFormulario id="dsSenha" label="Senha (mínimo 6 caracteres)" tipo="password" erro={errors.dsSenha}
+            registro={register("dsSenha", { required: "Crie uma senha.", minLength: { value: 6, message: "A senha precisa ter pelo menos 6 caracteres." } })} />
+          <CampoFormulario id="dsSenhaConfirmacao" label="Confirme a senha" tipo="password" erro={errors.dsSenhaConfirmacao}
+            registro={register("dsSenhaConfirmacao", { required: "Repita a senha.", validate: (v) => v === getValues("dsSenha") || "As senhas não são iguais." })} />
+        </>
+      )}
       <button type="submit" disabled={enviando} className="btn bg-primaria text-branco hover:bg-primariaEscura disabled:opacity-60">
         {enviando ? "Aguarde..." : textoBotao}
       </button>

@@ -3,6 +3,7 @@ import { useState } from "react";
 import { FiClock, FiRotateCcw, FiRepeat, FiSunset } from "react-icons/fi";
 import type { ResumoSimulacao } from "@/services/simulacao";
 import { useSimulador } from "@/context/SimuladorContext";
+import { CONTA_DEMO } from "@/data/contaDemo";
 
 export function ModoDemonstracao({ onConcluir }: { onConcluir?: () => void }) {
   const { reiniciarDemonstracao, simularPassagemPrazo, vencerPrazoOfertas, encerrarDia } = useSimulador();
@@ -40,6 +41,13 @@ export function ModoDemonstracao({ onConcluir }: { onConcluir?: () => void }) {
         Esta área existe só para a apresentação. Ela não faz parte do app real.
       </p>
       <div className="flex flex-col gap-3">
+        {cidadao && (
+          <div className="rounded-[12px] border border-borda bg-branco p-3">
+            <p className="font-semibold">Cidadão de exemplo (com ficha de saúde)</p>
+            <p>Cartão SUS: <strong className="select-all">{CONTA_DEMO.nrCns}</strong></p>
+            <p>Senha: <strong className="select-all">{CONTA_DEMO.dsSenha}</strong></p>
+          </div>
+        )}
         <button onClick={trocar} className="btn bg-primaria text-branco hover:bg-primariaEscura">
           <FiRepeat /> {cidadao ? "Ver como a UBS vê" : "Voltar para o cidadão"}
         </button>

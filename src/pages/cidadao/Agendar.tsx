@@ -1,11 +1,11 @@
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link, Navigate, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { EstadoVazio } from "@/components/EstadoVazio";
 import { FormularioCidadao } from "@/components/FormularioCidadao";
 import { MensagemErro } from "@/components/MensagemErro";
 import { useSimulador } from "@/context/SimuladorContext";
 import { fmtDiaHora } from "@/lib/datas";
-import { agendarConsulta, atualizarCidadao, cadastrarCidadao } from "@/services/api";
+import { agendarConsulta, atualizarCidadao } from "@/services/api";
 import type { CidadaoEntrada } from "@/types";
 
 export function Agendar({ cdHorario, cdOferta }: { cdHorario: number; cdOferta: number }) {
@@ -27,11 +27,16 @@ export function Agendar({ cdHorario, cdOferta }: { cdHorario: number; cdOferta: 
     );
   }
 
+  // Agendar exige login; depois de entrar, a tela de login volta para cá.
+  if (!cadastro) {
+    return <Navigate to="/cidadao/entrar" search={{ horario: cdHorario, oferta: cdOferta, destino: "" }} replace />;
+  }
+
   const aoEnviar = async (dados: CidadaoEntrada) => {
     setEnviando(true);
     setErro(null);
     try {
-      const cidadao = cadastro ? await atualizarCidadao(cadastro.cdCidadao, dados) : await cadastrarCidadao(dados);
+      const cidadao = await atualizarCidadao(cadastro.cdCidadao, dados);
       definirCidadaoAtual(cidadao.cdCidadao);
       const consulta = await agendarConsulta({
         cdHorario,
@@ -54,15 +59,13 @@ export function Agendar({ cdHorario, cdOferta }: { cdHorario: number; cdOferta: 
       <p className="rounded-[12px] bg-mentaSuave p-3 font-semibold">
         {unidade.nmUnidade} · {fmtDiaHora(horario.dtHorario, false)}
       </p>
-      {cadastro && (
-        <p className="text-base text-textoSuave">
-          Encontramos seu cadastro. Confira se o celular está certo: é por ele que avisamos a confirmação e as vagas.
-        </p>
-      )}
+      <p className="text-base text-textoSuave">
+        Confira se o celular está certo: é por ele que avisamos a confirmação e as vagas.
+      </p>
       {erro && <MensagemErro mensagem={erro} />}
       <FormularioCidadao
         nrCep={estado.orientacaoAtual?.nrCep ?? cadastro?.nrCep ?? ""}
-        valoresIniciais={cadastro ?? {}}
+        valoresIniciais={cadastro}
         aoEnviar={(d) => void aoEnviar(d)}
         textoBotao={enviando ? "Agendando..." : "Confirmar agendamento"}
         enviando={enviando}

@@ -12,7 +12,10 @@ export function rotaPai(pathname: string, cdUnidade?: number): DestinoPai | null
     case "/cidadao/agendar": return cdUnidade ? "/cidadao/ubs/$cdUnidade" : "/cidadao/ubs";
     case "/cidadao/sucesso": return "/cidadao/consultas";
     case "/cidadao/lista-do-dia": return "/cidadao/ubs";
-    case "/cidadao/perfil/editar": return "/cidadao/perfil";
+    case "/cidadao/perfil/editar":
+    case "/cidadao/perfil/ficha":
+    case "/cidadao/entrar":
+    case "/cidadao/criar-conta": return "/cidadao/perfil";
     default: return /^\/cidadao\/ubs\/[^/]+$/.test(caminho) ? "/cidadao/ubs" : null;
   }
 }
