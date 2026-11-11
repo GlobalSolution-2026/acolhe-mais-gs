@@ -9,6 +9,7 @@ import { listarUnidades } from "@/services/api";
 import type { OrientacaoBalcao } from "@/services/balcao";
 import { upaMaisProxima } from "@/services/orientacao";
 import type { Unidade } from "@/types";
+import { BalcaoAtendimento } from "./BalcaoAtendimento";
 import { BalcaoCodigo } from "./BalcaoCodigo";
 import { BalcaoQuestionario } from "./BalcaoQuestionario";
 
@@ -125,8 +126,7 @@ export function Balcao() {
       {etapa.tipo === "SEGUIR" && (
         <>
           <ResumoOrientacao orientacao={etapa.dados.orientacao} />
-          {/* Substituído no passo 6: CNS, cadastro de balcão e agendamento/lista do dia. */}
-          <p className="rounded-[12px] bg-mentaSuave p-3 font-semibold text-primaria">Orientação pronta para o agendamento.</p>
+          <BalcaoAtendimento dados={etapa.dados} cdUnidade={cdUnidade} nrCep={nrCep} />
         </>
       )}
 

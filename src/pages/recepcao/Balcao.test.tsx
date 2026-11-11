@@ -2,7 +2,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { EstadoSimulador } from "@/context/SimuladorContext";
 import { conectarStore } from "@/services/api";
-import type { Consulta } from "@/types";
+import type { Cidadao, Consulta, Horario } from "@/types";
 import type { Cor, Orientacao } from "@/types/orientacao";
 import { Balcao } from "./Balcao";
 
@@ -62,7 +62,7 @@ describe("Balcão: tem código", () => {
   it("código com consulta já foi utilizado", async () => {
     digitarCodigo("13");
     expect(await screen.findByText("Código já utilizado.", {}, ESPERA)).toBeInTheDocument();
-    expect(screen.queryByText("Orientação pronta para o agendamento.")).not.toBeInTheDocument();
+    expect(screen.queryByText("Identificar o cidadão")).not.toBeInTheDocument();
   });
 
   it("AMARELO mostra queixa, cor, a UPA e não segue para o agendamento", async () => {
@@ -71,12 +71,12 @@ describe("Balcão: tem código", () => {
     expect(screen.getByText("Amarelo – UPA")).toBeInTheDocument();
     expect(screen.getByText("Dor de garganta")).toBeInTheDocument();
     expect(await screen.findByText("UPA Vila", {}, ESPERA)).toBeInTheDocument();
-    expect(screen.queryByText("Orientação pronta para o agendamento.")).not.toBeInTheDocument();
+    expect(screen.queryByText("Identificar o cidadão")).not.toBeInTheDocument();
   });
 
   it("VERDE de hoje segue para o agendamento", async () => {
     digitarCodigo("12");
-    expect(await screen.findByText("Orientação pronta para o agendamento.", {}, ESPERA)).toBeInTheDocument();
+    expect(await screen.findByText("Identificar o cidadão", {}, ESPERA)).toBeInTheDocument();
     expect(screen.getByText("Verde – UBS")).toBeInTheDocument();
     expect(screen.getByText("Dor de garganta")).toBeInTheDocument();
   });
@@ -113,4 +113,76 @@ describe("Balcão: orientação feita aqui", () => {
     expect(salva?.cdCidadao ?? null).toBeNull();
     expect(estado.orientacaoAtual).toBeNull();
   });
+});
+
+describe("Balcão: identificação e agendamento", () => {
+  const maria: Cidadao = { cdCidadao: 1, nmCidadao: "Maria Silva", nrCns: "111222233334444", dtNascimento: "1980-01-01", dsSexo: "F", nrCelular: "(11) 98888-0001", nmContatoRecado: "", nrContatoRecado: "", nrCep: "04010-100" };
+  const horario = (cdHorario: number, horas: number, flOcupado = false): Horario => ({
+    cdHorario, cdUnidade: 1, dtHorario: new Date(Date.now() + horas * 3_600_000).toISOString(), nrDuracaoMin: 20, flOcupado,
+  });
+
+  async function codigoVerde() {
+    digitarCodigo("12");
+    await screen.findByText("Identificar o cidadão", {}, ESPERA);
+  }
+  async function buscarCns(cns: string) {
+    fireEvent.change(screen.getByLabelText("Cartão SUS do cidadão (15 números)"), { target: { value: cns } });
+    fireEvent.click(botao("Buscar cadastro"));
+  }
+  function preencherCadastro() {
+    fireEvent.change(screen.getByLabelText("Nome completo"), { target: { value: "José Novo" } });
+    fireEvent.change(screen.getByLabelText("Celular com DDD"), { target: { value: "(11) 97777-0000" } });
+    fireEvent.change(screen.getByLabelText("Data de nascimento"), { target: { value: "1970-05-05" } });
+    fireEvent.change(screen.getByLabelText("Sexo"), { target: { value: "M" } });
+    fireEvent.change(screen.getByLabelText("Contato de recado (opcional)"), { target: { value: "Ana" } });
+    fireEvent.change(screen.getByLabelText("Telefone do contato de recado (opcional)"), { target: { value: "(11) 96666-0000" } });
+  }
+
+  it("sem cadastro: cadastro de balcão sem senha, vincula e agenda no horário livre mais próximo", async () => {
+    estado.cidadaos = [maria];
+    estado.credenciais = [];
+    estado.horarios = [horario(1, 72), horario(2, 3), horario(3, 2, true), horario(4, -1)];
+    await codigoVerde();
+    await buscarCns("999888777666555");
+    expect(await screen.findByText("Cadastro de balcão", {}, ESPERA)).toBeInTheDocument();
+    expect(screen.getByLabelText("Cartão SUS (15 números)")).toHaveValue("999888777666555");
+    preencherCadastro();
+    fireEvent.click(botao("Cadastrar"));
+    expect(await screen.findByText(/vinculada a José Novo/, {}, ESPERA)).toBeInTheDocument();
+    const novo = estado.cidadaos.find((c) => c.nrCns === "999888777666555");
+    expect(novo).toMatchObject({ nmCidadao: "José Novo", nrContatoRecado: "(11) 96666-0000", nrCep: "04010-100" });
+    expect(estado.credenciais).toEqual([]);
+    expect(estado.orientacoes.find((o) => o.cdOrientacao === 12)?.cdCidadao).toBe(novo?.cdCidadao);
+    expect(screen.getByLabelText("Horário livre (sugerido: o mais próximo)")).toHaveValue("2");
+    expect(screen.getAllByRole("option")).toHaveLength(2);
+    fireEvent.click(botao("Agendar"));
+    expect(await screen.findByText("Consulta agendada", {}, ESPERA)).toBeInTheDocument();
+    expect(estado.consultas.at(-1)).toMatchObject({ cdHorario: 2, cdCidadao: novo?.cdCidadao, cdOrientacao: 12, dsStatus: "AGENDADA" });
+    expect(estado.horarios.find((h) => h.cdHorario === 2)?.flOcupado).toBe(true);
+  });
+
+  it("mesmo cidadão já vinculado e sem horário livre: confere o cadastro e entra na lista do dia com a cor", async () => {
+    estado.cidadaos = [maria];
+    estado.orientacoes = estado.orientacoes.map((o) => (o.cdOrientacao === 12 ? { ...o, cdCidadao: 1 } : o));
+    estado.horarios = [horario(3, 2, true)];
+    await codigoVerde();
+    await buscarCns("1112 2223 3334 444");
+    expect(await screen.findByText("Conferir cadastro", {}, ESPERA)).toBeInTheDocument();
+    expect(screen.getByLabelText("Celular com DDD")).toHaveValue("(11) 98888-0001");
+    fireEvent.click(botao("Confirmar dados"));
+    fireEvent.click(await screen.findByRole("button", { name: /Colocar na lista do dia \(Verde\)/ }, ESPERA));
+    expect(await screen.findByText("Na lista do dia", {}, ESPERA)).toBeInTheDocument();
+    expect(estado.listaDoDia).toEqual([expect.objectContaining({ cdCidadao: 1, cdOrientacao: 12, cdUnidade: 1, dsCor: "VERDE", flCidadao: false, status: "AGUARDANDO" })]);
+    expect(screen.getByText(/1º da fila \(Verde\)/)).toBeInTheDocument();
+  });
+
+  it.each([["outro cidadão cadastrado", "111222233334444"], ["CNS novo", "999888777666555"]])(
+    "orientação vinculada a outra pessoa bloqueia (%s)", async (_caso, cns) => {
+      estado.cidadaos = [maria];
+      estado.orientacoes = estado.orientacoes.map((o) => (o.cdOrientacao === 12 ? { ...o, cdCidadao: 50 } : o));
+      await codigoVerde();
+      await buscarCns(cns);
+      expect(await screen.findByText("Código já utilizado.", {}, ESPERA)).toBeInTheDocument();
+      expect(screen.queryByLabelText("Nome completo")).not.toBeInTheDocument();
+    });
 });
