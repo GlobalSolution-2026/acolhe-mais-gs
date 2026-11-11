@@ -59,3 +59,39 @@ describe("Pendentes: cancelamento por telefone", () => {
     expect(estado.consultas[0]?.dsStatus).toBe("AGENDADA");
   });
 });
+
+describe("Pendentes: prazo vencido sem contato", () => {
+  /** Consulta daqui a algumas horas, marcada há muito tempo: prazo de confirmação já vencido. */
+  function vencida(): Consulta {
+    for (let h = 2; h <= 30; h++) {
+      const c: Consulta = { ...consultaNaJanela(), cdConsulta: 2, cdHorario: 2, cdCidadao: 2, dtHorario: emHoras(h) };
+      if (!precisaConfirmar(c, new Date())) return c;
+    }
+    throw new Error("sem consulta vencida");
+  }
+  function preparar(nrCelular: string) {
+    const c = vencida();
+    estado.consultas = [c];
+    estado.horarios = [{ cdHorario: 2, cdUnidade: 1, dtHorario: c.dtHorario, nrDuracaoMin: 20, flOcupado: true }];
+    estado.cidadaos = [{ ...estado.cidadaos[0]!, cdCidadao: 2, nmCidadao: "Joana Sem Fone", nrCelular, nmContatoRecado: "", nrContatoRecado: "" }];
+  }
+
+  it("aparece com o aviso e os três botões; confirmar presencialmente tira da lista", async () => {
+    preparar("");
+    render(<Pendentes />);
+    expect(screen.getByText("Joana Sem Fone")).toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent("Prazo vencido – sem contato");
+    expect(screen.queryByText(/Sem contato: a vaga não é liberada/)).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Confirmado por telefone/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Cancelou por telefone/ })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /Confirmado presencialmente/ }));
+    expect(await screen.findByText("Nenhuma consulta aguardando confirmação.", {}, ESPERA)).toBeInTheDocument();
+    expect(estado.consultas[0]).toMatchObject({ dsStatus: "CONFIRMADA", dsCanalConfirmacao: "PRESENCIAL" });
+  });
+
+  it("com contato, a consulta de prazo vencido não aparece (ela é liberada no prazo)", () => {
+    preparar("(11) 97777-0000");
+    render(<Pendentes />);
+    expect(screen.getByText("Nenhuma consulta aguardando confirmação.")).toBeInTheDocument();
+  });
+});

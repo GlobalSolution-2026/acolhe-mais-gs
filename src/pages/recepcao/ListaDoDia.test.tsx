@@ -36,6 +36,26 @@ describe("Lista do dia (recepção): quem já tem consulta hoje", () => {
     render(<ListaDoDia />);
     expect(screen.getAllByText(/Fez orientação hoje/)).toHaveLength(1);
     expect(screen.getByText("Fez orientação hoje: Dor de garganta, verde")).toBeInTheDocument();
+    expect(screen.queryByText(/Outra orientação hoje/)).not.toBeInTheDocument();
     expect(screen.getByText("Consulta hoje às 15:00: não recebe oferta de vaga de hoje.")).toBeInTheDocument();
+  });
+});
+
+describe("Lista do dia (recepção): selo da entrada da fila", () => {
+  it("mostra a orientação da fila e, abaixo, a outra orientação do dia com o horário", () => {
+    estado.orientacoes.push({ cdOrientacao: 12, cdQueixa: 3, dsCor: "VERDE", dsDestino: "UBS", nrDor: 3, flElevadaModelo: false, dtOrientacao: hojeAs(15, 41), cdCidadao: 7 });
+    render(<ListaDoDia />);
+    expect(screen.getByText("Fez orientação hoje: Dor de garganta, verde")).toBeInTheDocument();
+    expect(screen.getByText("Outra orientação hoje: Diarreia e vômito, verde, 15:41")).toBeInTheDocument();
+  });
+
+  it("na fila com prioridade de ontem, o selo mostra a data da orientação da fila", () => {
+    const ontem = new Date(); ontem.setDate(ontem.getDate() - 1); ontem.setHours(9, 0, 0, 0);
+    estado.orientacoes = estado.orientacoes.map((o) => (o.cdOrientacao === 10 ? { ...o, dtOrientacao: ontem.toISOString() } : o));
+    estado.listaDoDia = estado.listaDoDia.map((e) => (e.cdEntrada === 1 ? { ...e, flPrioridade: true } : e));
+    render(<ListaDoDia />);
+    const dia = ontem.toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "2-digit" });
+    expect(screen.getByText(`Orientação da fila (${dia}): Dor de garganta, verde`)).toBeInTheDocument();
+    expect(screen.queryByText(/Fez orientação hoje/)).not.toBeInTheDocument();
   });
 });

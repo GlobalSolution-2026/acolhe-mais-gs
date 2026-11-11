@@ -131,13 +131,18 @@ export function consultaNoDia(consultas: Consulta[], cdCidadao: number | null, d
     .sort((a, b) => a.dtHorario.localeCompare(b.dtHorario))[0];
 }
 
-/** Orientação feita no dia pela pessoa (vinculada pelo Balcão/app ou pela lista do dia); a mais recente. */
-export function orientacaoDoDia(orientacoes: Orientacao[], listaDoDia: EntradaListaDoDia[], cdCidadao: number | null, dia: string): Orientacao | undefined {
-  if (cdCidadao === null) return undefined;
+/** Orientações do dia da pessoa (vinculadas pelo Balcão/app ou pela lista do dia), da mais recente para a mais antiga. */
+export function orientacoesDoDia(orientacoes: Orientacao[], listaDoDia: EntradaListaDoDia[], cdCidadao: number | null, dia: string): Orientacao[] {
+  if (cdCidadao === null) return [];
   const daLista = new Set(listaDoDia.filter((e) => e.cdCidadao === cdCidadao).map((e) => e.cdOrientacao));
   return orientacoes
     .filter((o) => (o.cdCidadao === cdCidadao || daLista.has(o.cdOrientacao)) && chaveDia(o.dtOrientacao) === dia)
-    .sort((a, b) => b.dtOrientacao.localeCompare(a.dtOrientacao))[0];
+    .sort((a, b) => b.dtOrientacao.localeCompare(a.dtOrientacao));
+}
+
+/** A orientação mais recente do dia (selo da Agenda). */
+export function orientacaoDoDia(orientacoes: Orientacao[], listaDoDia: EntradaListaDoDia[], cdCidadao: number | null, dia: string): Orientacao | undefined {
+  return orientacoesDoDia(orientacoes, listaDoDia, cdCidadao, dia)[0];
 }
 
 /** Não repetir destinatários, não devolver a quem perdeu e pular quem já tem consulta no dia da vaga. */
@@ -172,10 +177,23 @@ export function ofertasDoCidadao(ofertas: OfertaVaga[], fila: EntradaListaDoDia[
   return ofertas.filter((o) => o.status === "PENDENTE" && fila.some((e) => e.cdEntrada === o.cdEntrada && e.flCidadao));
 }
 
-/** Fonte única da lista e do contador de confirmações da recepção. */
-export function listarPendentesConfirmacao(consultas: Consulta[], horarios: Horario[], cdUnidade: number, agora: Date): Consulta[] {
+/** AGENDADA com prazo de confirmação vencido, sem contato válido e que ainda não aconteceu: não é liberada e segue pendente. */
+export function prazoVencidoSemContato(c: Consulta, cidadao: Pick<Cidadao, "nrCelular" | "nrContatoRecado"> | undefined, agora: Date): boolean {
+  const prazo = prazoConfirmacao(c);
+  return c.dsStatus === "AGENDADA" && prazo !== null && agora > prazo &&
+    new Date(c.dtHorario).getTime() > agora.getTime() && !(cidadao && temContatoValido(cidadao));
+}
+
+/**
+ * Fonte única da lista e do contador de confirmações da recepção.
+ * Inclui as de prazo vencido sem contato (primeiro, da consulta mais próxima); depois risco ALTO e prazo mais próximo.
+ */
+export function listarPendentesConfirmacao(consultas: Consulta[], horarios: Horario[], cidadaos: Cidadao[], cdUnidade: number, agora: Date): Consulta[] {
   const ids = new Set(horarios.filter((h) => h.cdUnidade === cdUnidade).map((h) => h.cdHorario));
-  return consultas.filter((c) => ids.has(c.cdHorario) && precisaConfirmar(c, agora)).sort((a, b) =>
+  const vencida = (c: Consulta) => prazoVencidoSemContato(c, cidadaos.find((p) => p.cdCidadao === c.cdCidadao), agora);
+  return consultas.filter((c) => ids.has(c.cdHorario) && (precisaConfirmar(c, agora) || vencida(c))).sort((a, b) =>
+    Number(vencida(b)) - Number(vencida(a)) ||
+    (vencida(a) && vencida(b) ? a.dtHorario.localeCompare(b.dtHorario) : 0) ||
     Number(b.dsRiscoFalta === "ALTO") - Number(a.dsRiscoFalta === "ALTO") ||
     (prazoConfirmacao(a)?.getTime() ?? 0) - (prazoConfirmacao(b)?.getTime() ?? 0));
 }

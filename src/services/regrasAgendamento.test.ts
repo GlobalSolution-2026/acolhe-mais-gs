@@ -12,7 +12,9 @@ import {
   inicioPedidoConfirmacao,
   ordenarListaDoDia,
   posicaoNaFila,
+  orientacoesDoDia,
   prazoConfirmacao,
+  prazoVencidoSemContato,
   precisaConfirmar,
   temContatoValido,
 } from "./regrasAgendamento";
@@ -201,7 +203,35 @@ describe("pendentes e sino", () => {
     const c = (id: number, horas: number, risco: "ALTO" | "BAIXO" = "BAIXO", status: Consulta["dsStatus"] = "AGENDADA") => consulta({ cdConsulta: id, cdHorario: id, dtHorario: new Date(base.getTime() + horas * HORA).toISOString(), dsRiscoFalta: risco, dsStatus: status });
     const consultas = [c(1, 30), c(2, 60, "ALTO"), c(3, 40, "ALTO"), c(4, 90), c(5, 10), c(6, 30, "BAIXO", "CONFIRMADA"), c(7, 30)];
     const horarios = consultas.map((c) => ({ cdHorario: c.cdHorario, cdUnidade: c.cdConsulta === 7 ? 2 : 1, dtHorario: c.dtHorario, flOcupado: true, nrDuracaoMin: 20 }));
-    expect(listarPendentesConfirmacao(consultas, horarios, 1, base).map((c) => c.cdConsulta)).toEqual([3, 2, 1]);
+    expect(listarPendentesConfirmacao(consultas, horarios, [cidComContato], 1, base).map((c) => c.cdConsulta)).toEqual([3, 2, 1]);
+  });
+
+  it("mantém, no topo, as de prazo vencido sem contato que ainda não aconteceram", () => {
+    const c = (id: number, cdCidadao: number, horas: number, status: Consulta["dsStatus"] = "AGENDADA") =>
+      consulta({ cdConsulta: id, cdHorario: id, cdCidadao, dtHorario: new Date(base.getTime() + horas * HORA).toISOString(), dsStatus: status });
+    const consultas = [c(1, 1, 30), c(2, 2, 10), c(3, 1, 10), c(4, 2, -2), c(5, 2, 10, "CONFIRMADA"), c(6, 9, 8), c(7, 2, 9)];
+    const horarios = consultas.map((x) => ({ cdHorario: x.cdHorario, cdUnidade: 1, dtHorario: x.dtHorario, flOcupado: true, nrDuracaoMin: 20 }));
+    // 2: sem contato (vencida); 9: sem cadastro (vencida); 1: com contato (vencida não entra).
+    expect(listarPendentesConfirmacao(consultas, horarios, [cidComContato, cidSemContato], 1, base).map((x) => x.cdConsulta)).toEqual([6, 7, 2, 1]);
+  });
+});
+
+const cidComContato: Cidadao = { cdCidadao: 1, nmCidadao: "Com", nrCns: "1", dtNascimento: "1980-01-01", dsSexo: "F", nrCelular: "(11) 98888-0001", nmContatoRecado: "", nrContatoRecado: "", nrCep: "04010-100" };
+const cidSemContato: Cidadao = { ...cidComContato, cdCidadao: 2, nmCidadao: "Sem", nrCelular: "", nrContatoRecado: "" };
+
+describe("prazoVencidoSemContato", () => {
+  const vencida = consulta({ dtHorario: new Date(base.getTime() + 10 * HORA).toISOString() });
+  it("vencida, sem contato (ou sem cadastro) e ainda por acontecer", () => {
+    expect(prazoVencidoSemContato(vencida, cidSemContato, base)).toBe(true);
+    expect(prazoVencidoSemContato(vencida, undefined, base)).toBe(true);
+  });
+  it("não vale com contato, confirmada, já passada, antes do prazo ou dispensada", () => {
+    expect(prazoVencidoSemContato(vencida, cidComContato, base)).toBe(false);
+    expect(prazoVencidoSemContato({ ...vencida, nrContatoRecado: "" } as Consulta, { nrCelular: "", nrContatoRecado: "(11) 96666-0000" }, base)).toBe(false);
+    expect(prazoVencidoSemContato({ ...vencida, dsStatus: "CONFIRMADA" }, cidSemContato, base)).toBe(false);
+    expect(prazoVencidoSemContato({ ...vencida, dtHorario: new Date(base.getTime() - HORA).toISOString() }, cidSemContato, base)).toBe(false);
+    expect(prazoVencidoSemContato({ ...vencida, dtHorario: new Date(base.getTime() + 24 * 6 * HORA).toISOString() }, cidSemContato, base)).toBe(false);
+    expect(prazoVencidoSemContato({ ...vencida, dtAgendamento: new Date(base.getTime() - HORA).toISOString() }, cidSemContato, base)).toBe(false);
   });
 });
 it("comparecimento após orientação exclui futuras, liberadas e não encerradas", () => {
@@ -277,5 +307,15 @@ describe("consulta e orientação do dia", () => {
     const lista = [e(1, 7, 10), e(2, 8, 11), e(3, null, 12)];
     expect(calcularIndicadores([c(1, 7, "2026-11-11T15:00:00")], lista, agora).naoEncaixadas).toBe(2);
     expect(calcularIndicadores([c(1, 7, "2026-11-12T15:00:00")], lista, agora).naoEncaixadas).toBe(3);
+  });
+});
+
+describe("orientacoesDoDia", () => {
+  it("lista as do dia da mais recente para a mais antiga; orientacaoDoDia é a primeira", () => {
+    const o = (cdOrientacao: number, hora: string): Orientacao => ({ cdOrientacao, cdQueixa: 1, dsCor: "AZUL", dsDestino: "UBS", nrDor: 1, flElevadaModelo: false, dtOrientacao: `2026-11-11T${hora}:00`, cdCidadao: 7 });
+    const lista = [o(1, "08:00"), o(2, "15:41"), o(3, "10:00")];
+    expect(orientacoesDoDia(lista, [], 7, "2026-11-11").map((x) => x.cdOrientacao)).toEqual([2, 3, 1]);
+    expect(orientacaoDoDia(lista, [], 7, "2026-11-11")?.cdOrientacao).toBe(2);
+    expect(orientacoesDoDia(lista, [], null, "2026-11-11")).toEqual([]);
   });
 });

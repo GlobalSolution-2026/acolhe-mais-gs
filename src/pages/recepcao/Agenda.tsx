@@ -111,7 +111,7 @@ export function Agenda() {
                   const hoje = chaveDia(new Date().toISOString());
                   const ativa = consulta.dsStatus === "AGENDADA" || consulta.dsStatus === "CONFIRMADA";
                   const o = ativa && chaveDia(consulta.dtHorario) === hoje && orientacaoDoDia(estado.orientacoes, estado.listaDoDia, consulta.cdCidadao, hoje);
-                  return o && <SeloOrientacaoHoje orientacao={o} />;
+                  return o && <SeloOrientacaoHoje orientacao={o} hoje={hoje} />;
                 })()}
                 <p className={`text-sm font-bold ${consulta.dsRiscoFalta === "ALTO" ? "text-gravidade-vermelho" : "text-textoSuave"}`}>
                   Risco de falta: {consulta.dsRiscoFalta} ({Math.round(consulta.vlProbFalta * 100)}%)

@@ -50,7 +50,7 @@ export function LayoutCompartilhado({ cidadao, barra }: { cidadao: boolean; barr
   const avisos = cidadao
     ? estado.consultas.filter((c) => c.cdCidadao === estado.cdCidadaoAtual && precisaConfirmar(c, agora)).length +
       ofertasDoCidadao(estado.ofertas, estado.listaDoDia).length
-    : listarPendentesConfirmacao(estado.consultas, estado.horarios, estado.cdUnidadeRecepcao, agora).length;
+    : listarPendentesConfirmacao(estado.consultas, estado.horarios, estado.cidadaos, estado.cdUnidadeRecepcao, agora).length;
   const ubs = estado.unidades.filter((u) => u.tpUnidade === "UBS");
 
   return (

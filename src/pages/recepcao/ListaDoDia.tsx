@@ -4,10 +4,10 @@ import { EstadoVazio } from "@/components/EstadoVazio";
 import { SeloDemonstracao } from "@/components/SeloDemonstracao";
 import { useSimulador } from "@/context/SimuladorContext";
 import { MensagemErro } from "@/components/MensagemErro";
-import { SeloOrientacaoHoje } from "@/components/SeloOrientacaoHoje";
+import { nomeCor, nomeQueixa, SeloOrientacaoHoje } from "@/components/SeloOrientacaoHoje";
 import { aceitarOfertaPorTelefone } from "@/services/api";
 import { chaveDia, fmtDiaHora, fmtHora } from "@/lib/datas";
-import { consultaNoDia, escolherDestinatarioOferta, horarioOferecivel, orientacaoDoDia, ordenarListaDoDia, tempoRestanteOferta } from "@/services/regrasAgendamento";
+import { consultaNoDia, escolherDestinatarioOferta, horarioOferecivel, orientacoesDoDia, ordenarListaDoDia, tempoRestanteOferta } from "@/services/regrasAgendamento";
 
 export function ListaDoDia() {
   const { estado, oferecerVaga, responderOferta } = useSimulador();
@@ -62,7 +62,11 @@ export function ListaDoDia() {
       {fila.length === 0 && <EstadoVazio mensagem="Ninguém aguardando encaixe hoje." />}
       {fila.map((e, i) => {
         const consultaHoje = consultaNoDia(estado.consultas, e.cdCidadao, hoje);
-        const orientacaoHoje = consultaHoje && orientacaoDoDia(estado.orientacoes, estado.listaDoDia, e.cdCidadao, hoje);
+        // Selo: a orientação da entrada da fila (a que define a posição); as outras do dia vêm abaixo, por horário.
+        const daFila = estado.orientacoes.find((o) => o.cdOrientacao === e.cdOrientacao);
+        const outras = consultaHoje
+          ? orientacoesDoDia(estado.orientacoes, estado.listaDoDia, e.cdCidadao, hoje).filter((o) => o.cdOrientacao !== e.cdOrientacao).reverse()
+          : [];
         return (
         <article key={e.cdEntrada} className="flex items-center gap-3 rounded-[12px] border border-borda bg-branco p-4 shadow-leve">
           <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-mentaSuave text-lg font-extrabold text-primaria">
@@ -73,7 +77,12 @@ export function ListaDoDia() {
             <p className="text-sm text-textoSuave">Entrou às {fmtHora(e.dtEntrada)}{e.flPrioridade ? " · prioridade de ontem" : ""}</p>
             {consultaHoje && (
               <div className="mt-1 flex flex-col gap-1">
-                {orientacaoHoje && <SeloOrientacaoHoje orientacao={orientacaoHoje} />}
+                {daFila && <SeloOrientacaoHoje orientacao={daFila} hoje={hoje} />}
+                {outras.map((o) => (
+                  <p key={o.cdOrientacao} className="text-sm text-textoSuave">
+                    Outra orientação hoje: {nomeQueixa(o)}, {nomeCor(o)}, {fmtHora(o.dtOrientacao)}
+                  </p>
+                ))}
                 <p className="text-sm text-textoSuave">Consulta hoje às {fmtHora(consultaHoje.dtHorario)}: não recebe oferta de vaga de hoje.</p>
               </div>
             )}

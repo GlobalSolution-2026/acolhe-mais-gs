@@ -5,7 +5,7 @@ import { MensagemErro } from "@/components/MensagemErro";
 import { useSimulador } from "@/context/SimuladorContext";
 import { fmtDiaHora } from "@/lib/datas";
 import { cancelarConsulta, confirmarConsulta } from "@/services/api";
-import { listarPendentesConfirmacao, prazoConfirmacao, temContatoValido } from "@/services/regrasAgendamento";
+import { listarPendentesConfirmacao, prazoConfirmacao, prazoVencidoSemContato, temContatoValido } from "@/services/regrasAgendamento";
 import type { CanalConfirmacao } from "@/types";
 
 export function Pendentes() {
@@ -15,7 +15,8 @@ export function Pendentes() {
   const [enviando, setEnviando] = useState(false);
   const [cancelando, setCancelando] = useState<number | null>(null);
 
-  const pendentes = listarPendentesConfirmacao(estado.consultas, estado.horarios, cdUnidade, new Date());
+  const agora = new Date();
+  const pendentes = listarPendentesConfirmacao(estado.consultas, estado.horarios, estado.cidadaos, cdUnidade, agora);
 
   const confirmar = async (cdConsulta: number, canal: CanalConfirmacao) => {
     setEnviando(true);
@@ -51,6 +52,7 @@ export function Pendentes() {
         const cidadao = estado.cidadaos.find((x) => x.cdCidadao === c.cdCidadao);
         const prazo = prazoConfirmacao(c);
         const semContato = cidadao ? !temContatoValido(cidadao) : true;
+        const vencida = prazoVencidoSemContato(c, cidadao, agora);
         return (
           <article key={c.cdConsulta} className="flex flex-col gap-2 rounded-[12px] border border-borda bg-branco p-4 shadow-leve">
             <div className="flex items-center justify-between gap-2">
@@ -60,12 +62,16 @@ export function Pendentes() {
               </span>
             </div>
             <p className="font-semibold">{fmtDiaHora(c.dtHorario)}</p>
-            {prazo && <p className="text-sm font-semibold text-gravidade-laranja">Prazo para confirmar: {fmtDiaHora(prazo.toISOString(), false)}</p>}
+            {vencida ? (
+              <p className="rounded-[12px] bg-gravidade-laranja p-2 text-sm font-extrabold text-branco" role="status">
+                Prazo vencido – sem contato
+              </p>
+            ) : prazo && <p className="text-sm font-semibold text-gravidade-laranja">Prazo para confirmar: {fmtDiaHora(prazo.toISOString(), false)}</p>}
             {cidadao?.nrCelular && <p className="text-sm">Celular: {cidadao.nrCelular}</p>}
             {cidadao?.nmContatoRecado && (
               <p className="text-sm">Recado: {cidadao.nmContatoRecado} · {cidadao.nrContatoRecado}</p>
             )}
-            {semContato && (
+            {semContato && !vencida && (
               <p className="rounded-[12px] bg-mentaSuave p-2 text-sm font-bold text-primaria">
                 Sem contato: a vaga não é liberada automaticamente
               </p>
