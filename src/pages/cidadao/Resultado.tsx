@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { FiAlertCircle, FiCalendar, FiMapPin, FiPhone, FiPhoneCall } from "react-icons/fi";
+import { FiAlertCircle, FiCalendar, FiHash, FiMapPin, FiPhone, FiPhoneCall } from "react-icons/fi";
 import { Carregando } from "@/components/Carregando";
 import { EstadoVazio } from "@/components/EstadoVazio";
 import { MensagemErro } from "@/components/MensagemErro";
@@ -11,7 +11,7 @@ import { orientacoesUbs } from "@/data/orientacoesUbs";
 import { listarUnidades } from "@/services/api";
 import { enderecoParaLigacao } from "@/services/cep";
 import { respostasEfetivas } from "@/services/fichaOrientacao";
-import { concluirOrientacao, upaMaisProxima } from "@/services/orientacao";
+import { concluirOrientacao, ordenarUbsPorCep, upaMaisProxima } from "@/services/orientacao";
 import type { Unidade } from "@/types";
 import type { OrientacaoEmAndamento, ResultadoFinal } from "@/types/orientacao";
 
@@ -99,8 +99,52 @@ function Amarelo({ atual, res }: { atual: OrientacaoEmAndamento; res: ResultadoF
   );
 }
 
-function Ubs({ atual }: { atual: OrientacaoEmAndamento }) {
+/** Código para apresentar na recepção (vale só hoje; funciona sem login) + UBS indicada pelo CEP. */
+function CodigoParaUbs({ atual, cdOrientacao }: { atual: OrientacaoEmAndamento; cdOrientacao: number }) {
+  const [ubs, setUbs] = useState<Unidade | null>(null);
+  const [carregando, setCarregando] = useState(true);
+  const [erro, setErro] = useState<string | null>(null);
+
+  const carregar = useCallback(async () => {
+    setCarregando(true);
+    setErro(null);
+    try {
+      setUbs(ordenarUbsPorCep(await listarUnidades("UBS"), atual.nrCep)[0] ?? null);
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Não foi possível carregar as UBS.");
+    } finally {
+      setCarregando(false);
+    }
+  }, [atual.nrCep]);
+
+  useEffect(() => { void carregar(); }, [carregar]);
+
+  return (
+    <section className="flex flex-col gap-3 rounded-[12px] border-2 border-primaria bg-branco p-4" aria-live="polite">
+      <h2 className="text-lg font-extrabold text-primaria">Mostre este código na recepção</h2>
+      <p className="flex items-center gap-2 text-4xl font-extrabold tracking-wider">
+        <FiHash aria-hidden /> <span aria-label={`Código ${cdOrientacao}`}>{cdOrientacao}</span>
+      </p>
+      <p className="text-base text-textoSuave">O código vale só para hoje. Leve o Cartão SUS.</p>
+      {carregando && <Carregando texto="Buscando a UBS indicada..." />}
+      {erro && <MensagemErro mensagem={erro} onTentarNovamente={carregar} />}
+      {!carregando && !erro && !ubs && <EstadoVazio mensagem="Nenhuma UBS encontrada." />}
+      {!carregando && ubs && (
+        <div>
+          <h3 className="font-extrabold">UBS indicada: {ubs.nmUnidade}</h3>
+          <p className="flex items-start gap-2 text-textoSuave"><FiMapPin className="mt-1 shrink-0" />{ubs.dsEndereco} · CEP {ubs.nrCep}</p>
+          <a href={`tel:${ubs.nrTelefone.replace(/\D/g, "")}`} className="flex min-h-12 items-center gap-2 font-bold text-primaria">
+            <FiPhone /> {ubs.nrTelefone}
+          </a>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function Ubs({ atual, res }: { atual: OrientacaoEmAndamento; res: ResultadoFinal }) {
   const o = orientacoesUbs[atual.cdQueixa];
+  const [prefereUbs, setPrefereUbs] = useState(false);
   return (
     <>
       <h1 className="text-2xl font-extrabold">Procure a UBS</h1>
@@ -115,6 +159,13 @@ function Ubs({ atual }: { atual: OrientacaoEmAndamento }) {
       <Link to="/cidadao/ubs" className="btn bg-primaria text-branco hover:bg-primariaEscura">
         <FiCalendar /> Ver horários nas UBS próximas
       </Link>
+      {prefereUbs ? (
+        <CodigoParaUbs atual={atual} cdOrientacao={res.cdOrientacao} />
+      ) : (
+        <button onClick={() => setPrefereUbs(true)} className="btn border border-borda bg-branco text-primaria">
+          <FiMapPin /> Prefiro ir à UBS
+        </button>
+      )}
     </>
   );
 }
@@ -174,7 +225,7 @@ export function Resultado() {
         </>
       )}
       {res.dsCor === "AMARELO" && <Amarelo atual={atual} res={res} />}
-      {(res.dsCor === "VERDE" || res.dsCor === "AZUL") && <Ubs atual={atual} />}
+      {(res.dsCor === "VERDE" || res.dsCor === "AZUL") && <Ubs atual={atual} res={res} />}
       <p className="text-sm text-textoSuave">
         O Acolhe+ orienta, mas não faz diagnóstico nem substitui a avaliação de profissionais de saúde.
       </p>
