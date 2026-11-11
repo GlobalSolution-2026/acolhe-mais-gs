@@ -109,7 +109,8 @@ registroContexto.__acolheSimuladorContext = SimuladorContext;
 export function SimuladorProvider({ children }: { children: ReactNode }) {
   const [estado, setEstado] = useState<EstadoSimulador>(estadoInicial);
   const ref = useRef(estado);
-  const carregado = useRef(false);
+  // Só grava depois que o estado salvo (ou a semente nova) já foi aplicado.
+  const [carregado, setCarregado] = useState(false);
 
   useEffect(() => {
     const salvo = lerStorage();
@@ -117,12 +118,12 @@ export function SimuladorProvider({ children }: { children: ReactNode }) {
       ref.current = salvo;
       setEstado(salvo);
     }
-    carregado.current = true;
+    setCarregado(true);
   }, []);
 
   useEffect(() => {
-    if (carregado.current) gravarStorage(estado);
-  }, [estado]);
+    if (carregado) gravarStorage(estado);
+  }, [estado, carregado]);
 
   const obterEstado = useCallback(() => ref.current, []);
 
