@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { EstadoSimulador } from "@/context/SimuladorContext";
 import type { Consulta } from "@/types";
-import { aceitarOfertaPorTelefone, agendarConsulta, conectarStore, confirmarConsulta, listarUnidades, registrarPresenca, salvarOrientacao } from "./api";
+import { aceitarOfertaPorTelefone, agendarConsulta, buscarCidadaoPorCns, conectarStore, confirmarConsulta, incluirNaListaDoDia, listarUnidades, registrarPresenca, salvarOrientacao, vincularOrientacao } from "./api";
 
 const original: Consulta = {
   cdConsulta: 7, cdHorario: 12, cdCidadao: 9, cdOrientacao: 3,
@@ -64,13 +64,14 @@ describe("agendamento por oferta", () => {
   function preparar() {
     estado.cidadaos = [{ cdCidadao: 9, nmCidadao: "Maria", nrCns: "111222233334444", dtNascimento: "1980-01-01", dsSexo: "F", nrCelular: "11999999999", nmContatoRecado: "", nrContatoRecado: "", nrCep: "04010-100" }];
     estado.horarios = [{ cdHorario: 12, cdUnidade: 1, dtHorario: new Date(Date.now() + 48 * 3600000).toISOString(), nrDuracaoMin: 20, flOcupado: false }];
-    estado.listaDoDia = [{ cdEntrada: 1, cdCidadao: 9, cdUnidade: 1, nmCidadao: "Maria", dsCor: "VERDE", dtEntrada: new Date().toISOString(), flPrioridade: false, flCidadao: false, status: "AGUARDANDO" }];
+    estado.listaDoDia = [{ cdEntrada: 1, cdCidadao: 9, cdOrientacao: 4, cdUnidade: 1, nmCidadao: "Maria", dsCor: "VERDE", dtEntrada: new Date().toISOString(), flPrioridade: false, flCidadao: false, status: "AGUARDANDO" }];
     estado.ofertas = [{ cdOferta: 1, cdHorario: 12, cdEntrada: 1, cdUnidade: 1, nmCidadao: "Maria", dtCriacao: new Date().toISOString(), status: "PENDENTE" }];
   }
   it("telefone cria consulta, ocupa horário e encerra oferta e entrada", async () => {
     preparar(); const promise = aceitarOfertaPorTelefone(1); await vi.runAllTimersAsync();
     const c = await promise;
     expect(c.cdCidadao).toBe(9);
+    expect(c.cdOrientacao).toBe(4);
     expect(estado.horarios[0]?.flOcupado).toBe(true);
     expect(estado.ofertas[0]?.status).toBe("ACEITA");
     expect(estado.listaDoDia[0]?.status).toBe("ENCERRADA");
@@ -89,5 +90,37 @@ describe("agendamento por oferta", () => {
     await vi.runAllTimersAsync();
     expect((await results).map((r) => r.status).sort()).toEqual(["fulfilled", "rejected"]);
     expect(estado.consultas).toHaveLength(2);
+  });
+});
+
+describe("balcão", () => {
+  const maria = { cdCidadao: 9, nmCidadao: "Maria", nrCns: "111222233334444", dtNascimento: "1980-01-01", dsSexo: "F" as const, nrCelular: "11999999999", nmContatoRecado: "", nrContatoRecado: "", nrCep: "04010-100" };
+  const executar = async <T,>(p: Promise<T>) => { await vi.runAllTimersAsync(); return p; };
+
+  it("busca o cidadão pelo CNS com ou sem máscara", async () => {
+    estado.cidadaos = [maria];
+    expect((await executar(buscarCidadaoPorCns("1112 2223 3334 444")))?.cdCidadao).toBe(9);
+    expect(await executar(buscarCidadaoPorCns("999999999999999"))).toBeNull();
+  });
+
+  it("inclui na lista do dia com cor e orientação, sem duplicar quem já aguarda", async () => {
+    estado.cidadaos = [maria];
+    const entrada = await executar(incluirNaListaDoDia({ cdUnidade: 1, cdCidadao: 9, cdOrientacao: 4, dsCor: "AZUL" }));
+    expect(entrada).toMatchObject({ cdEntrada: 1, cdCidadao: 9, cdOrientacao: 4, dsCor: "AZUL", nmCidadao: "Maria", flCidadao: false, status: "AGUARDANDO" });
+    expect(estado.listaDoDia).toEqual([entrada]);
+    const repetida = incluirNaListaDoDia({ cdUnidade: 1, cdCidadao: 9, cdOrientacao: 5, dsCor: "VERDE" });
+    const rejeicao = expect(repetida).rejects.toThrow("já está na lista do dia");
+    await vi.runAllTimersAsync(); await rejeicao;
+    expect(estado.listaDoDia).toHaveLength(1);
+  });
+
+  it("vincula a orientação ao mesmo cidadão e recusa outro", async () => {
+    estado.orientacoes = [{ cdOrientacao: 4, cdQueixa: 1, dsCor: "VERDE", dsDestino: "UBS", nrDor: 2, flElevadaModelo: false, dtOrientacao: new Date().toISOString() }];
+    expect((await executar(vincularOrientacao(4, 9))).cdCidadao).toBe(9);
+    expect((await executar(vincularOrientacao(4, 9))).cdCidadao).toBe(9);
+    const outro = vincularOrientacao(4, 10);
+    const rejeicao = expect(outro).rejects.toThrow("Código já utilizado.");
+    await vi.runAllTimersAsync(); await rejeicao;
+    expect(estado.orientacoes[0]?.cdCidadao).toBe(9);
   });
 });

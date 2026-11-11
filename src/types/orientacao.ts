@@ -60,6 +60,8 @@ export interface Orientacao {
   nrDor: number | null;
   flElevadaModelo: boolean;
   dtOrientacao: string;
+  /** Cidadão vinculado (orientação feita sem login fica null até o balcão vincular). */
+  cdCidadao?: number | null;
 }
 
 export interface ResultadoFinal extends ResultadoOrientacao {

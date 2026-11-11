@@ -7,9 +7,8 @@ import { MensagemErro } from "@/components/MensagemErro";
 import { SeloGravidade } from "@/components/SeloGravidade";
 import { useSimulador } from "@/context/SimuladorContext";
 import { listarUnidades } from "@/services/api";
+import { ordenarUbsPorCep } from "@/services/orientacao";
 import type { Unidade } from "@/types";
-
-const prefixo = (cep: string) => cep.replace(/\D/g, "").slice(0, 3);
 
 export function Ubs() {
   const { estado } = useSimulador();
@@ -29,16 +28,7 @@ export function Ubs() {
   useEffect(() => { void carregar(); }, [carregar]);
 
   const cep = estado.orientacaoAtual?.nrCep ?? "";
-  const ordenadas = useMemo(() => {
-    if (!ubs) return [];
-    const alvo = prefixo(cep);
-    return [...ubs].sort((a, b) => {
-      const da = prefixo(a.nrCep) === alvo ? 0 : 1;
-      const db = prefixo(b.nrCep) === alvo ? 0 : 1;
-      if (da !== db) return da - db;
-      return Math.abs(Number(prefixo(a.nrCep)) - Number(alvo)) - Math.abs(Number(prefixo(b.nrCep)) - Number(alvo));
-    });
-  }, [ubs, cep]);
+  const ordenadas = useMemo(() => (ubs ? ordenarUbsPorCep(ubs, cep) : []), [ubs, cep]);
 
   const resultado = estado.orientacaoAtual?.resultado ?? null;
 

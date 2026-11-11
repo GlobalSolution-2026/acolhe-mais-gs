@@ -55,6 +55,8 @@ export interface Consulta {
 export interface EntradaListaDoDia {
   cdEntrada: number;
   cdCidadao: number | null;
+  /** Orientação que levou à lista (ACM_LISTA_DIA.id_orientacao, NOT NULL). */
+  cdOrientacao: number;
   cdUnidade: number;
   nmCidadao: string;
   dsCor: Extract<Cor, "VERDE" | "AZUL">;

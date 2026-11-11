@@ -38,7 +38,8 @@ function estadoInicial(): EstadoSimulador {
   return {
     dtSemente: chaveDia(agora.toISOString()),
     // 4: perguntas de marcar no questionário (respostas antigas em "SIM"/"NAO" deixam de valer).
-    versaoSemente: 4,
+    // 5: lista do dia com cdOrientacao obrigatório (ACM_LISTA_DIA.id_orientacao).
+    versaoSemente: 5,
     unidades: unidadesIniciais,
     horarios: semente.horarios,
     cidadaos: semente.cidadaos,
@@ -59,7 +60,7 @@ function lerStorage(): EstadoSimulador | null {
     const bruto = localStorage.getItem(CHAVE);
     if (!bruto) return null;
     const { perfil: _perfilAntigo, ...salvo } = JSON.parse(bruto) as Partial<EstadoSimulador> & { perfil?: unknown };
-    if (salvo.versaoSemente !== 4 || salvo.dtSemente !== chaveDia(new Date().toISOString())) return null;
+    if (salvo.versaoSemente !== 5 || salvo.dtSemente !== chaveDia(new Date().toISOString())) return null;
     return { ...estadoInicial(), ...salvo };
   } catch {
     return null;
@@ -87,7 +88,7 @@ interface SimuladorValor {
   voltarPergunta: () => void;
   definirResultado: (resultado: ResultadoFinal) => void;
   definirCidadaoAtual: (cdCidadao: number) => void;
-  entrarNaListaDoDia: (cdUnidade: number, dsCor: EntradaListaDoDia["dsCor"]) => void;
+  entrarNaListaDoDia: (cdUnidade: number, dsCor: EntradaListaDoDia["dsCor"], cdOrientacao: number) => void;
   oferecerVaga: (cdHorario: number) => void;
   responderOferta: (cdOferta: number, resposta: "ACEITA" | "RECUSADA" | "EXPIRADA") => void;
   /** DEMONSTRAÇÃO: libera consultas não confirmadas e oferece as vagas à lista do dia. */
@@ -183,7 +184,7 @@ export function SimuladorProvider({ children }: { children: ReactNode }) {
   );
 
   const entrarNaListaDoDia = useCallback(
-    (cdUnidade: number, dsCor: EntradaListaDoDia["dsCor"]) =>
+    (cdUnidade: number, dsCor: EntradaListaDoDia["dsCor"], cdOrientacao: number) =>
       atualizarEstado((e) => {
         if (e.listaDoDia.some((x) => x.flCidadao && x.status === "AGUARDANDO")) return e;
         const nome = e.cidadaos.find((c) => c.cdCidadao === e.cdCidadaoAtual)?.nmCidadao ?? "Você";
@@ -191,6 +192,7 @@ export function SimuladorProvider({ children }: { children: ReactNode }) {
           cdEntrada: Math.max(0, ...e.listaDoDia.map((x) => x.cdEntrada)) + 1,
           cdUnidade,
           cdCidadao: e.cdCidadaoAtual,
+          cdOrientacao,
           nmCidadao: nome,
           dsCor,
           dtEntrada: new Date().toISOString(),

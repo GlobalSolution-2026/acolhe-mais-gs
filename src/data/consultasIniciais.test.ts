@@ -72,6 +72,10 @@ for (const data of ["2026-11-05T10:30:00", "2026-11-07T00:00:01", "2026-11-08T23
       expect(s.cidadaos.filter((p) => !temContatoValido(p))).toHaveLength(8);
       for (const e of s.listaDoDia) {
         expect(e.cdCidadao).not.toBeNull();
+        const o = s.orientacoes.find((x) => x.cdOrientacao === e.cdOrientacao);
+        expect(o).toMatchObject({ dsCor: e.dsCor, dsDestino: "UBS", cdCidadao: e.cdCidadao });
+        expect(chaveDia(o?.dtOrientacao ?? "")).toBe(chaveDia(e.dtEntrada));
+        expect(new Date(o?.dtOrientacao ?? "").getTime()).toBeLessThan(new Date(e.dtEntrada).getTime());
         expect(chaveDia(e.dtEntrada)).toBe(chaveDia(agora.toISOString()));
         const inicio = new Date(agora); inicio.setHours(7, 0, 0, 0);
         const fim = new Date(agora); fim.setHours(17, 0, 0, 0);

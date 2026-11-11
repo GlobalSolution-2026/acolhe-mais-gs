@@ -7,7 +7,7 @@ import { finalizarOferta, oferecerHorario, simularPrazo, vencerOfertas } from ".
 const agora = new Date("2026-11-05T10:00:00Z");
 const H = 3_600_000;
 const iso = (horas: number) => new Date(agora.getTime() + horas * H).toISOString();
-const entrada = (id: number): EntradaListaDoDia => ({ cdEntrada: id, cdCidadao: id, cdUnidade: 1, nmCidadao: `Pessoa ${id}`, dsCor: "VERDE", dtEntrada: iso(-id), flPrioridade: id === 1, flCidadao: id === 3, status: "AGUARDANDO" });
+const entrada = (id: number): EntradaListaDoDia => ({ cdEntrada: id, cdCidadao: id, cdOrientacao: id, cdUnidade: 1, nmCidadao: `Pessoa ${id}`, dsCor: "VERDE", dtEntrada: iso(-id), flPrioridade: id === 1, flCidadao: id === 3, status: "AGUARDANDO" });
 const oferta = (id: number, status: OfertaVaga["status"] = "PENDENTE", cdHorario = 1): OfertaVaga => ({ cdOferta: id, cdHorario, cdUnidade: 1, cdEntrada: id, nmCidadao: `Pessoa ${id}`, status, dtCriacao: agora.toISOString() });
 function estado(): EstadoSimulador {
   return { dtSemente: "2026-11-05", unidades: [], cdUnidadeRecepcao: 1, cdCidadaoAtual: null, orientacoes: [], orientacaoAtual: null, ofertas: [], listaDoDia: [entrada(1), entrada(2), entrada(3)],

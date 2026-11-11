@@ -68,7 +68,7 @@ export function gerarSemente(horariosBase: Horario[], agora: Date = new Date()):
     let cdOrientacao: number | null = null;
     if (rand() < .3) {
       cdOrientacao = orientacoes.length + 1;
-      orientacoes.push({ cdOrientacao, cdQueixa: 1 + Math.floor(rand() * 5), dsCor: rand() < .5 ? "VERDE" : "AZUL", dsDestino: "UBS", nrDor: Math.floor(rand() * 5), flElevadaModelo: false, dtOrientacao: new Date(agendamento - H).toISOString() });
+      orientacoes.push({ cdOrientacao, cdCidadao, cdQueixa: 1 + Math.floor(rand() * 5), dsCor: rand() < .5 ? "VERDE" : "AZUL", dsDestino: "UBS", nrDor: Math.floor(rand() * 5), flElevadaModelo: false, dtOrientacao: new Date(agendamento - H).toISOString() });
     }
     const c: Consulta = { cdConsulta: consultas.length + 1, cdHorario: h.cdHorario, cdCidadao, cdOrientacao, dtAgendamento: new Date(agendamento).toISOString(), dtHorario: h.dtHorario, dtConfirmacao: null, dsCanalConfirmacao: null, dsStatus: status, dsRiscoFalta: riscoAlto ? "ALTO" : "BAIXO", vlProbFalta: Number((riscoAlto ? .5 + rand() * .45 : .05 + rand() * .4).toFixed(2)), nmUnidade: unidadesIniciais.find((u) => u.cdUnidade === h.cdUnidade)?.nmUnidade ?? "UBS" };
     if (status === "CONFIRMADA" || status === "REALIZADA") {
@@ -119,6 +119,12 @@ export function gerarSemente(horariosBase: Horario[], agora: Date = new Date()):
   const inicioEntrada = new Date(agora); inicioEntrada.setHours(7, 0, 0, 0);
   const fimEntrada = new Date(agora); fimEntrada.setHours(17, 0, 0, 0);
   const limiteEntrada = agora < inicioEntrada || agora > fimEntrada ? fimEntrada.getTime() : now;
-  const listaDoDia = filaIds.map((id, i): EntradaListaDoDia => ({ cdEntrada: i + 1, cdCidadao: id, cdUnidade: Math.floor(i / 4) + 1, nmCidadao: cidadaos.find((c) => c.cdCidadao === id)?.nmCidadao ?? "Paciente", dsCor: i % 2 === 0 ? "VERDE" : "AZUL", dtEntrada: new Date(inicioEntrada.getTime() + (limiteEntrada - inicioEntrada.getTime()) * (i + 1) / 14).toISOString(), flPrioridade: i % 4 === 0, flCidadao: false, status: "AGUARDANDO" }));
+  const listaDoDia = filaIds.map((id, i): EntradaListaDoDia => {
+    const dsCor = i % 2 === 0 ? "VERDE" : "AZUL";
+    const dtEntrada = new Date(inicioEntrada.getTime() + (limiteEntrada - inicioEntrada.getTime()) * (i + 1) / 14).toISOString();
+    const cdOrientacao = orientacoes.length + 1;
+    orientacoes.push({ cdOrientacao, cdCidadao: id, cdQueixa: 1 + (i % 5), dsCor, dsDestino: "UBS", nrDor: i % 5, flElevadaModelo: false, dtOrientacao: new Date(new Date(dtEntrada).getTime() - 10 * 60_000).toISOString() });
+    return { cdEntrada: i + 1, cdCidadao: id, cdOrientacao, cdUnidade: Math.floor(i / 4) + 1, nmCidadao: cidadaos.find((c) => c.cdCidadao === id)?.nmCidadao ?? "Paciente", dsCor, dtEntrada, flPrioridade: i % 4 === 0, flCidadao: false, status: "AGUARDANDO" };
+  });
   return { cidadaos, consultas, orientacoes, horarios, listaDoDia };
 }

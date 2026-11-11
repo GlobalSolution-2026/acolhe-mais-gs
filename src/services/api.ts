@@ -4,9 +4,10 @@
  * No protótipo, lê/altera o estado mockado do Context e espera 400 ms.
  */
 import type { EstadoSimulador } from "@/context/SimuladorContext";
-import type { CanalConfirmacao, Cidadao, FichaSaude, CidadaoEntrada, Consulta, ErroResponse, Horario, Unidade } from "@/types";
+import type { CanalConfirmacao, Cidadao, FichaSaude, CidadaoEntrada, Consulta, EntradaListaDoDia, ErroResponse, Horario, Unidade } from "@/types";
 import type { Orientacao, VerificacaoUrgenciaEntrada } from "@/types/orientacao";
 import { idadeEm } from "@/lib/datas";
+import { podeVincular } from "./balcao";
 import { segundosRestantesOferta, temContatoValido } from "./regrasAgendamento";
 
 export const API_URL = import.meta.env["VITE_API_URL"] as string | undefined;
@@ -280,7 +281,58 @@ export async function aceitarOfertaPorTelefone(cdOferta: number): Promise<Consul
   const oferta = e.ofertas.find((o) => o.cdOferta === cdOferta && o.status === "PENDENTE");
   const entrada = e.listaDoDia.find((x) => x.cdEntrada === oferta?.cdEntrada);
   if (!oferta || segundosRestantesOferta(oferta, new Date()) === 0 || !entrada || entrada.cdCidadao === null) falhar({ status: 409, erro: "Oferta indisponível." });
-  const consulta = await agendarConsulta({ cdHorario: oferta.cdHorario, cdCidadao: entrada.cdCidadao, cdOrientacao: null, cdOferta });
+  const consulta = await agendarConsulta({ cdHorario: oferta.cdHorario, cdCidadao: entrada.cdCidadao, cdOrientacao: entrada.cdOrientacao, cdOferta });
   getStore().atualizarEstado((atual) => ({ ...atual, ofertas: atual.ofertas.map((o) => o.cdOferta === cdOferta ? { ...o, status: "ACEITA" } : o), listaDoDia: atual.listaDoDia.map((x) => x.cdEntrada === entrada.cdEntrada ? { ...x, status: "ENCERRADA" } : x) }));
   return consulta;
+}
+
+// GET /cidadaos?cns={nrCns}
+export async function buscarCidadaoPorCns(nrCns: string): Promise<Cidadao | null> {
+  // const res = await fetch(`${API_URL}/cidadaos?cns=${nrCns.replace(/\D/g, "")}`);
+  // if (res.status === 404) return null;
+  // if (!res.ok) { const erro: ErroResponse = await res.json(); throw new Error(erro.erro); }
+  // return res.json();
+  await esperar();
+  return getStore().obterEstado().cidadaos.find((c) => c.nrCns === nrCns.replace(/\D/g, "")) ?? null;
+}
+
+/** DEMONSTRAÇÃO: fica só no front; não existe na API Java. */
+export async function buscarOrientacao(cdOrientacao: number): Promise<Orientacao> {
+  await esperar();
+  const o = getStore().obterEstado().orientacoes.find((x) => x.cdOrientacao === cdOrientacao);
+  if (!o) falhar({ status: 404, erro: "Código não encontrado. Confira o número com o cidadão." });
+  return o;
+}
+
+/** DEMONSTRAÇÃO: vincula ao cidadão a orientação feita sem login (balcão). */
+export async function vincularOrientacao(cdOrientacao: number, cdCidadao: number): Promise<Orientacao> {
+  await esperar();
+  const s = getStore();
+  const o = s.obterEstado().orientacoes.find((x) => x.cdOrientacao === cdOrientacao);
+  if (!o) falhar({ status: 404, erro: "Código não encontrado." });
+  if (!podeVincular(o, cdCidadao)) falhar({ status: 409, erro: "Código já utilizado." });
+  const nova: Orientacao = { ...o, cdCidadao };
+  s.atualizarEstado((e) => ({ ...e, orientacoes: e.orientacoes.map((x) => (x.cdOrientacao === cdOrientacao ? nova : x)) }));
+  return nova;
+}
+
+/** DEMONSTRAÇÃO: a recepção coloca o cidadão na lista do dia da UBS (flCidadao = false). */
+export async function incluirNaListaDoDia(dados: { cdUnidade: number; cdCidadao: number; cdOrientacao: number; dsCor: EntradaListaDoDia["dsCor"] }): Promise<EntradaListaDoDia> {
+  await esperar();
+  const s = getStore();
+  const e = s.obterEstado();
+  const cidadao = e.cidadaos.find((c) => c.cdCidadao === dados.cdCidadao);
+  if (!cidadao) falhar({ status: 404, erro: "Cadastro não encontrado." });
+  if (e.listaDoDia.some((x) => x.cdCidadao === dados.cdCidadao && x.status === "AGUARDANDO")) falhar({ status: 409, erro: "Este cidadão já está na lista do dia." });
+  const entrada: EntradaListaDoDia = {
+    cdEntrada: Math.max(0, ...e.listaDoDia.map((x) => x.cdEntrada)) + 1,
+    cdCidadao: dados.cdCidadao, cdOrientacao: dados.cdOrientacao, cdUnidade: dados.cdUnidade,
+    nmCidadao: cidadao.nmCidadao, dsCor: dados.dsCor, dtEntrada: new Date().toISOString(),
+    flPrioridade: false, flCidadao: false, status: "AGUARDANDO",
+  };
+  s.atualizarEstado((atual) => {
+    entrada.cdEntrada = Math.max(0, ...atual.listaDoDia.map((x) => x.cdEntrada)) + 1;
+    return { ...atual, listaDoDia: [...atual.listaDoDia, { ...entrada }] };
+  });
+  return entrada;
 }

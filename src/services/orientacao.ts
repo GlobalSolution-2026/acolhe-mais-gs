@@ -60,3 +60,16 @@ export function upaMaisProxima(upas: Unidade[], nrCep: string): Unidade | null {
   }
   return melhor;
 }
+
+const prefixoCep = (cep: string) => cep.replace(/\D/g, "").slice(0, 3);
+
+/** UBS na ordem de proximidade: mesmo prefixo de CEP primeiro, depois a menor distância entre prefixos. */
+export function ordenarUbsPorCep(ubs: Unidade[], nrCep: string): Unidade[] {
+  const alvo = prefixoCep(nrCep);
+  return [...ubs].sort((a, b) => {
+    const da = prefixoCep(a.nrCep) === alvo ? 0 : 1;
+    const db = prefixoCep(b.nrCep) === alvo ? 0 : 1;
+    if (da !== db) return da - db;
+    return Math.abs(Number(prefixoCep(a.nrCep)) - Number(alvo)) - Math.abs(Number(prefixoCep(b.nrCep)) - Number(alvo));
+  });
+}

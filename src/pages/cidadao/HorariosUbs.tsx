@@ -1,4 +1,4 @@
-import { useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { FiList } from "react-icons/fi";
 import { CardHorario } from "@/components/CardHorario";
@@ -35,9 +35,11 @@ export function HorariosUbs({ cdUnidade }: { cdUnidade: number }) {
       .filter(([, lista]) => lista.length > 0);
   }, [livres, estado.horarios, cdUnidade]);
 
+  const resultado = estado.orientacaoAtual?.resultado;
+  const podeEntrarNaLista = resultado?.dsCor === "VERDE" || resultado?.dsCor === "AZUL";
   const entrarNaLista = () => {
-    const cor = estado.orientacaoAtual?.resultado?.dsCor === "AZUL" ? "AZUL" : "VERDE";
-    entrarNaListaDoDia(cdUnidade, cor);
+    if (!resultado || !podeEntrarNaLista) return;
+    entrarNaListaDoDia(cdUnidade, resultado.dsCor === "AZUL" ? "AZUL" : "VERDE", resultado.cdOrientacao);
     void navigate({ to: "/cidadao/lista-do-dia" });
   };
 
@@ -49,9 +51,15 @@ export function HorariosUbs({ cdUnidade }: { cdUnidade: number }) {
       {horarios && livres.length === 0 && (
         <>
           <EstadoVazio mensagem="Nenhum horário livre nesta UBS" />
-          <button onClick={entrarNaLista} className="btn bg-primaria text-branco hover:bg-primariaEscura">
-            <FiList /> Entrar na lista do dia
-          </button>
+          {podeEntrarNaLista ? (
+            <button onClick={entrarNaLista} className="btn bg-primaria text-branco hover:bg-primariaEscura">
+              <FiList /> Entrar na lista do dia
+            </button>
+          ) : (
+            <Link to="/cidadao/inicio" className="btn border border-borda bg-branco text-primaria">
+              Fazer a orientação para entrar na lista
+            </Link>
+          )}
         </>
       )}
       {porDia.map(([dia, lista]) => (

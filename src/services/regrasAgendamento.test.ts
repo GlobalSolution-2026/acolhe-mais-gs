@@ -123,6 +123,7 @@ describe("ordenação da lista do dia", () => {
   const entrada = (cdEntrada: number, dsCor: "VERDE" | "AZUL", minutos: number, flPrioridade = false): EntradaListaDoDia => ({
     cdEntrada,
     cdCidadao: cdEntrada,
+    cdOrientacao: cdEntrada,
     cdUnidade: 1,
     nmCidadao: `P${cdEntrada}`,
     dsCor,
@@ -165,8 +166,8 @@ describe("indicadores", () => {
       consulta({ cdConsulta: 5, dsStatus: "LIBERADA", cdHorario: 51 }),
     ];
     const lista: EntradaListaDoDia[] = [
-      { cdEntrada: 1, cdCidadao: 1, cdUnidade: 1, nmCidadao: "A", dsCor: "VERDE", dtEntrada: base.toISOString(), flPrioridade: false, flCidadao: false, status: "AGUARDANDO" },
-      { cdEntrada: 2, cdCidadao: 2, cdUnidade: 1, nmCidadao: "B", dsCor: "AZUL", dtEntrada: base.toISOString(), flPrioridade: false, flCidadao: false, status: "AGUARDANDO" },
+      { cdEntrada: 1, cdCidadao: 1, cdOrientacao: 1, cdUnidade: 1, nmCidadao: "A", dsCor: "VERDE", dtEntrada: base.toISOString(), flPrioridade: false, flCidadao: false, status: "AGUARDANDO" },
+      { cdEntrada: 2, cdCidadao: 2, cdOrientacao: 2, cdUnidade: 1, nmCidadao: "B", dsCor: "AZUL", dtEntrada: base.toISOString(), flPrioridade: false, flCidadao: false, status: "AGUARDANDO" },
     ];
     const i = calcularIndicadores(consultas, lista, base);
     expect(i.taxaAbsenteismo).toBeCloseTo(1 / 2);
