@@ -28,6 +28,7 @@ import { Route as CidadaoSucessoRouteImport } from './routes/cidadao.sucesso'
 import { Route as CidadaoUbsRouteImport } from './routes/cidadao.ubs'
 import { Route as RecepcaoIndexRouteImport } from './routes/recepcao.index'
 import { Route as RecepcaoAgendaRouteImport } from './routes/recepcao.agenda'
+import { Route as RecepcaoBalcaoRouteImport } from './routes/recepcao.balcao'
 import { Route as RecepcaoIndicadoresRouteImport } from './routes/recepcao.indicadores'
 import { Route as RecepcaoListaDoDiaRouteImport } from './routes/recepcao.lista-do-dia'
 import { Route as RecepcaoPendentesRouteImport } from './routes/recepcao.pendentes'
@@ -130,6 +131,11 @@ const RecepcaoAgendaRoute = RecepcaoAgendaRouteImport.update({
   path: '/agenda',
   getParentRoute: () => RecepcaoRoute,
 } as any)
+const RecepcaoBalcaoRoute = RecepcaoBalcaoRouteImport.update({
+  id: '/balcao',
+  path: '/balcao',
+  getParentRoute: () => RecepcaoRoute,
+} as any)
 const RecepcaoIndicadoresRoute = RecepcaoIndicadoresRouteImport.update({
   id: '/indicadores',
   path: '/indicadores',
@@ -179,6 +185,7 @@ export interface FileRoutesByFullPath {
   '/cidadao/sucesso': typeof CidadaoSucessoRoute
   '/cidadao/ubs': typeof CidadaoUbsRoute
   '/recepcao/agenda': typeof RecepcaoAgendaRoute
+  '/recepcao/balcao': typeof RecepcaoBalcaoRoute
   '/recepcao/indicadores': typeof RecepcaoIndicadoresRoute
   '/recepcao/lista-do-dia': typeof RecepcaoListaDoDiaRoute
   '/recepcao/pendentes': typeof RecepcaoPendentesRoute
@@ -204,6 +211,7 @@ export interface FileRoutesByTo {
   '/cidadao/sucesso': typeof CidadaoSucessoRoute
   '/cidadao/ubs': typeof CidadaoUbsRoute
   '/recepcao/agenda': typeof RecepcaoAgendaRoute
+  '/recepcao/balcao': typeof RecepcaoBalcaoRoute
   '/recepcao/indicadores': typeof RecepcaoIndicadoresRoute
   '/recepcao/lista-do-dia': typeof RecepcaoListaDoDiaRoute
   '/recepcao/pendentes': typeof RecepcaoPendentesRoute
@@ -232,6 +240,7 @@ export interface FileRoutesById {
   '/cidadao/sucesso': typeof CidadaoSucessoRoute
   '/cidadao/ubs': typeof CidadaoUbsRoute
   '/recepcao/agenda': typeof RecepcaoAgendaRoute
+  '/recepcao/balcao': typeof RecepcaoBalcaoRoute
   '/recepcao/indicadores': typeof RecepcaoIndicadoresRoute
   '/recepcao/lista-do-dia': typeof RecepcaoListaDoDiaRoute
   '/recepcao/pendentes': typeof RecepcaoPendentesRoute
@@ -261,6 +270,7 @@ export interface FileRouteTypes {
     | '/cidadao/sucesso'
     | '/cidadao/ubs'
     | '/recepcao/agenda'
+    | '/recepcao/balcao'
     | '/recepcao/indicadores'
     | '/recepcao/lista-do-dia'
     | '/recepcao/pendentes'
@@ -286,6 +296,7 @@ export interface FileRouteTypes {
     | '/cidadao/sucesso'
     | '/cidadao/ubs'
     | '/recepcao/agenda'
+    | '/recepcao/balcao'
     | '/recepcao/indicadores'
     | '/recepcao/lista-do-dia'
     | '/recepcao/pendentes'
@@ -313,6 +324,7 @@ export interface FileRouteTypes {
     | '/cidadao/sucesso'
     | '/cidadao/ubs'
     | '/recepcao/agenda'
+    | '/recepcao/balcao'
     | '/recepcao/indicadores'
     | '/recepcao/lista-do-dia'
     | '/recepcao/pendentes'
@@ -464,6 +476,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RecepcaoAgendaRouteImport
       parentRoute: typeof RecepcaoRoute
     }
+    '/recepcao/balcao': {
+      id: '/recepcao/balcao'
+      path: '/balcao'
+      fullPath: '/recepcao/balcao'
+      preLoaderRoute: typeof RecepcaoBalcaoRouteImport
+      parentRoute: typeof RecepcaoRoute
+    }
     '/recepcao/indicadores': {
       id: '/recepcao/indicadores'
       path: '/indicadores'
@@ -554,6 +573,7 @@ const CidadaoRouteWithChildren =
 
 interface RecepcaoRouteChildren {
   RecepcaoAgendaRoute: typeof RecepcaoAgendaRoute
+  RecepcaoBalcaoRoute: typeof RecepcaoBalcaoRoute
   RecepcaoIndicadoresRoute: typeof RecepcaoIndicadoresRoute
   RecepcaoListaDoDiaRoute: typeof RecepcaoListaDoDiaRoute
   RecepcaoPendentesRoute: typeof RecepcaoPendentesRoute
@@ -562,6 +582,7 @@ interface RecepcaoRouteChildren {
 
 const RecepcaoRouteChildren: RecepcaoRouteChildren = {
   RecepcaoAgendaRoute: RecepcaoAgendaRoute,
+  RecepcaoBalcaoRoute: RecepcaoBalcaoRoute,
   RecepcaoIndicadoresRoute: RecepcaoIndicadoresRoute,
   RecepcaoListaDoDiaRoute: RecepcaoListaDoDiaRoute,
   RecepcaoPendentesRoute: RecepcaoPendentesRoute,

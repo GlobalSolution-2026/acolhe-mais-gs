@@ -10,6 +10,13 @@ export type AvaliacaoCodigo =
   | { tipo: "ENCAMINHAR"; orientacao: Orientacao }
   | { tipo: "OK"; orientacao: Orientacao };
 
+/** Orientação pronta no balcão: veio do código do app ou do questionário feito aqui. */
+export interface OrientacaoBalcao {
+  orientacao: Orientacao;
+  /** Sinais marcados (só no questionário do balcão; a orientação salva não guarda sinais). */
+  sinais: string[];
+}
+
 /** Vincular só se ainda não tem dono ou se é o mesmo cidadão. */
 export const podeVincular = (o: Pick<Orientacao, "cdCidadao">, cdCidadao: number): boolean =>
   o.cdCidadao == null || o.cdCidadao === cdCidadao;

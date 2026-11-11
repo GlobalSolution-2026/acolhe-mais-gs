@@ -9,7 +9,7 @@ import { rotaPai } from "@/services/navegacao";
 
 const router = createRouter({ routeTree });
 const cidadao = ["inicio", "orientacao", "resultado", "ubs", "agendar", "sucesso", "lista-do-dia", "consultas", "emergencia", "avisos", "perfil"];
-const recepcao = ["agenda", "pendentes", "lista-do-dia", "indicadores"];
+const recepcao = ["agenda", "balcao", "pendentes", "lista-do-dia", "indicadores"];
 
 describe("navegação por perfil", () => {
   it.each([
