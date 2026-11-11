@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { FiAlertCircle, FiCalendar, FiHash, FiMapPin, FiPhone, FiPhoneCall } from "react-icons/fi";
+import { FiAlertCircle, FiCalendar, FiExternalLink, FiHash, FiMapPin, FiPhone, FiPhoneCall } from "react-icons/fi";
 import { Carregando } from "@/components/Carregando";
 import { EstadoVazio } from "@/components/EstadoVazio";
 import { MensagemErro } from "@/components/MensagemErro";
@@ -214,8 +214,13 @@ export function Resultado() {
       {res.dsCor === "VERMELHO" && <Vermelho atual={atual} res={res} />}
       {res.dsCor === "LARANJA" && (
         <>
-          <h1 className="text-2xl font-extrabold">Vá a um pronto-socorro agora</h1>
+          <h1 className="text-2xl font-extrabold">Vá ao pronto-socorro de um hospital público ou que atenda pelo SUS</h1>
           <ListaSinais sinais={res.sinaisMarcados} />
+          <a href="https://buscasaude.prefeitura.sp.gov.br/" target="_blank" rel="noopener noreferrer"
+            className="btn border border-borda bg-branco text-primaria">
+            <FiExternalLink aria-hidden /> Ver prontos-socorros no Busca Saúde
+            <span className="sr-only"> (abre em nova aba)</span>
+          </a>
           <p className="rounded-[12px] bg-mentaSuave p-4 font-extrabold text-primaria">
             Se não tiver como chegar com segurança, ou se piorar no caminho, ligue 192
           </p>

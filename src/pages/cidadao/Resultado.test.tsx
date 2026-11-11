@@ -53,3 +53,17 @@ describe("Resultado: Prefiro ir à UBS", () => {
     expect(screen.queryByRole("button", { name: "Prefiro ir à UBS" })).not.toBeInTheDocument();
   });
 });
+
+describe("Resultado LARANJA", () => {
+  it("indica pronto-socorro do SUS com link para o Busca Saúde e mantém o 192", () => {
+    preparar("LARANJA");
+    render(<Resultado />);
+    expect(screen.getByRole("heading", { name: "Vá ao pronto-socorro de um hospital público ou que atenda pelo SUS" })).toBeInTheDocument();
+    const link = screen.getByRole("link", { name: /Ver prontos-socorros no Busca Saúde/ });
+    expect(link).toHaveAttribute("href", "https://buscasaude.prefeitura.sp.gov.br/");
+    expect(link).toHaveAttribute("target", "_blank");
+    expect(link).toHaveAttribute("rel", "noopener noreferrer");
+    expect(screen.getByText(/Se não tiver como chegar com segurança/)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Ligar para o 192/ })).toHaveAttribute("href", "tel:192");
+  });
+});
