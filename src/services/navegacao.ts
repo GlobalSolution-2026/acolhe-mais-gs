@@ -19,3 +19,18 @@ export function rotaPai(pathname: string, cdUnidade?: number): DestinoPai | null
     default: return /^\/cidadao\/ubs\/[^/]+$/.test(caminho) ? "/cidadao/ubs" : null;
   }
 }
+
+/** Destinos de volta depois de entrar ou criar conta (além do agendamento por horário/oferta). */
+export type DestinoLogin = "" | "ficha" | "lista-do-dia";
+
+export const lerDestinoLogin = (v: unknown): DestinoLogin => (v === "ficha" || v === "lista-do-dia" ? v : "");
+
+/** Para onde voltar após o login: agendamento > ficha > lista do dia > perfil. */
+export function destinoAposLogin(s: { horario: number; oferta: number; destino: DestinoLogin }):
+  | { to: "/cidadao/agendar"; search: { horario: number; oferta: number } }
+  | { to: "/cidadao/perfil/ficha" | "/cidadao/lista-do-dia" | "/cidadao/perfil" } {
+  if (s.horario) return { to: "/cidadao/agendar", search: { horario: s.horario, oferta: s.oferta } };
+  if (s.destino === "ficha") return { to: "/cidadao/perfil/ficha" };
+  if (s.destino === "lista-do-dia") return { to: "/cidadao/lista-do-dia" };
+  return { to: "/cidadao/perfil" };
+}

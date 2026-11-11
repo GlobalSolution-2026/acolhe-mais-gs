@@ -1,10 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { CriarConta } from "@/pages/cidadao/CriarConta";
+import { lerDestinoLogin } from "@/services/navegacao";
 
 export const Route = createFileRoute("/cidadao/criar-conta")({
   validateSearch: (s: Record<string, unknown>) => ({
     horario: Number(s["horario"]) || 0,
     oferta: Number(s["oferta"]) || 0,
+    destino: lerDestinoLogin(s["destino"]),
   }),
   head: () => ({
     meta: [
@@ -17,7 +19,7 @@ export const Route = createFileRoute("/cidadao/criar-conta")({
     ],
   }),
   component: function CriarContaRoute() {
-    const { horario, oferta } = Route.useSearch();
-    return <CriarConta cdHorario={horario} cdOferta={oferta} />;
+    const { horario, oferta, destino } = Route.useSearch();
+    return <CriarConta cdHorario={horario} cdOferta={oferta} destino={destino} />;
   },
 });

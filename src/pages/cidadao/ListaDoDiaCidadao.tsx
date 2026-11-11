@@ -31,6 +31,13 @@ export function ListaDoDiaCidadao() {
         <p className="text-5xl font-extrabold text-primaria">{posicao}º</p>
         {minha.flPrioridade && <p className="font-semibold text-textoSuave">Você tem prioridade por ter ficado de ontem.</p>}
       </div>
+      {estado.cdCidadaoAtual === null && (
+        <section className="flex flex-col gap-3 rounded-[12px] border border-borda bg-branco p-4">
+          <p className="font-semibold">Entre ou crie sua conta para receber a vaga no seu nome.</p>
+          <Link to="/cidadao/entrar" search={{ horario: 0, oferta: 0, destino: "lista-do-dia" }} className="btn bg-primaria text-branco hover:bg-primariaEscura">Entrar</Link>
+          <Link to="/cidadao/criar-conta" search={{ horario: 0, oferta: 0, destino: "lista-do-dia" }} className="btn border border-borda bg-branco text-primaria">Criar conta</Link>
+        </section>
+      )}
       <p className="flex items-start gap-2 rounded-[12px] bg-mentaSuave p-3 font-semibold">
         <FiAlertTriangle className="mt-1 shrink-0" /> Se piorar, ligue 192 ou procure a UPA.
       </p>

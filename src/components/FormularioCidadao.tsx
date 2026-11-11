@@ -76,9 +76,9 @@ export function FormularioCidadao({ valoresIniciais, nrCep, aoEnviar, textoBotao
         })} />
       {pedirSenha && (
         <>
-          <CampoFormulario id="dsSenha" label="Senha (mínimo 6 caracteres)" tipo="password" erro={errors.dsSenha}
+          <CampoFormulario id="dsSenha" label="Senha (mínimo 6 caracteres)" tipo="password" alternarSenha erro={errors.dsSenha}
             registro={register("dsSenha", { required: "Crie uma senha.", minLength: { value: 6, message: "A senha precisa ter pelo menos 6 caracteres." } })} />
-          <CampoFormulario id="dsSenhaConfirmacao" label="Confirme a senha" tipo="password" erro={errors.dsSenhaConfirmacao}
+          <CampoFormulario id="dsSenhaConfirmacao" label="Confirme a senha" tipo="password" alternarSenha erro={errors.dsSenhaConfirmacao}
             registro={register("dsSenhaConfirmacao", { required: "Repita a senha.", validate: (v) => v === getValues("dsSenha") || "As senhas não são iguais." })} />
         </>
       )}

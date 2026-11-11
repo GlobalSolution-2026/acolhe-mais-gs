@@ -1,11 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Entrar } from "@/pages/cidadao/Entrar";
+import { lerDestinoLogin } from "@/services/navegacao";
 
 export const Route = createFileRoute("/cidadao/entrar")({
   validateSearch: (s: Record<string, unknown>) => ({
     horario: Number(s["horario"]) || 0,
     oferta: Number(s["oferta"]) || 0,
-    destino: typeof s["destino"] === "string" ? s["destino"] : "",
+    destino: lerDestinoLogin(s["destino"]),
   }),
   head: () => ({
     meta: [

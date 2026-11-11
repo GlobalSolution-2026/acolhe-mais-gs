@@ -28,7 +28,7 @@ export function Perfil() {
         <>
           <EstadoVazio mensagem="Entre para agendar consultas e guardar sua ficha de saúde. A orientação funciona sem conta." />
           <Link to="/cidadao/entrar" search={{ horario: 0, oferta: 0, destino: "" }} className="btn bg-primaria text-branco hover:bg-primariaEscura">Entrar</Link>
-          <Link to="/cidadao/criar-conta" search={{ horario: 0, oferta: 0 }} className="btn border border-borda bg-branco text-primaria">Criar conta</Link>
+          <Link to="/cidadao/criar-conta" search={{ horario: 0, oferta: 0, destino: "" }} className="btn border border-borda bg-branco text-primaria">Criar conta</Link>
         </>
       ) : (
         <>

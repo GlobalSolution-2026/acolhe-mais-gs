@@ -4,9 +4,10 @@ import { FormularioCidadao } from "@/components/FormularioCidadao";
 import { MensagemErro } from "@/components/MensagemErro";
 import { useSimulador } from "@/context/SimuladorContext";
 import { criarConta } from "@/services/api";
+import { destinoAposLogin, type DestinoLogin } from "@/services/navegacao";
 import type { CidadaoEntrada } from "@/types";
 
-export function CriarConta({ cdHorario, cdOferta }: { cdHorario: number; cdOferta: number }) {
+export function CriarConta({ cdHorario, cdOferta, destino }: { cdHorario: number; cdOferta: number; destino: DestinoLogin }) {
   const { estado, definirCidadaoAtual } = useSimulador();
   const navigate = useNavigate();
   const [enviando, setEnviando] = useState(false);
@@ -18,9 +19,7 @@ export function CriarConta({ cdHorario, cdOferta }: { cdHorario: number; cdOfert
     try {
       const cidadao = await criarConta(dados, dsSenha ?? "");
       definirCidadaoAtual(cidadao.cdCidadao);
-      void (cdHorario
-        ? navigate({ to: "/cidadao/agendar", search: { horario: cdHorario, oferta: cdOferta } })
-        : navigate({ to: "/cidadao/perfil" }));
+      void navigate(destinoAposLogin({ horario: cdHorario, oferta: cdOferta, destino }));
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Não foi possível criar a conta.");
     } finally {
@@ -43,7 +42,7 @@ export function CriarConta({ cdHorario, cdOferta }: { cdHorario: number; cdOfert
       />
       <p className="text-center">
         Já tem conta?{" "}
-        <Link to="/cidadao/entrar" search={{ horario: cdHorario, oferta: cdOferta, destino: "" }} className="font-bold text-primaria underline">Entrar</Link>
+        <Link to="/cidadao/entrar" search={{ horario: cdHorario, oferta: cdOferta, destino }} className="font-bold text-primaria underline">Entrar</Link>
       </p>
     </div>
   );
