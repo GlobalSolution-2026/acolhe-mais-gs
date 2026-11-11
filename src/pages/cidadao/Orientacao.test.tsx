@@ -2,7 +2,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { perguntas } from "@/data/perguntas";
 import type { Pergunta } from "@/types/orientacao";
-import { Multipla } from "./Orientacao";
+import { Multipla } from "@/components/RespostasPergunta";
 
 const pergunta = (codigo: string): Pergunta => perguntas.find((p) => p.codigo === codigo)!;
 const opcao = (nome: string) => screen.getByRole("button", { name: nome });
