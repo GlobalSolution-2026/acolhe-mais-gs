@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { Cidadao, Consulta, EntradaListaDoDia } from "@/types";
 import type { Orientacao } from "@/types/orientacao";
 import {
+  acoesPresenca,
   calcularIndicadores,
   consultaNoDia,
   orientacaoDoDia,
@@ -317,5 +318,17 @@ describe("orientacoesDoDia", () => {
     expect(orientacoesDoDia(lista, [], 7, "2026-11-11").map((x) => x.cdOrientacao)).toEqual([2, 3, 1]);
     expect(orientacaoDoDia(lista, [], 7, "2026-11-11")?.cdOrientacao).toBe(2);
     expect(orientacoesDoDia(lista, [], null, "2026-11-11")).toEqual([]);
+  });
+});
+
+describe("acoesPresenca (Agenda da recepção)", () => {
+  const agora = new Date(2026, 10, 11, 10, 0);
+  const em = (dia: number, hora: number, dsStatus: Consulta["dsStatus"] = "AGENDADA") => ({ dsStatus, dtHorario: new Date(2026, 10, dia, hora, 0).toISOString() });
+  it("dia futuro: nenhum botão", () => expect(acoesPresenca(em(12, 9), agora)).toEqual({ presenca: false, falta: false }));
+  it("no dia, antes do horário: só presença", () => expect(acoesPresenca(em(11, 15), agora)).toEqual({ presenca: true, falta: false }));
+  it("no dia, depois do horário: os dois", () => expect(acoesPresenca(em(11, 8, "CONFIRMADA"), agora)).toEqual({ presenca: true, falta: true }));
+  it("dia anterior: só falta", () => expect(acoesPresenca(em(10, 15), agora)).toEqual({ presenca: false, falta: true }));
+  it.each(["REALIZADA", "FALTA", "LIBERADA"] as const)("%s: nenhum botão", (status) => {
+    expect(acoesPresenca(em(11, 8, status), agora)).toEqual({ presenca: false, falta: false });
   });
 });

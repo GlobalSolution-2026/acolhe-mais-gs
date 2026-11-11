@@ -8,7 +8,7 @@ import type { CanalConfirmacao, Cidadao, FichaSaude, CidadaoEntrada, Consulta, E
 import type { Orientacao, VerificacaoUrgenciaEntrada } from "@/types/orientacao";
 import { idadeEm } from "@/lib/datas";
 import { podeVincular } from "./balcao";
-import { podeCancelar, segundosRestantesOferta, temContatoValido } from "./regrasAgendamento";
+import { acoesPresenca, podeCancelar, segundosRestantesOferta, temContatoValido } from "./regrasAgendamento";
 import { liberarConsulta } from "./simulacao";
 
 export const API_URL = import.meta.env["VITE_API_URL"] as string | undefined;
@@ -245,6 +245,9 @@ export async function registrarPresenca(cdConsulta: number, status: "REALIZADA" 
   const s = getStore();
   const atual = s.obterEstado().consultas.find((c) => c.cdConsulta === cdConsulta);
   if (!atual) falhar({ status: 404, erro: "Consulta não encontrada." });
+  const pode = acoesPresenca(atual, new Date());
+  if (status === "REALIZADA" && !pode.presenca) falhar({ status: 409, erro: "A presença só pode ser registrada no dia da consulta." });
+  if (status === "FALTA" && !pode.falta) falhar({ status: 409, erro: "A falta só pode ser registrada depois do horário da consulta." });
   const nova: Consulta = { ...atual, dsStatus: status };
   // const res = await fetch(`${API_URL}/consultas/${cdConsulta}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(nova) });
   // if (!res.ok) { const erro: ErroResponse = await res.json(); throw new Error(erro.erro); }

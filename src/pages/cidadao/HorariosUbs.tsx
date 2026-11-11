@@ -6,12 +6,14 @@ import { Carregando } from "@/components/Carregando";
 import { EstadoVazio } from "@/components/EstadoVazio";
 import { MensagemErro } from "@/components/MensagemErro";
 import { useSimulador } from "@/context/SimuladorContext";
+import { useEntrarNaListaDoDia } from "@/hooks/useEntrarNaListaDoDia";
 import { chaveDia, listarDiasUnidade, rotuloDia } from "@/lib/datas";
 import { listarHorarios } from "@/services/api";
 import type { Horario } from "@/types";
 
 export function HorariosUbs({ cdUnidade }: { cdUnidade: number }) {
-  const { estado, entrarNaListaDoDia } = useSimulador();
+  const { estado } = useSimulador();
+  const entrarNaLista = useEntrarNaListaDoDia();
   const navigate = useNavigate();
   const [horarios, setHorarios] = useState<Horario[] | null>(null);
   const [erro, setErro] = useState<string | null>(null);
@@ -37,10 +39,14 @@ export function HorariosUbs({ cdUnidade }: { cdUnidade: number }) {
 
   const resultado = estado.orientacaoAtual?.resultado;
   const podeEntrarNaLista = resultado?.dsCor === "VERDE" || resultado?.dsCor === "AZUL";
-  const entrarNaLista = () => {
-    if (!resultado || !podeEntrarNaLista) return;
-    entrarNaListaDoDia(cdUnidade, resultado.dsCor === "AZUL" ? "AZUL" : "VERDE", resultado.cdOrientacao);
-    void navigate({ to: "/cidadao/lista-do-dia" });
+  const aoEntrarNaLista = () => {
+    if (!podeEntrarNaLista) return;
+    // Mesmo padrão do agendamento: sem login, vai para Entrar e volta para a lista do dia desta UBS.
+    if (estado.cdCidadaoAtual === null) {
+      void navigate({ to: "/cidadao/entrar", search: { horario: 0, oferta: 0, destino: "lista-do-dia", ubs: cdUnidade } });
+      return;
+    }
+    if (entrarNaLista(cdUnidade)) void navigate({ to: "/cidadao/lista-do-dia" });
   };
 
   return (
@@ -52,7 +58,7 @@ export function HorariosUbs({ cdUnidade }: { cdUnidade: number }) {
         <>
           <EstadoVazio mensagem="Nenhum horário livre nesta UBS" />
           {podeEntrarNaLista ? (
-            <button onClick={entrarNaLista} className="btn bg-primaria text-branco hover:bg-primariaEscura">
+            <button onClick={aoEntrarNaLista} className="btn bg-primaria text-branco hover:bg-primariaEscura">
               <FiList /> Entrar na lista do dia
             </button>
           ) : (
@@ -74,7 +80,7 @@ export function HorariosUbs({ cdUnidade }: { cdUnidade: number }) {
         </section>
       ))}
       {horarios && livres.length > 0 && (
-        <button onClick={entrarNaLista} className="btn border border-borda bg-branco text-primaria">
+        <button onClick={aoEntrarNaLista} className="btn border border-borda bg-branco text-primaria">
           <FiList /> Prefiro entrar na lista do dia
         </button>
       )}

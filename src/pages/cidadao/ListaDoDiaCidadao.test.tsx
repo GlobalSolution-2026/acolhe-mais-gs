@@ -28,7 +28,7 @@ describe("Lista do dia: entrar para receber a vaga", () => {
   it("sem login, oferece Entrar e Criar conta voltando para a lista do dia", () => {
     render(<ListaDoDiaCidadao />);
     expect(screen.getByText("Sua posição na fila da UBS Centro")).toBeInTheDocument();
-    const destino = JSON.stringify({ horario: 0, oferta: 0, destino: "lista-do-dia" });
+    const destino = JSON.stringify({ horario: 0, oferta: 0, destino: "lista-do-dia", ubs: 0 });
     expect(screen.getByRole("link", { name: "Entrar" })).toHaveAttribute("href", "/cidadao/entrar");
     expect(screen.getByRole("link", { name: "Entrar" })).toHaveAttribute("data-search", destino);
     expect(screen.getByRole("link", { name: "Criar conta" })).toHaveAttribute("href", "/cidadao/criar-conta");

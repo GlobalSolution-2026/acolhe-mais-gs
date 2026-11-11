@@ -30,3 +30,22 @@ describe("Agenda: lembrete de orientação do dia", () => {
     expect(screen.getByText("Fez orientação hoje: Diarreia e vômito, verde")).toBeInTheDocument();
   });
 });
+
+describe("Agenda: presença e falta", () => {
+  it("presença só no dia da consulta e falta só depois do horário", () => {
+    const daqui = (min: number) => new Date(Date.now() + min * 60_000).toISOString();
+    const cons = (cdConsulta: number, dtHorario: string) => ({ cdConsulta, cdHorario: cdConsulta, cdCidadao: 7, cdOrientacao: null, dtAgendamento: hojeAs(0, 1),
+      dtConfirmacao: null, dsCanalConfirmacao: null, dsStatus: "AGENDADA" as const, vlProbFalta: .2, dsRiscoFalta: "BAIXO" as const, nmUnidade: "UBS Centro", dtHorario });
+    // Hoje: uma daqui a 1 minuto (só presença) e outra de 1 minuto atrás (os dois), quando o dia ainda permite.
+    const futura = daqui(1), passada = daqui(-1);
+    estado = { ...estado, listaDoDia: [], orientacoes: [],
+      horarios: [{ cdHorario: 1, cdUnidade: 1, dtHorario: futura, nrDuracaoMin: 20, flOcupado: true }, { cdHorario: 2, cdUnidade: 1, dtHorario: passada, nrDuracaoMin: 20, flOcupado: true }],
+      consultas: [cons(1, futura), cons(2, passada)] };
+    render(<Agenda />);
+    const cards = screen.getAllByRole("article");
+    const botoes = (i: number) => [...cards[i]!.querySelectorAll("button")].map((b) => b.textContent);
+    const [iPassada, iFutura] = passada < futura ? [0, 1] : [1, 0];
+    expect(botoes(iFutura)).toEqual(["Registrar presença"]);
+    expect(botoes(iPassada)).toEqual(["Registrar presença", "Registrar falta"]);
+  });
+});

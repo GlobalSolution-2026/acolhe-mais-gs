@@ -41,8 +41,8 @@ export function ListaDoDiaCidadao() {
       {estado.cdCidadaoAtual === null && (
         <section className="flex flex-col gap-3 rounded-[12px] border border-borda bg-branco p-4">
           <p className="font-semibold">Entre ou crie sua conta para receber a vaga no seu nome.</p>
-          <Link to="/cidadao/entrar" search={{ horario: 0, oferta: 0, destino: "lista-do-dia" }} className="btn bg-primaria text-branco hover:bg-primariaEscura">Entrar</Link>
-          <Link to="/cidadao/criar-conta" search={{ horario: 0, oferta: 0, destino: "lista-do-dia" }} className="btn border border-borda bg-branco text-primaria">Criar conta</Link>
+          <Link to="/cidadao/entrar" search={{ horario: 0, oferta: 0, destino: "lista-do-dia", ubs: 0 }} className="btn bg-primaria text-branco hover:bg-primariaEscura">Entrar</Link>
+          <Link to="/cidadao/criar-conta" search={{ horario: 0, oferta: 0, destino: "lista-do-dia", ubs: 0 }} className="btn border border-borda bg-branco text-primaria">Criar conta</Link>
         </section>
       )}
       <p className="flex items-start gap-2 rounded-[12px] bg-mentaSuave p-3 font-semibold">

@@ -52,10 +52,25 @@ describe("contratos dos serviços", () => {
   });
 
   it.each(["REALIZADA", "FALTA"] as const)("registrar %s preserva todos os campos da consulta", async (status) => {
+    // Consulta de hoje, um minuto atrás: presença (no dia) e falta (depois do horário) são permitidas.
+    const deHoje = { ...original, dtHorario: new Date(Date.now() - 60_000).toISOString() };
+    estado.consultas = [{ ...deHoje }];
     const pendente = registrarPresenca(7, status);
     await vi.runAllTimersAsync();
-    expect(await pendente).toEqual({ ...original, dsStatus: status });
-    expect(estado.consultas).toEqual([{ ...original, dsStatus: status }]);
+    expect(await pendente).toEqual({ ...deHoje, dsStatus: status });
+    expect(estado.consultas).toEqual([{ ...deHoje, dsStatus: status }]);
+  });
+
+  it.each([
+    ["REALIZADA", 24 * 3, "A presença só pode ser registrada no dia da consulta."],
+    ["FALTA", 1, "A falta só pode ser registrada depois do horário da consulta."],
+  ] as const)("recusa %s fora da regra da agenda", async (status, horas, mensagem) => {
+    const futura = { ...original, dtHorario: new Date(Date.now() + horas * 3_600_000).toISOString() };
+    estado.consultas = [{ ...futura }];
+    const pendente = registrarPresenca(7, status);
+    const rejeicao = expect(pendente).rejects.toThrow(mensagem);
+    await vi.runAllTimersAsync(); await rejeicao;
+    expect(estado.consultas).toEqual([futura]);
   });
 });
 

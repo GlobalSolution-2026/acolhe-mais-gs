@@ -38,7 +38,7 @@ describe("Entrar a partir da lista do dia", () => {
     render(
       <SimuladorProvider>
         <Preparar />
-        <Entrar cdHorario={0} cdOferta={0} destino="lista-do-dia" />
+        <Entrar cdHorario={0} cdOferta={0} destino="lista-do-dia" cdUnidade={0} />
         <Espiao />
       </SimuladorProvider>,
     );
@@ -56,6 +56,38 @@ describe("Entrar a partir da lista do dia", () => {
     expect(minha).toMatchObject({ cdUnidade: 2, cdCidadao: CONTA_DEMO.cdCidadao, cdOrientacao: 77, status: "AGUARDANDO" });
     expect(minha?.nmCidadao).not.toBe("Você");
     expect(visto?.cdCidadaoAtual).toBe(CONTA_DEMO.cdCidadao);
+    expect(visto?.orientacaoAtual).toEqual(orientacaoAntes);
+  });
+});
+
+/** Orientação VERDE em andamento, ainda sem lista do dia (o cidadão veio da tela de horários da UBS 2). */
+function PrepararOrientacao() {
+  const { iniciarOrientacao, definirResultado } = useSimulador();
+  useEffect(() => {
+    iniciarOrientacao("GARGANTA", "04010-100");
+    definirResultado({ cdOrientacao: 88, dsCor: "VERDE", dsDestino: "UBS", sinaisMarcados: [], nrDor: 2, flElevadaModelo: false });
+  }, [iniciarOrientacao, definirResultado]);
+  return null;
+}
+
+describe("Entrar vindo da tela de horários (lista do dia da UBS)", () => {
+  it("depois do login, entra na lista do dia da UBS com a orientação e volta para ela", async () => {
+    render(
+      <SimuladorProvider>
+        <PrepararOrientacao />
+        <Entrar cdHorario={0} cdOferta={0} destino="lista-do-dia" cdUnidade={2} />
+        <Espiao />
+      </SimuladorProvider>,
+    );
+    await waitFor(() => expect(visto?.orientacaoAtual?.resultado?.cdOrientacao).toBe(88));
+    expect(screen.getByText(/Entre para entrar na lista do dia da /)).toBeInTheDocument();
+    expect(visto?.listaDoDia.some((e) => e.flCidadao)).toBe(false);
+    const orientacaoAntes = visto?.orientacaoAtual;
+    fireEvent.change(screen.getByLabelText("Cartão SUS (CNS)"), { target: { value: CONTA_DEMO.nrCns } });
+    fireEvent.change(screen.getByLabelText("Senha"), { target: { value: CONTA_DEMO.dsSenha } });
+    fireEvent.click(screen.getByRole("button", { name: "Entrar" }));
+    await waitFor(() => expect(navigate).toHaveBeenCalledWith({ to: "/cidadao/lista-do-dia" }), { timeout: 3000 });
+    expect(visto?.listaDoDia.find((e) => e.flCidadao)).toMatchObject({ cdUnidade: 2, cdCidadao: CONTA_DEMO.cdCidadao, cdOrientacao: 88, dsCor: "VERDE", status: "AGUARDANDO" });
     expect(visto?.orientacaoAtual).toEqual(orientacaoAntes);
   });
 });

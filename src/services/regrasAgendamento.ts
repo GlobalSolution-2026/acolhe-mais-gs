@@ -202,3 +202,12 @@ export function listarPendentesConfirmacao(consultas: Consulta[], horarios: Hora
 export function podeCancelar(c: Pick<Consulta, "dsStatus" | "dtHorario">, agora: Date): boolean {
   return (c.dsStatus === "AGENDADA" || c.dsStatus === "CONFIRMADA") && new Date(c.dtHorario).getTime() > agora.getTime();
 }
+
+/** Recepção: presença só no dia da consulta; falta só depois do horário. Só para AGENDADA ou CONFIRMADA. */
+export function acoesPresenca(c: Pick<Consulta, "dsStatus" | "dtHorario">, agora: Date): { presenca: boolean; falta: boolean } {
+  const ativa = c.dsStatus === "AGENDADA" || c.dsStatus === "CONFIRMADA";
+  return {
+    presenca: ativa && chaveDia(c.dtHorario) === chaveDia(agora.toISOString()),
+    falta: ativa && agora.getTime() > new Date(c.dtHorario).getTime(),
+  };
+}

@@ -7,6 +7,7 @@ export const Route = createFileRoute("/cidadao/criar-conta")({
     horario: Number(s["horario"]) || 0,
     oferta: Number(s["oferta"]) || 0,
     destino: lerDestinoLogin(s["destino"]),
+    ubs: Number(s["ubs"]) || 0,
   }),
   head: () => ({
     meta: [
@@ -19,7 +20,7 @@ export const Route = createFileRoute("/cidadao/criar-conta")({
     ],
   }),
   component: function CriarContaRoute() {
-    const { horario, oferta, destino } = Route.useSearch();
-    return <CriarConta cdHorario={horario} cdOferta={oferta} destino={destino} />;
+    const { horario, oferta, destino, ubs } = Route.useSearch();
+    return <CriarConta cdHorario={horario} cdOferta={oferta} destino={destino} cdUnidade={ubs} />;
   },
 });

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { EstadoSimulador } from "@/context/SimuladorContext";
 import type { EntradaListaDoDia, OfertaVaga } from "@/types";
-import { escolherDestinatarioOferta, ofertasDoCidadao, segundosRestantesOferta, tempoRestanteOferta } from "./regrasAgendamento";
+import { escolherDestinatarioOferta, listarPendentesConfirmacao, ofertasDoCidadao, prazoVencidoSemContato, segundosRestantesOferta, tempoRestanteOferta } from "./regrasAgendamento";
 import { finalizarOferta, liberarConsulta, oferecerHorario, simularPrazo, vencerOfertas } from "./simulacao";
 
 const agora = new Date("2026-11-05T10:00:00Z");
@@ -150,5 +150,9 @@ describe("cadastro sem telefone e sem recado", () => {
     expect(novoEstado.consultas.find((c) => c.cdConsulta === 1)?.dsStatus).toBe("AGENDADA");
     expect(novoEstado.horarios.find((h) => h.cdHorario === 1)?.flOcupado).toBe(true);
     expect(resumo.mantidasSemContato).toBe(2);
+    // Depois do prazo (e antes do horário), segue em Pendentes como "prazo vencido – sem contato".
+    const depois = new Date(agora.getTime() + 30 * H);
+    expect(listarPendentesConfirmacao(novoEstado.consultas, novoEstado.horarios, novoEstado.cidadaos, 1, depois).map((c) => c.cdConsulta)).toContain(1);
+    expect(prazoVencidoSemContato(novoEstado.consultas[0]!, novoEstado.cidadaos[0], depois)).toBe(true);
   });
 });

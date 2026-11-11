@@ -3,12 +3,14 @@ import { useState } from "react";
 import { FormularioCidadao } from "@/components/FormularioCidadao";
 import { MensagemErro } from "@/components/MensagemErro";
 import { useSimulador } from "@/context/SimuladorContext";
+import { useEntrarNaListaDoDia } from "@/hooks/useEntrarNaListaDoDia";
 import { criarConta } from "@/services/api";
 import { destinoAposLogin, type DestinoLogin } from "@/services/navegacao";
 import type { CidadaoEntrada } from "@/types";
 
-export function CriarConta({ cdHorario, cdOferta, destino }: { cdHorario: number; cdOferta: number; destino: DestinoLogin }) {
+export function CriarConta({ cdHorario, cdOferta, destino, cdUnidade }: { cdHorario: number; cdOferta: number; destino: DestinoLogin; cdUnidade: number }) {
   const { estado, definirCidadaoAtual } = useSimulador();
+  const entrarNaLista = useEntrarNaListaDoDia();
   const navigate = useNavigate();
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
@@ -19,6 +21,7 @@ export function CriarConta({ cdHorario, cdOferta, destino }: { cdHorario: number
     try {
       const cidadao = await criarConta(dados, dsSenha ?? "");
       definirCidadaoAtual(cidadao.cdCidadao);
+      if (destino === "lista-do-dia" && cdUnidade) entrarNaLista(cdUnidade);
       void navigate(destinoAposLogin({ horario: cdHorario, oferta: cdOferta, destino }));
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Não foi possível criar a conta.");
@@ -42,7 +45,7 @@ export function CriarConta({ cdHorario, cdOferta, destino }: { cdHorario: number
       />
       <p className="text-center">
         Já tem conta?{" "}
-        <Link to="/cidadao/entrar" search={{ horario: cdHorario, oferta: cdOferta, destino }} className="font-bold text-primaria underline">Entrar</Link>
+        <Link to="/cidadao/entrar" search={{ horario: cdHorario, oferta: cdOferta, destino, ubs: cdUnidade }} className="font-bold text-primaria underline">Entrar</Link>
       </p>
     </div>
   );

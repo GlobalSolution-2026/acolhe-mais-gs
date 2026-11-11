@@ -4,14 +4,17 @@ import { useForm } from "react-hook-form";
 import { CampoFormulario } from "@/components/CampoFormulario";
 import { MensagemErro } from "@/components/MensagemErro";
 import { useSimulador } from "@/context/SimuladorContext";
+import { useEntrarNaListaDoDia } from "@/hooks/useEntrarNaListaDoDia";
 import { entrar } from "@/services/api";
 import { destinoAposLogin, type DestinoLogin } from "@/services/navegacao";
 
 interface EntrarForm { nrCns: string; dsSenha: string }
 
-/** Depois de entrar, volta ao agendamento (se veio dele) ou ao destino pedido. */
-export function Entrar({ cdHorario, cdOferta, destino }: { cdHorario: number; cdOferta: number; destino: DestinoLogin }) {
-  const { definirCidadaoAtual } = useSimulador();
+/** Depois de entrar, volta ao agendamento (se veio dele) ou ao destino pedido; vindo da UBS, entra na lista do dia dela. */
+export function Entrar({ cdHorario, cdOferta, destino, cdUnidade }: { cdHorario: number; cdOferta: number; destino: DestinoLogin; cdUnidade: number }) {
+  const { estado, definirCidadaoAtual } = useSimulador();
+  const entrarNaLista = useEntrarNaListaDoDia();
+  const nomeUbs = estado.unidades.find((u) => u.cdUnidade === cdUnidade)?.nmUnidade ?? "UBS";
   const navigate = useNavigate();
   const [erro, setErro] = useState<string | null>(null);
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<EntrarForm>();
@@ -23,6 +26,7 @@ export function Entrar({ cdHorario, cdOferta, destino }: { cdHorario: number; cd
     try {
       const cidadao = await entrar(v.nrCns, v.dsSenha);
       definirCidadaoAtual(cidadao.cdCidadao);
+      if (destino === "lista-do-dia" && cdUnidade) entrarNaLista(cdUnidade);
       void voltar();
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Não foi possível entrar.");
@@ -33,7 +37,11 @@ export function Entrar({ cdHorario, cdOferta, destino }: { cdHorario: number; cd
     <div className="flex flex-col gap-4">
       <h1 className="text-2xl font-extrabold text-primaria">Entrar</h1>
       {cdHorario > 0 && <p className="rounded-[12px] bg-mentaSuave p-3 font-semibold">Entre para concluir o agendamento.</p>}
-      {destino === "lista-do-dia" && <p className="rounded-[12px] bg-mentaSuave p-3 font-semibold">Entre para receber a vaga da lista do dia no seu nome.</p>}
+      {destino === "lista-do-dia" && (
+        <p className="rounded-[12px] bg-mentaSuave p-3 font-semibold">
+          {cdUnidade ? `Entre para entrar na lista do dia da ${nomeUbs}.` : "Entre para receber a vaga da lista do dia no seu nome."}
+        </p>
+      )}
       {erro && <MensagemErro mensagem={erro} />}
       <form onSubmit={(e) => void enviar(e)} className="flex flex-col gap-4" noValidate>
         <CampoFormulario id="nrCns" label="Cartão SUS (CNS)" placeholder="000000000000000" erro={errors.nrCns}
@@ -49,7 +57,7 @@ export function Entrar({ cdHorario, cdOferta, destino }: { cdHorario: number; cd
       </button>
       <p className="text-center">
         Ainda não tem conta?{" "}
-        <Link to="/cidadao/criar-conta" search={{ horario: cdHorario, oferta: cdOferta, destino }} className="font-bold text-primaria underline">Criar conta</Link>
+        <Link to="/cidadao/criar-conta" search={{ horario: cdHorario, oferta: cdOferta, destino, ubs: cdUnidade }} className="font-bold text-primaria underline">Criar conta</Link>
       </p>
     </div>
   );

@@ -7,7 +7,7 @@ import { SeloOrientacaoHoje } from "@/components/SeloOrientacaoHoje";
 import { useSimulador } from "@/context/SimuladorContext";
 import { chaveDia, fmtHora, listarDiasUnidade, rotuloDia } from "@/lib/datas";
 import { agendarConsulta, cadastrarCidadao, registrarPresenca } from "@/services/api";
-import { orientacaoDoDia } from "@/services/regrasAgendamento";
+import { acoesPresenca, orientacaoDoDia } from "@/services/regrasAgendamento";
 import type { CidadaoEntrada, Consulta, Horario } from "@/types";
 
 const ROTULO_STATUS: Record<Consulta["dsStatus"], string> = {
@@ -116,14 +116,23 @@ export function Agenda() {
                 <p className={`text-sm font-bold ${consulta.dsRiscoFalta === "ALTO" ? "text-gravidade-vermelho" : "text-textoSuave"}`}>
                   Risco de falta: {consulta.dsRiscoFalta} ({Math.round(consulta.vlProbFalta * 100)}%)
                 </p>
-                {(consulta.dsStatus === "AGENDADA" || consulta.dsStatus === "CONFIRMADA") && (
-                  <div className="grid grid-cols-2 gap-2">
-                    <button onClick={() => void registrar(consulta.cdConsulta, "REALIZADA")}
-                      className="btn bg-primaria text-branco hover:bg-primariaEscura">Registrar presença</button>
-                    <button onClick={() => void registrar(consulta.cdConsulta, "FALTA")}
-                      className="btn border border-borda bg-branco text-texto">Registrar falta</button>
-                  </div>
-                )}
+                {(() => {
+                  // Presença só no dia da consulta; falta só depois do horário.
+                  const pode = acoesPresenca(consulta, new Date());
+                  if (!pode.presenca && !pode.falta) return null;
+                  return (
+                    <div className={`grid gap-2 ${pode.presenca && pode.falta ? "grid-cols-2" : "grid-cols-1"}`}>
+                      {pode.presenca && (
+                        <button onClick={() => void registrar(consulta.cdConsulta, "REALIZADA")}
+                          className="btn bg-primaria text-branco hover:bg-primariaEscura">Registrar presença</button>
+                      )}
+                      {pode.falta && (
+                        <button onClick={() => void registrar(consulta.cdConsulta, "FALTA")}
+                          className="btn border border-borda bg-branco text-texto">Registrar falta</button>
+                      )}
+                    </div>
+                  );
+                })()}
               </>
             )}
             {!h.flOcupado && new Date(h.dtHorario).getTime() > Date.now() && (

@@ -29,7 +29,7 @@ export function Agendar({ cdHorario, cdOferta }: { cdHorario: number; cdOferta: 
 
   // Agendar exige login; depois de entrar, a tela de login volta para cá.
   if (!cadastro) {
-    return <Navigate to="/cidadao/entrar" search={{ horario: cdHorario, oferta: cdOferta, destino: "" }} replace />;
+    return <Navigate to="/cidadao/entrar" search={{ horario: cdHorario, oferta: cdOferta, destino: "", ubs: 0 }} replace />;
   }
 
   const aoEnviar = async (dados: CidadaoEntrada) => {

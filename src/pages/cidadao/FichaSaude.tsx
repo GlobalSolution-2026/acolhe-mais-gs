@@ -29,7 +29,7 @@ export function FichaSaudePagina() {
     return (
       <div className="flex flex-col gap-4">
         <EstadoVazio mensagem="Entre na sua conta para ver ou editar a ficha de saúde." />
-        <Link to="/cidadao/entrar" search={{ horario: 0, oferta: 0, destino: "ficha" }} className="btn bg-primaria text-branco">Entrar</Link>
+        <Link to="/cidadao/entrar" search={{ horario: 0, oferta: 0, destino: "ficha", ubs: 0 }} className="btn bg-primaria text-branco">Entrar</Link>
       </div>
     );
   }
