@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { EstadoSimulador } from "@/context/SimuladorContext";
 import type { Consulta } from "@/types";
-import { aceitarOfertaPorTelefone, agendarConsulta, buscarCidadaoPorCns, conectarStore, confirmarConsulta, incluirNaListaDoDia, listarUnidades, registrarPresenca, salvarOrientacao, vincularOrientacao } from "./api";
+import { aceitarOfertaPorTelefone, agendarConsulta, buscarCidadaoPorCns, cancelarConsulta, conectarStore, confirmarConsulta, incluirNaListaDoDia, listarUnidades, registrarPresenca, salvarOrientacao, vincularOrientacao } from "./api";
 
 const original: Consulta = {
   cdConsulta: 7, cdHorario: 12, cdCidadao: 9, cdOrientacao: 3,
@@ -122,5 +122,29 @@ describe("balcão", () => {
     const rejeicao = expect(outro).rejects.toThrow("Código já utilizado.");
     await vi.runAllTimersAsync(); await rejeicao;
     expect(estado.orientacoes[0]?.cdCidadao).toBe(9);
+  });
+});
+
+describe("cancelamento", () => {
+  function preparar(horas: number, dsStatus: Consulta["dsStatus"] = "AGENDADA") {
+    const dtHorario = new Date(Date.now() + horas * 3_600_000).toISOString();
+    estado.horarios = [{ cdHorario: 12, cdUnidade: 1, dtHorario, nrDuracaoMin: 20, flOcupado: true }];
+    estado.consultas = [{ ...original, dtHorario, dsStatus }];
+  }
+  it("libera a consulta futura e devolve o horário à agenda", async () => {
+    preparar(48);
+    const pendente = cancelarConsulta(7);
+    await vi.runAllTimersAsync();
+    expect((await pendente).dsStatus).toBe("LIBERADA");
+    expect(estado.consultas[0]?.dsStatus).toBe("LIBERADA");
+    expect(estado.horarios[0]?.flOcupado).toBe(false);
+  });
+  it.each([["REALIZADA", -2], ["AGENDADA", -1]] as const)("recusa consulta %s (%s h)", async (status, horas) => {
+    preparar(horas, status);
+    const pendente = cancelarConsulta(7);
+    const rejeicao = expect(pendente).rejects.toThrow("não pode mais ser cancelada");
+    await vi.runAllTimersAsync(); await rejeicao;
+    expect(estado.consultas[0]?.dsStatus).toBe(status);
+    expect(estado.horarios[0]?.flOcupado).toBe(true);
   });
 });

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { Cidadao, Consulta, EntradaListaDoDia } from "@/types";
 import {
   calcularIndicadores,
+  podeCancelar,
   listarPendentesConfirmacao,
   deveLiberar,
   dispensadaConfirmacao,
@@ -205,4 +206,18 @@ it("comparecimento após orientação exclui futuras, liberadas e não encerrada
   const consultas = [consulta({ dsStatus: "REALIZADA", cdOrientacao: 1, dtHorario: passado }), consulta({ dsStatus: "FALTA", cdOrientacao: 2, dtHorario: passado }), consulta({ dsStatus: "LIBERADA", cdOrientacao: 3, dtHorario: passado }), consulta({ dsStatus: "REALIZADA", cdOrientacao: 4 }), consulta({ dsStatus: "FALTA", cdOrientacao: 5 }), consulta({ dsStatus: "AGENDADA", cdOrientacao: 6, dtHorario: passado }), consulta({ dsStatus: "REALIZADA", dtHorario: passado })];
   expect(calcularIndicadores(consultas, [], base).comparecimentoAposOrientacao).toBe(.5);
   expect(calcularIndicadores(consultas.slice(2), [], base).comparecimentoAposOrientacao).toBeNull();
+});
+
+describe("podeCancelar", () => {
+  const agora = new Date("2026-11-11T10:00:00Z");
+  const futura = "2026-11-12T10:00:00Z";
+  it.each(["AGENDADA", "CONFIRMADA"] as const)("%s futura pode ser cancelada", (dsStatus) => {
+    expect(podeCancelar({ dsStatus, dtHorario: futura }, agora)).toBe(true);
+  });
+  it.each(["LIBERADA", "REALIZADA", "FALTA"] as const)("%s não pode ser cancelada", (dsStatus) => {
+    expect(podeCancelar({ dsStatus, dtHorario: futura }, agora)).toBe(false);
+  });
+  it("consulta que já passou não pode ser cancelada", () => {
+    expect(podeCancelar({ dsStatus: "AGENDADA", dtHorario: "2026-11-11T09:59:00Z" }, agora)).toBe(false);
+  });
 });

@@ -155,3 +155,8 @@ export function listarPendentesConfirmacao(consultas: Consulta[], horarios: Hora
     Number(b.dsRiscoFalta === "ALTO") - Number(a.dsRiscoFalta === "ALTO") ||
     (prazoConfirmacao(a)?.getTime() ?? 0) - (prazoConfirmacao(b)?.getTime() ?? 0));
 }
+
+/** Pode cancelar: consulta agendada ou confirmada que ainda não aconteceu. */
+export function podeCancelar(c: Pick<Consulta, "dsStatus" | "dtHorario">, agora: Date): boolean {
+  return (c.dsStatus === "AGENDADA" || c.dsStatus === "CONFIRMADA") && new Date(c.dtHorario).getTime() > agora.getTime();
+}

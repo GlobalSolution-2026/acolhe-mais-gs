@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { FiPhone, FiUserCheck } from "react-icons/fi";
+import { FiPhone, FiUserCheck, FiXCircle } from "react-icons/fi";
 import { EstadoVazio } from "@/components/EstadoVazio";
 import { MensagemErro } from "@/components/MensagemErro";
 import { useSimulador } from "@/context/SimuladorContext";
 import { fmtDiaHora } from "@/lib/datas";
-import { confirmarConsulta } from "@/services/api";
+import { cancelarConsulta, confirmarConsulta } from "@/services/api";
 import { listarPendentesConfirmacao, prazoConfirmacao, temContatoValido } from "@/services/regrasAgendamento";
 import type { CanalConfirmacao } from "@/types";
 
@@ -13,6 +13,7 @@ export function Pendentes() {
   const cdUnidade = estado.cdUnidadeRecepcao;
   const [erro, setErro] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
+  const [cancelando, setCancelando] = useState<number | null>(null);
 
   const pendentes = listarPendentesConfirmacao(estado.consultas, estado.horarios, cdUnidade, new Date());
 
@@ -23,6 +24,19 @@ export function Pendentes() {
       await confirmarConsulta(cdConsulta, canal);
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Não foi possível confirmar.");
+    } finally {
+      setEnviando(false);
+    }
+  };
+
+  const cancelar = async (cdConsulta: number) => {
+    setEnviando(true);
+    setErro(null);
+    try {
+      await cancelarConsulta(cdConsulta);
+      setCancelando(null);
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Não foi possível cancelar.");
     } finally {
       setEnviando(false);
     }
@@ -65,6 +79,20 @@ export function Pendentes() {
                 className="btn border border-borda bg-branco text-primaria disabled:opacity-60">
                 <FiUserCheck /> Confirmado presencialmente
               </button>
+              {cancelando === c.cdConsulta ? (
+                <div className="flex flex-col gap-2 rounded-[12px] border border-borda bg-fundo p-3" role="alert">
+                  <p className="font-semibold">Confirmar cancelamento? O horário será liberado para outra pessoa.</p>
+                  <button onClick={() => void cancelar(c.cdConsulta)} disabled={enviando} className="btn bg-gravidade-vermelho text-branco disabled:opacity-60">
+                    Sim, cancelar a consulta
+                  </button>
+                  <button onClick={() => setCancelando(null)} disabled={enviando} className="btn border border-borda bg-branco text-texto">Voltar</button>
+                </div>
+              ) : (
+                <button onClick={() => setCancelando(c.cdConsulta)} disabled={enviando}
+                  className="btn border border-borda bg-branco text-texto disabled:opacity-60">
+                  <FiXCircle /> Cancelou por telefone
+                </button>
+              )}
             </div>
           </article>
         );

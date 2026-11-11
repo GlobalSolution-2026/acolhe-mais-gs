@@ -32,6 +32,23 @@ export function vencerOfertas(estado: EstadoSimulador, agora: Date, todas = fals
     .reduce((e, o) => finalizarOferta(e, o.cdOferta, "EXPIRADA", agora), estado);
 }
 
+/**
+ * Fonte única da liberação de um horário: a consulta vira LIBERADA, o horário volta a ficar livre
+ * e, com antecedência suficiente e alguém aguardando, é oferecido à lista do dia (oferecerHorario).
+ * Usada pelo prazo de confirmação (simularPrazo) e pelo cancelamento.
+ */
+export function liberarConsulta(estado: EstadoSimulador, cdConsulta: number, agora: Date): { novoEstado: EstadoSimulador; oferecida: boolean } {
+  const c = estado.consultas.find((x) => x.cdConsulta === cdConsulta);
+  if (!c) return { novoEstado: estado, oferecida: false };
+  const liberado: EstadoSimulador = {
+    ...estado,
+    consultas: estado.consultas.map((x) => (x.cdConsulta === cdConsulta ? { ...x, dsStatus: "LIBERADA" } : x)),
+    horarios: estado.horarios.map((h) => (h.cdHorario === c.cdHorario ? { ...h, flOcupado: false } : h)),
+  };
+  const oferecido = oferecerHorario(liberado, c.cdHorario, agora);
+  return { novoEstado: oferecido, oferecida: oferecido !== liberado };
+}
+
 /** Avança apenas o prazo das consultas no alcance, mantendo o relógio das vagas real. */
 export function simularPrazo(estado: EstadoSimulador, agora: Date): { novoEstado: EstadoSimulador; resumo: ResumoSimulacao } {
   const resumo: ResumoSimulacao = { consultasLiberadas: 0, vagasOferecidas: 0, vagasDeVoltaNaAgenda: 0, mantidasSemContato: 0 };
@@ -46,11 +63,10 @@ export function simularPrazo(estado: EstadoSimulador, agora: Date): { novoEstado
   for (const c of alvo) {
     const cidadao = estado.cidadaos.find((p) => p.cdCidadao === c.cdCidadao);
     if (!cidadao || !temContatoValido(cidadao)) { resumo.mantidasSemContato++; continue; }
-    novoEstado = { ...novoEstado, consultas: novoEstado.consultas.map((x) => x.cdConsulta === c.cdConsulta ? { ...x, dsStatus: "LIBERADA" } : x), horarios: novoEstado.horarios.map((h) => h.cdHorario === c.cdHorario ? { ...h, flOcupado: false } : h) };
+    const { novoEstado: liberado, oferecida } = liberarConsulta(novoEstado, c.cdConsulta, agora);
     resumo.consultasLiberadas++;
-    const oferecido = oferecerHorario(novoEstado, c.cdHorario, agora);
-    if (oferecido !== novoEstado) resumo.vagasOferecidas++; else resumo.vagasDeVoltaNaAgenda++;
-    novoEstado = oferecido;
+    if (oferecida) resumo.vagasOferecidas++; else resumo.vagasDeVoltaNaAgenda++;
+    novoEstado = liberado;
   }
   return { novoEstado, resumo };
 }

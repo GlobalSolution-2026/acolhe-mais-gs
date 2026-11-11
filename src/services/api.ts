@@ -8,7 +8,8 @@ import type { CanalConfirmacao, Cidadao, FichaSaude, CidadaoEntrada, Consulta, E
 import type { Orientacao, VerificacaoUrgenciaEntrada } from "@/types/orientacao";
 import { idadeEm } from "@/lib/datas";
 import { podeVincular } from "./balcao";
-import { segundosRestantesOferta, temContatoValido } from "./regrasAgendamento";
+import { podeCancelar, segundosRestantesOferta, temContatoValido } from "./regrasAgendamento";
+import { liberarConsulta } from "./simulacao";
 
 export const API_URL = import.meta.env["VITE_API_URL"] as string | undefined;
 
@@ -249,6 +250,26 @@ export async function registrarPresenca(cdConsulta: number, status: "REALIZADA" 
   // if (!res.ok) { const erro: ErroResponse = await res.json(); throw new Error(erro.erro); }
   // return res.json();
   s.atualizarEstado((e) => ({ ...e, consultas: e.consultas.map((c) => (c.cdConsulta === cdConsulta ? nova : c)) }));
+  return nova;
+}
+
+// PUT /consultas/{cdConsulta} — cancelamento pelo cidadão ou pela recepção (dsStatus LIBERADA)
+export async function cancelarConsulta(cdConsulta: number): Promise<Consulta> {
+  await esperar();
+  const s = getStore();
+  const atual = s.obterEstado().consultas.find((c) => c.cdConsulta === cdConsulta);
+  if (!atual) falhar({ status: 404, erro: "Consulta não encontrada." });
+  if (!podeCancelar(atual, new Date())) falhar({ status: 409, erro: "Esta consulta não pode mais ser cancelada." });
+  const nova: Consulta = { ...atual, dsStatus: "LIBERADA" };
+  // const res = await fetch(`${API_URL}/consultas/${cdConsulta}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(nova) });
+  // if (!res.ok) { const erro: ErroResponse = await res.json(); throw new Error(erro.erro); }
+  // return res.json();
+  // No protótipo, a mesma regra do prazo de confirmação libera o horário e oferece à lista do dia.
+  s.atualizarEstado((e) => {
+    const c = e.consultas.find((x) => x.cdConsulta === cdConsulta);
+    if (!c || !podeCancelar(c, new Date())) falhar({ status: 409, erro: "Esta consulta não pode mais ser cancelada." });
+    return liberarConsulta(e, cdConsulta, new Date()).novoEstado;
+  });
   return nova;
 }
 

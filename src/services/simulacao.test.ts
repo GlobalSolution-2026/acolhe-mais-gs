@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { EstadoSimulador } from "@/context/SimuladorContext";
 import type { EntradaListaDoDia, OfertaVaga } from "@/types";
 import { escolherDestinatarioOferta, ofertasDoCidadao, segundosRestantesOferta, tempoRestanteOferta } from "./regrasAgendamento";
-import { finalizarOferta, oferecerHorario, simularPrazo, vencerOfertas } from "./simulacao";
+import { finalizarOferta, liberarConsulta, oferecerHorario, simularPrazo, vencerOfertas } from "./simulacao";
 
 const agora = new Date("2026-11-05T10:00:00Z");
 const H = 3_600_000;
@@ -85,4 +85,35 @@ it("simulação conta três dias com horários, atravessando fim de semana", () 
   e.horarios = e.horarios.map((h, i) => ({ ...h, cdUnidade: 1, dtHorario: datas[i] ?? "" }));
   e.consultas = e.consultas.map((c, i) => ({ ...c, cdCidadao: 1, dtHorario: datas[i] ?? "", dtAgendamento: "2026-10-30T08:00:00" }));
   expect(simularPrazo(e, agora).novoEstado.consultas.map((c) => c.dsStatus)).toEqual(["LIBERADA", "LIBERADA", "LIBERADA", "AGENDADA"]);
+});
+
+describe("liberarConsulta (prazo e cancelamento)", () => {
+  it("libera a consulta e o horário e oferece ao primeiro da fila da UBS", () => {
+    const { novoEstado, oferecida } = liberarConsulta(estado(), 2, agora);
+    expect(novoEstado.consultas.find((c) => c.cdConsulta === 2)?.dsStatus).toBe("LIBERADA");
+    expect(novoEstado.horarios.find((h) => h.cdHorario === 2)?.flOcupado).toBe(false);
+    expect(oferecida).toBe(true);
+    expect(novoEstado.ofertas).toEqual([expect.objectContaining({ cdHorario: 2, cdEntrada: 1, status: "PENDENTE" })]);
+  });
+  it("não oferece a vaga de volta a quem a liberou", () => {
+    const { novoEstado } = liberarConsulta(estado(), 1, agora);
+    expect(novoEstado.ofertas.map((o) => o.cdEntrada)).toEqual([3]);
+  });
+  it("sem ninguém na fila, o horário só volta livre para a agenda", () => {
+    const e = estado(); e.listaDoDia = [];
+    const { novoEstado, oferecida } = liberarConsulta(e, 2, agora);
+    expect(oferecida).toBe(false);
+    expect(novoEstado.ofertas).toEqual([]);
+    expect(novoEstado.horarios.find((h) => h.cdHorario === 2)?.flOcupado).toBe(false);
+  });
+  it("em cima da hora (menos de 1 h) não oferece à lista do dia", () => {
+    const e = estado(); e.horarios = e.horarios.map((h) => (h.cdHorario === 2 ? { ...h, dtHorario: iso(.5) } : h));
+    const { novoEstado, oferecida } = liberarConsulta(e, 2, agora);
+    expect(oferecida).toBe(false);
+    expect(novoEstado.horarios.find((h) => h.cdHorario === 2)?.flOcupado).toBe(false);
+  });
+  it("consulta inexistente não muda nada", () => {
+    const e = estado();
+    expect(liberarConsulta(e, 99, agora)).toEqual({ novoEstado: e, oferecida: false });
+  });
 });
