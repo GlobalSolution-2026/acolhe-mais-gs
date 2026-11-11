@@ -6,6 +6,7 @@ import { gerarHorariosIniciais } from "@/data/horarios";
 import { gerarSemente } from "@/data/consultasIniciais";
 import { conectarStore } from "@/services/api";
 import { oferecerHorario, finalizarOferta, simularPrazo, vencerOfertas, type ResumoSimulacao } from "@/services/simulacao";
+import { iniciarQuestionario, responderNoQuestionario, trocarQueixaNoQuestionario, voltarNoQuestionario } from "@/services/regrasOrientacao";
 import { chaveDia } from "@/lib/datas";
 import { credenciaisIniciais, fichasIniciais } from "@/data/contaDemo";
 
@@ -151,39 +152,23 @@ export function SimuladorProvider({ children }: { children: ReactNode }) {
 
   const iniciarOrientacao = useCallback(
     (cdQueixa: CodigoQueixa, nrCep: string, local: LocalOrientacao = {}) =>
-      atualizarEstado((e) => ({ ...e, orientacaoAtual: { cdQueixa, nrCep, ...local, respostas: {}, ordem: [], resultado: null } })),
+      atualizarEstado((e) => ({ ...e, orientacaoAtual: iniciarQuestionario(cdQueixa, nrCep, local) })),
     [atualizarEstado],
   );
 
   /** Troca a queixa mantendo as respostas do perfil (PF1, PF2, SX, PF3, DOR). */
   const trocarQueixa = useCallback(
-    (cdQueixa: CodigoQueixa) =>
-      alterarOrientacao((o) => {
-        const perfil = ["PF1", "PF2", "SX", "PF3", "DOR"];
-        const respostas = Object.fromEntries(Object.entries(o.respostas).filter(([k]) => perfil.includes(k)));
-        return { ...o, cdQueixa, respostas, ordem: o.ordem.filter((c) => perfil.includes(c)), resultado: null };
-      }),
+    (cdQueixa: CodigoQueixa) => alterarOrientacao((o) => trocarQueixaNoQuestionario(o, cdQueixa)),
     [alterarOrientacao],
   );
 
   const responder = useCallback(
-    (codigo: string, valor: Resposta) =>
-      alterarOrientacao((o) => ({
-        ...o,
-        respostas: { ...o.respostas, [codigo]: valor },
-        ordem: o.ordem.includes(codigo) ? o.ordem : [...o.ordem, codigo],
-      })),
+    (codigo: string, valor: Resposta) => alterarOrientacao((o) => responderNoQuestionario(o, codigo, valor)),
     [alterarOrientacao],
   );
 
   const voltarPergunta = useCallback(
-    () =>
-      alterarOrientacao((o) => {
-        const ultima = o.ordem[o.ordem.length - 1];
-        if (!ultima) return o;
-        const { [ultima]: _removida, ...respostas } = o.respostas;
-        return { ...o, respostas, ordem: o.ordem.slice(0, -1) };
-      }),
+    () => alterarOrientacao(voltarNoQuestionario),
     [alterarOrientacao],
   );
 

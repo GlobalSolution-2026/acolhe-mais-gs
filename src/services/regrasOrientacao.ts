@@ -5,7 +5,7 @@
 import { perguntas } from "@/data/perguntas";
 import { obterQueixa } from "@/data/queixas";
 import type {
-  CodigoQueixa, CondicaoExibicao, Cor, Destino, Pergunta, Respostas, ResultadoOrientacao,
+  CodigoQueixa, CondicaoExibicao, Cor, Destino, LocalOrientacao, OrientacaoEmAndamento, Pergunta, Resposta, Respostas, ResultadoOrientacao,
 } from "@/types/orientacao";
 
 export const DESTINO_POR_COR: Record<Cor, Destino> = {
@@ -223,4 +223,36 @@ export function podeContinuar(p: Pergunta, marcados: string[]): boolean {
 export function textoPergunta(p: Pergunta, r: Respostas): string {
   const outra = r["PF1"] === "OUTRA_PESSOA";
   return p.dsPergunta.replaceAll("{voce}", outra ? "a pessoa" : "você").replaceAll("{Voce}", outra ? "A pessoa" : "Você");
+}
+
+/* ---------- Estado do questionário (puro; usado pelo app e pelo balcão) ---------- */
+
+/** Respostas do perfil, mantidas ao trocar de queixa. */
+const CODIGOS_PERFIL = ["PF1", "PF2", "SX", "PF3", "DOR"];
+
+export function iniciarQuestionario(cdQueixa: CodigoQueixa, nrCep: string, local: LocalOrientacao = {}): OrientacaoEmAndamento {
+  return { cdQueixa, nrCep, ...local, respostas: {}, ordem: [], resultado: null };
+}
+
+/** Grava a resposta; a ordem guarda cada pergunta uma vez só (para o "Pergunta anterior"). */
+export function responderNoQuestionario(o: OrientacaoEmAndamento, codigo: string, valor: Resposta): OrientacaoEmAndamento {
+  return {
+    ...o,
+    respostas: { ...o.respostas, [codigo]: valor },
+    ordem: o.ordem.includes(codigo) ? o.ordem : [...o.ordem, codigo],
+  };
+}
+
+/** Desfaz a última resposta dada; sem respostas, devolve o mesmo objeto. */
+export function voltarNoQuestionario(o: OrientacaoEmAndamento): OrientacaoEmAndamento {
+  const ultima = o.ordem[o.ordem.length - 1];
+  if (!ultima) return o;
+  const { [ultima]: _removida, ...respostas } = o.respostas;
+  return { ...o, respostas, ordem: o.ordem.slice(0, -1) };
+}
+
+/** Troca a queixa mantendo só as respostas do perfil (PF1, PF2, SX, PF3, DOR). */
+export function trocarQueixaNoQuestionario(o: OrientacaoEmAndamento, cdQueixa: CodigoQueixa): OrientacaoEmAndamento {
+  const respostas = Object.fromEntries(Object.entries(o.respostas).filter(([k]) => CODIGOS_PERFIL.includes(k)));
+  return { ...o, cdQueixa, respostas, ordem: o.ordem.filter((c) => CODIGOS_PERFIL.includes(c)), resultado: null };
 }

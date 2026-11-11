@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
-  alarmeGestacaoCabeca, alternarOpcao, calcularOrientacao, grupoRiscoGestacao, perguntasDaQueixa, podeContinuar, proximoPasso,
+  alarmeGestacaoCabeca, alternarOpcao, calcularOrientacao, grupoRiscoGestacao, iniciarQuestionario, perguntasDaQueixa, podeContinuar,
+  proximoPasso, responderNoQuestionario, trocarQueixaNoQuestionario, voltarNoQuestionario,
 } from "./regrasOrientacao";
 import { perguntas } from "@/data/perguntas";
 import type { CodigoQueixa, Cor, Pergunta, Respostas } from "@/types/orientacao";
@@ -371,5 +372,44 @@ describe("perguntas positivas preservam o significado clínico", () => {
   });
   it("C6 permanece oculta abaixo de dor 8", () => {
     expect(proximoPasso("CABECA", perfil({ C1: "NAO", C2: N, C3: N, C4: "NAO", C5: "NAO" }))).toMatchObject({ tipo: "PERGUNTA", pergunta: { codigo: "C7" } });
+  });
+});
+
+describe("Estado do questionário", () => {
+  const novo = () => iniciarQuestionario("GARGANTA", "01310-100", { nrEndereco: "10" });
+
+  it("começa vazio, com CEP e local", () => {
+    expect(novo()).toEqual({ cdQueixa: "GARGANTA", nrCep: "01310-100", nrEndereco: "10", respostas: {}, ordem: [], resultado: null });
+  });
+
+  it("responder grava a resposta sem repetir a pergunta na ordem", () => {
+    let o = responderNoQuestionario(novo(), "PF2", 30);
+    o = responderNoQuestionario(o, "PF2", 31);
+    expect(o.respostas).toEqual({ PF2: 31 });
+    expect(o.ordem).toEqual(["PF2"]);
+  });
+
+  it("voltar desfaz só a última resposta e não muda nada sem respostas", () => {
+    const vazio = novo();
+    expect(voltarNoQuestionario(vazio)).toBe(vazio);
+    const o = voltarNoQuestionario(responderNoQuestionario(responderNoQuestionario(vazio, "PF1", "PARA_MIM"), "G0", "NAO"));
+    expect(o.respostas).toEqual({ PF1: "PARA_MIM" });
+    expect(o.ordem).toEqual(["PF1"]);
+  });
+
+  it("trocar de queixa mantém só o perfil e limpa o resultado", () => {
+    let o = novo();
+    for (const [c, v] of Object.entries({ PF1: "PARA_MIM", PF2: 30, SX: "F", PF3: "NAO", DOR: 3, G0: "SIM" })) o = responderNoQuestionario(o, c, v);
+    const t = trocarQueixaNoQuestionario(o, "GRIPAL");
+    expect(t.cdQueixa).toBe("GRIPAL");
+    expect(t.respostas).toEqual({ PF1: "PARA_MIM", PF2: 30, SX: "F", PF3: "NAO", DOR: 3 });
+    expect(t.ordem).toEqual(["PF1", "PF2", "SX", "PF3", "DOR"]);
+    expect(t.resultado).toBeNull();
+  });
+
+  it("não altera o objeto original (o balcão e o app guardam estados separados)", () => {
+    const o = novo();
+    responderNoQuestionario(o, "PF2", 30);
+    expect(o.respostas).toEqual({});
   });
 });
