@@ -9,19 +9,21 @@ const H = 3_600_000;
 const iso = (horas: number) => new Date(agora.getTime() + horas * H).toISOString();
 const entrada = (id: number): EntradaListaDoDia => ({ cdEntrada: id, cdCidadao: id, cdOrientacao: id, cdUnidade: 1, nmCidadao: `Pessoa ${id}`, dsCor: "VERDE", dtEntrada: iso(-id), flPrioridade: id === 1, flCidadao: id === 3, status: "AGUARDANDO" });
 const oferta = (id: number, status: OfertaVaga["status"] = "PENDENTE", cdHorario = 1): OfertaVaga => ({ cdOferta: id, cdHorario, cdUnidade: 1, cdEntrada: id, nmCidadao: `Pessoa ${id}`, status, dtCriacao: agora.toISOString() });
+const vaga = (cdHorario: number, horas = 48) => ({ cdHorario, dtHorario: iso(horas) });
 function estado(): EstadoSimulador {
-  return { dtSemente: "2026-11-05", unidades: [], cdUnidadeRecepcao: 1, cdCidadaoAtual: null, orientacoes: [], orientacaoAtual: null, ofertas: [], listaDoDia: [entrada(1), entrada(2), entrada(3)],
+  return { dtSemente: "2026-11-05", unidades: [], cdUnidadeRecepcao: 1, cdCidadaoAtual: null, orientacoes: [], orientacaoAtual: null, // Na fila estão outras pessoas (11 a 13), sem consulta própria nos dias das vagas.
+    ofertas: [], listaDoDia: [entrada(1), entrada(2), entrada(3)].map((x) => ({ ...x, cdCidadao: 10 + x.cdEntrada })),
     cidadaos: [1, 2, 3, 4].map((id) => ({ cdCidadao: id, nmCidadao: `Pessoa ${id}`, nrCns: String(id), dtNascimento: "1980-01-01", dsSexo: "F", nrCelular: id === 4 ? "" : "11999999999", nmContatoRecado: "", nrContatoRecado: "", nrCep: "04010-100" })),
     horarios: [1, 2, 3, 4].map((id) => ({ cdHorario: id, cdUnidade: id === 3 ? 2 : 1, dtHorario: iso(id === 3 ? 120 : 48), nrDuracaoMin: 20, flOcupado: true })),
     consultas: [1, 2, 3, 4].map((id) => ({ cdConsulta: id, cdHorario: id, cdCidadao: id, cdOrientacao: null, dtAgendamento: iso(-72), dtHorario: iso(id === 3 ? 120 : 48), dtConfirmacao: null, dsCanalConfirmacao: null, dsStatus: "AGENDADA", dsRiscoFalta: "BAIXO", vlProbFalta: .2, nmUnidade: "UBS" })) };
 }
 
 describe("destinatário das ofertas", () => {
-  it("não oferece a quem perdeu", () => expect(escolherDestinatarioOferta([entrada(1), entrada(2)], [], 1, 1)?.cdCidadao).toBe(2));
-  it("pula quem tem oferta pendente em outra vaga", () => expect(escolherDestinatarioOferta([entrada(1), entrada(2)], [oferta(1, "PENDENTE", 2)], 1, null)?.cdCidadao).toBe(2));
+  it("não oferece a quem perdeu", () => expect(escolherDestinatarioOferta([entrada(1), entrada(2)], [], vaga(1), 1, [])?.cdCidadao).toBe(2));
+  it("pula quem tem oferta pendente em outra vaga", () => expect(escolherDestinatarioOferta([entrada(1), entrada(2)], [oferta(1, "PENDENTE", 2)], vaga(1), null, [])?.cdCidadao).toBe(2));
   it.each(["RECUSADA", "EXPIRADA"] as const)("não repete quem deixou %s esta vaga", (status) => {
-    expect(escolherDestinatarioOferta([entrada(1), entrada(2)], [oferta(1, status)], 1, null)?.cdCidadao).toBe(2);
-    expect(escolherDestinatarioOferta([entrada(1), entrada(2)], [oferta(1, status)], 2, null)?.cdCidadao).toBe(1);
+    expect(escolherDestinatarioOferta([entrada(1), entrada(2)], [oferta(1, status)], vaga(1), null, [])?.cdCidadao).toBe(2);
+    expect(escolherDestinatarioOferta([entrada(1), entrada(2)], [oferta(1, status)], vaga(2), null, [])?.cdCidadao).toBe(1);
   });
   it.each(["RECUSADA", "EXPIRADA"] as const)("repasse após %s", (status) => {
     const e = estado(); e.horarios[0] = { ...e.horarios[0], cdHorario: 1, cdUnidade: 1, dtHorario: iso(48), nrDuracaoMin: 20, flOcupado: false };
@@ -96,7 +98,8 @@ describe("liberarConsulta (prazo e cancelamento)", () => {
     expect(novoEstado.ofertas).toEqual([expect.objectContaining({ cdHorario: 2, cdEntrada: 1, status: "PENDENTE" })]);
   });
   it("não oferece a vaga de volta a quem a liberou", () => {
-    const { novoEstado } = liberarConsulta(estado(), 1, agora);
+    const e = estado(); e.listaDoDia = e.listaDoDia.map((x) => (x.cdEntrada === 1 ? { ...x, cdCidadao: 1 } : x));
+    const { novoEstado } = liberarConsulta(e, 1, agora);
     expect(novoEstado.ofertas.map((o) => o.cdEntrada)).toEqual([3]);
   });
   it("sem ninguém na fila, o horário só volta livre para a agenda", () => {
@@ -115,5 +118,37 @@ describe("liberarConsulta (prazo e cancelamento)", () => {
   it("consulta inexistente não muda nada", () => {
     const e = estado();
     expect(liberarConsulta(e, 99, agora)).toEqual({ novoEstado: e, oferecida: false });
+  });
+});
+
+describe("quem já tem consulta no dia da vaga é pulado", () => {
+  /** Consulta ativa extra da pessoa no mesmo dia da vaga 2 (que fica a 48 h). */
+  const comConsultaNoDia = (cdCidadao: number, dsStatus: "AGENDADA" | "CONFIRMADA" | "LIBERADA" = "AGENDADA", horas = 49) => {
+    const e = estado();
+    e.consultas = [...e.consultas, { ...e.consultas[0]!, cdConsulta: 50, cdHorario: 50, cdCidadao, dtHorario: iso(horas), dsStatus }];
+    return e;
+  };
+  it.each(["AGENDADA", "CONFIRMADA"] as const)("com consulta %s no dia, a oferta passa ao próximo da lista", (status) => {
+    const { novoEstado } = liberarConsulta(comConsultaNoDia(11, status), 2, agora);
+    expect(novoEstado.ofertas.map((o) => o.cdEntrada)).toEqual([3]);
+  });
+  it("consulta liberada no dia não conta", () => {
+    const { novoEstado } = liberarConsulta(comConsultaNoDia(11, "LIBERADA"), 2, agora);
+    expect(novoEstado.ofertas.map((o) => o.cdEntrada)).toEqual([1]);
+  });
+  it("consulta em outro dia não pula a pessoa", () => {
+    const { novoEstado } = liberarConsulta(comConsultaNoDia(11, "AGENDADA", 24 * 6), 2, agora);
+    expect(novoEstado.ofertas.map((o) => o.cdEntrada)).toEqual([1]);
+  });
+});
+
+describe("cadastro sem telefone e sem recado", () => {
+  it("a consulta não é liberada automaticamente no prazo", () => {
+    const e = estado();
+    e.cidadaos = e.cidadaos.map((c) => (c.cdCidadao === 1 ? { ...c, nrCelular: "", nmContatoRecado: "", nrContatoRecado: "" } : c));
+    const { novoEstado, resumo } = simularPrazo(e, agora);
+    expect(novoEstado.consultas.find((c) => c.cdConsulta === 1)?.dsStatus).toBe("AGENDADA");
+    expect(novoEstado.horarios.find((h) => h.cdHorario === 1)?.flOcupado).toBe(true);
+    expect(resumo.mantidasSemContato).toBe(2);
   });
 });

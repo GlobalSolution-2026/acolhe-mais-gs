@@ -14,7 +14,7 @@ export function oferecerHorario(estado: EstadoSimulador, cdHorario: number, agor
   const h = estado.horarios.find((x) => x.cdHorario === cdHorario);
   if (!h || !horarioOferecivel(h, estado.ofertas, agora)) return estado;
   const perdida = [...estado.consultas].reverse().find((c) => c.cdHorario === cdHorario && c.dsStatus === "LIBERADA");
-  const entrada = escolherDestinatarioOferta(estado.listaDoDia.filter((e) => e.cdUnidade === h.cdUnidade), estado.ofertas, cdHorario, perdida?.cdCidadao ?? null);
+  const entrada = escolherDestinatarioOferta(estado.listaDoDia.filter((e) => e.cdUnidade === h.cdUnidade), estado.ofertas, h, perdida?.cdCidadao ?? null, estado.consultas);
   if (!entrada) return estado;
   return { ...estado, ofertas: [...estado.ofertas, { cdOferta: Math.max(0, ...estado.ofertas.map((o) => o.cdOferta)) + 1, cdHorario, cdUnidade: h.cdUnidade, cdEntrada: entrada.cdEntrada, nmCidadao: entrada.nmCidadao, dtCriacao: agora.toISOString(), status: "PENDENTE" }] };
 }

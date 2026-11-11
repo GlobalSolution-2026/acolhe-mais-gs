@@ -186,13 +186,15 @@ export function Resultado() {
     rodando.current = true;
     setErro(null);
     try {
-      definirResultado(await concluirOrientacao(atual.cdQueixa, respostas));
+      // "Para mim" com login: a orientação fica vinculada ao cadastro (lembrete para a equipe da UBS).
+      const vinculo = respostas["PF1"] === "PARA_MIM" ? cdCidadaoAtual : null;
+      definirResultado(await concluirOrientacao(atual.cdQueixa, respostas, vinculo));
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Não foi possível concluir a orientação.");
     } finally {
       rodando.current = false;
     }
-  }, [atual, respostas, definirResultado]);
+  }, [atual, respostas, definirResultado, cdCidadaoAtual]);
 
   useEffect(() => { void concluir(); }, [concluir]);
 

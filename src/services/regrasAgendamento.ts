@@ -10,8 +10,9 @@ import {
   CONFIRMACAO_RISCO_BAIXO_DIAS_UTEIS,
   PRAZO_FINAL_CONFIRMACAO_DIAS_UTEIS,
 } from "@/data/configuracoes";
-import { subtrairDiasUteis } from "@/lib/datas";
+import { chaveDia, subtrairDiasUteis } from "@/lib/datas";
 import type { Cidadao, Consulta, EntradaListaDoDia, OfertaVaga, Horario } from "@/types";
+import type { Orientacao } from "@/types/orientacao";
 
 /** Contato válido: celular ou telefone de recado preenchido. */
 export function temContatoValido(c: Pick<Cidadao, "nrCelular" | "nrContatoRecado">): boolean {
@@ -89,7 +90,7 @@ export interface Indicadores {
   taxaAbsenteismo: number | null;
   /** Horários liberados e reocupados ÷ horários liberados (null se não há liberações). */
   taxaReaproveitamento: number | null;
-  /** Pessoas ainda aguardando encaixe na lista do dia. */
+  /** Pessoas ainda aguardando encaixe na lista do dia (sem contar quem já tem consulta hoje). */
   naoEncaixadas: number;
   /** REALIZADA ÷ (REALIZADA + FALTA) com orientação (null se não há orientações). */
   comparecimentoAposOrientacao: number | null;
@@ -116,15 +117,38 @@ export function calcularIndicadores(consultas: Consulta[], listaDoDia: EntradaLi
   const realizadas = comOrientacao.filter((c) => c.dsStatus === "REALIZADA");
   const comparecimentoAposOrientacao = comOrientacao.length > 0 ? realizadas.length / comOrientacao.length : null;
 
-  return { taxaAbsenteismo, taxaReaproveitamento, naoEncaixadas: ordenarListaDoDia(listaDoDia).length, comparecimentoAposOrientacao };
+  // Quem já tem consulta hoje será atendido: não conta como não encaixado.
+  const hoje = chaveDia(agora.toISOString());
+  const naoEncaixadas = ordenarListaDoDia(listaDoDia).filter((e) => !consultaNoDia(consultas, e.cdCidadao, hoje)).length;
+  return { taxaAbsenteismo, taxaReaproveitamento, naoEncaixadas, comparecimentoAposOrientacao };
 }
 
-/** Não repetir destinatários para a mesma vaga nem devolver a quem a perdeu. */
-export function escolherDestinatarioOferta(fila: EntradaListaDoDia[], ofertas: OfertaVaga[], cdHorario: number, cdCidadaoQuePerdeu: number | null): EntradaListaDoDia | undefined {
+/** Consulta ativa (agendada ou confirmada) da pessoa no dia "aaaa-mm-dd"; a mais cedo, se houver mais de uma. */
+export function consultaNoDia(consultas: Consulta[], cdCidadao: number | null, dia: string): Consulta | undefined {
+  if (cdCidadao === null) return undefined;
+  return consultas
+    .filter((c) => c.cdCidadao === cdCidadao && (c.dsStatus === "AGENDADA" || c.dsStatus === "CONFIRMADA") && chaveDia(c.dtHorario) === dia)
+    .sort((a, b) => a.dtHorario.localeCompare(b.dtHorario))[0];
+}
+
+/** Orientação feita no dia pela pessoa (vinculada pelo Balcão/app ou pela lista do dia); a mais recente. */
+export function orientacaoDoDia(orientacoes: Orientacao[], listaDoDia: EntradaListaDoDia[], cdCidadao: number | null, dia: string): Orientacao | undefined {
+  if (cdCidadao === null) return undefined;
+  const daLista = new Set(listaDoDia.filter((e) => e.cdCidadao === cdCidadao).map((e) => e.cdOrientacao));
+  return orientacoes
+    .filter((o) => (o.cdCidadao === cdCidadao || daLista.has(o.cdOrientacao)) && chaveDia(o.dtOrientacao) === dia)
+    .sort((a, b) => b.dtOrientacao.localeCompare(a.dtOrientacao))[0];
+}
+
+/** Não repetir destinatários, não devolver a quem perdeu e pular quem já tem consulta no dia da vaga. */
+export function escolherDestinatarioOferta(fila: EntradaListaDoDia[], ofertas: OfertaVaga[], horario: Pick<Horario, "cdHorario" | "dtHorario">,
+  cdCidadaoQuePerdeu: number | null, consultas: Consulta[]): EntradaListaDoDia | undefined {
+  const dia = chaveDia(horario.dtHorario);
   return ordenarListaDoDia(fila).find((e) =>
     (cdCidadaoQuePerdeu === null || e.cdCidadao !== cdCidadaoQuePerdeu) &&
+    !consultaNoDia(consultas, e.cdCidadao, dia) &&
     !ofertas.some((o) => o.cdEntrada === e.cdEntrada && (o.status === "PENDENTE" ||
-      (o.cdHorario === cdHorario && (o.status === "RECUSADA" || o.status === "EXPIRADA")))));
+      (o.cdHorario === horario.cdHorario && (o.status === "RECUSADA" || o.status === "EXPIRADA")))));
 }
 
 export function horarioOferecivel(h: Horario, ofertas: OfertaVaga[], agora: Date): boolean {

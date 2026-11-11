@@ -20,7 +20,8 @@ export const estadoMentalAlerta = (r: Respostas): boolean =>
   });
 
 /** Aplica as regras, chama a verificação de IA (só eleva) e salva a orientação. */
-export async function concluirOrientacao(queixa: CodigoQueixa, respostas: Respostas): Promise<ResultadoFinal> {
+/** cdCidadao: só quando a orientação é "Para mim" e há login (vincula ao cadastro para a equipe da UBS). */
+export async function concluirOrientacao(queixa: CodigoQueixa, respostas: Respostas, cdCidadao: number | null = null): Promise<ResultadoFinal> {
   const regras = calcularOrientacao(queixa, respostas);
   const nrDor = typeof respostas["DOR"] === "number" ? respostas["DOR"] : null;
   let { dsCor } = regras;
@@ -42,7 +43,7 @@ export async function concluirOrientacao(queixa: CodigoQueixa, respostas: Respos
   }
 
   const dsDestino = DESTINO_POR_COR[dsCor];
-  const salva = await salvarOrientacao({ cdQueixa: obterQueixa(queixa).cdQueixa, dsCor, dsDestino, nrDor, flElevadaModelo });
+  const salva = await salvarOrientacao({ cdQueixa: obterQueixa(queixa).cdQueixa, dsCor, dsDestino, nrDor, flElevadaModelo, cdCidadao });
   return { cdOrientacao: salva.cdOrientacao, dsCor, dsDestino, sinaisMarcados: regras.sinaisMarcados, nrDor, flElevadaModelo };
 }
 

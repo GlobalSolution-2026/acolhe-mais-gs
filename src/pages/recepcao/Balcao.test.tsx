@@ -161,6 +161,25 @@ describe("Balcão: identificação e agendamento", () => {
     expect(estado.horarios.find((h) => h.cdHorario === 2)?.flOcupado).toBe(true);
   });
 
+  it("cadastro de balcão sem telefone: 'Não tem telefone' dispensa o celular e avisa que não há contato", async () => {
+    estado.cidadaos = [maria];
+    estado.horarios = [horario(2, 3)];
+    await codigoVerde();
+    await buscarCns("999888777666555");
+    await screen.findByText("Cadastro de balcão", {}, ESPERA);
+    fireEvent.change(screen.getByLabelText("Nome completo"), { target: { value: "Sem Fone" } });
+    fireEvent.change(screen.getByLabelText("Data de nascimento"), { target: { value: "1950-01-01" } });
+    fireEvent.change(screen.getByLabelText("Sexo"), { target: { value: "F" } });
+    fireEvent.click(screen.getByRole("checkbox", { name: "Não tem telefone" }));
+    expect(screen.queryByLabelText("Celular com DDD")).not.toBeInTheDocument();
+    expect(screen.getByText(/Sem telefone e sem contato de recado/)).toBeInTheDocument();
+    fireEvent.click(botao("Cadastrar"));
+    expect(await screen.findByText(/vinculada a Sem Fone/, {}, ESPERA)).toBeInTheDocument();
+    expect(estado.cidadaos.find((c) => c.nmCidadao === "Sem Fone")).toMatchObject({ nrCelular: "", nrContatoRecado: "" });
+    fireEvent.click(botao("Agendar"));
+    expect(await screen.findByText("Consulta agendada", {}, ESPERA)).toBeInTheDocument();
+  });
+
   it("mesmo cidadão já vinculado e sem horário livre: confere o cadastro e entra na lista do dia com a cor", async () => {
     estado.cidadaos = [maria];
     estado.orientacoes = estado.orientacoes.map((o) => (o.cdOrientacao === 12 ? { ...o, cdCidadao: 1 } : o));

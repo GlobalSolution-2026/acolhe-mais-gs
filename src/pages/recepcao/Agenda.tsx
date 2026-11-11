@@ -3,9 +3,11 @@ import { FiUserPlus } from "react-icons/fi";
 import { EstadoVazio } from "@/components/EstadoVazio";
 import { FormularioCidadao } from "@/components/FormularioCidadao";
 import { MensagemErro } from "@/components/MensagemErro";
+import { SeloOrientacaoHoje } from "@/components/SeloOrientacaoHoje";
 import { useSimulador } from "@/context/SimuladorContext";
 import { chaveDia, fmtHora, listarDiasUnidade, rotuloDia } from "@/lib/datas";
 import { agendarConsulta, cadastrarCidadao, registrarPresenca } from "@/services/api";
+import { orientacaoDoDia } from "@/services/regrasAgendamento";
 import type { CidadaoEntrada, Consulta, Horario } from "@/types";
 
 const ROTULO_STATUS: Record<Consulta["dsStatus"], string> = {
@@ -104,6 +106,13 @@ export function Agenda() {
             {consulta && (
               <>
                 <p className="font-bold">{nomePaciente(consulta)}</p>
+                {(() => {
+                  // Lembrete para quem vai atender: a pessoa procurou ajuda hoje.
+                  const hoje = chaveDia(new Date().toISOString());
+                  const ativa = consulta.dsStatus === "AGENDADA" || consulta.dsStatus === "CONFIRMADA";
+                  const o = ativa && chaveDia(consulta.dtHorario) === hoje && orientacaoDoDia(estado.orientacoes, estado.listaDoDia, consulta.cdCidadao, hoje);
+                  return o && <SeloOrientacaoHoje orientacao={o} />;
+                })()}
                 <p className={`text-sm font-bold ${consulta.dsRiscoFalta === "ALTO" ? "text-gravidade-vermelho" : "text-textoSuave"}`}>
                   Risco de falta: {consulta.dsRiscoFalta} ({Math.round(consulta.vlProbFalta * 100)}%)
                 </p>
@@ -124,6 +133,7 @@ export function Agenda() {
                   <FormularioCidadao
                     nrCep={unidade?.nrCep ?? ""}
                     valoresIniciais={{}}
+                    celularOpcional
                     aoEnviar={(d) => void agendarParaQuemChegou(h.cdHorario, d)}
                     textoBotao="Agendar"
                     enviando={enviando}

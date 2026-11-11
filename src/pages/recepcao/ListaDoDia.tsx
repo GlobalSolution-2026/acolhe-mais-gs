@@ -4,9 +4,10 @@ import { EstadoVazio } from "@/components/EstadoVazio";
 import { SeloDemonstracao } from "@/components/SeloDemonstracao";
 import { useSimulador } from "@/context/SimuladorContext";
 import { MensagemErro } from "@/components/MensagemErro";
+import { SeloOrientacaoHoje } from "@/components/SeloOrientacaoHoje";
 import { aceitarOfertaPorTelefone } from "@/services/api";
-import { fmtDiaHora, fmtHora } from "@/lib/datas";
-import { escolherDestinatarioOferta, horarioOferecivel, ordenarListaDoDia, tempoRestanteOferta } from "@/services/regrasAgendamento";
+import { chaveDia, fmtDiaHora, fmtHora } from "@/lib/datas";
+import { consultaNoDia, escolherDestinatarioOferta, horarioOferecivel, orientacaoDoDia, ordenarListaDoDia, tempoRestanteOferta } from "@/services/regrasAgendamento";
 
 export function ListaDoDia() {
   const { estado, oferecerVaga, responderOferta } = useSimulador();
@@ -24,11 +25,12 @@ export function ListaDoDia() {
   };
 
   const fila = ordenarListaDoDia(estado.listaDoDia.filter((e) => e.cdUnidade === cdUnidade));
+  const hoje = chaveDia(agora.toISOString());
 
   // Vaga oferecível: horário livre começando daqui a pelo menos 60 minutos.
   const vaga = estado.horarios
     .filter((h) => h.cdUnidade === cdUnidade && horarioOferecivel(h, estado.ofertas, agora) &&
-      escolherDestinatarioOferta(fila, estado.ofertas, h.cdHorario, [...estado.consultas].reverse().find((c) => c.cdHorario === h.cdHorario && c.dsStatus === "LIBERADA")?.cdCidadao ?? null))
+      escolherDestinatarioOferta(fila, estado.ofertas, h, [...estado.consultas].reverse().find((c) => c.cdHorario === h.cdHorario && c.dsStatus === "LIBERADA")?.cdCidadao ?? null, estado.consultas))
     .sort((a, b) => a.dtHorario.localeCompare(b.dtHorario))[0];
 
   const oferecer = () => {
@@ -58,7 +60,10 @@ export function ListaDoDia() {
         })}
       </section>}
       {fila.length === 0 && <EstadoVazio mensagem="Ninguém aguardando encaixe hoje." />}
-      {fila.map((e, i) => (
+      {fila.map((e, i) => {
+        const consultaHoje = consultaNoDia(estado.consultas, e.cdCidadao, hoje);
+        const orientacaoHoje = consultaHoje && orientacaoDoDia(estado.orientacoes, estado.listaDoDia, e.cdCidadao, hoje);
+        return (
         <article key={e.cdEntrada} className="flex items-center gap-3 rounded-[12px] border border-borda bg-branco p-4 shadow-leve">
           <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-mentaSuave text-lg font-extrabold text-primaria">
             {i + 1}º
@@ -66,12 +71,19 @@ export function ListaDoDia() {
           <div className="min-w-0 flex-1">
             <p className="font-bold">{e.nmCidadao}</p>
             <p className="text-sm text-textoSuave">Entrou às {fmtHora(e.dtEntrada)}{e.flPrioridade ? " · prioridade de ontem" : ""}</p>
+            {consultaHoje && (
+              <div className="mt-1 flex flex-col gap-1">
+                {orientacaoHoje && <SeloOrientacaoHoje orientacao={orientacaoHoje} />}
+                <p className="text-sm text-textoSuave">Consulta hoje às {fmtHora(consultaHoje.dtHorario)}: não recebe oferta de vaga de hoje.</p>
+              </div>
+            )}
           </div>
           <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${e.dsCor === "VERDE" ? "bg-gravidade-verde text-branco" : "bg-gravidade-azul text-branco"}`}>
             {e.dsCor === "VERDE" ? "Verde" : "Azul"}
           </span>
         </article>
-      ))}
+        );
+      })}
       {fila.length > 0 && vaga && (
         <div>
           <button onClick={oferecer}

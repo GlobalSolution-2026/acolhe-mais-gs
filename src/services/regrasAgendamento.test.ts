@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
 import type { Cidadao, Consulta, EntradaListaDoDia } from "@/types";
+import type { Orientacao } from "@/types/orientacao";
 import {
   calcularIndicadores,
+  consultaNoDia,
+  orientacaoDoDia,
   podeCancelar,
   listarPendentesConfirmacao,
   deveLiberar,
@@ -219,5 +222,60 @@ describe("podeCancelar", () => {
   });
   it("consulta que já passou não pode ser cancelada", () => {
     expect(podeCancelar({ dsStatus: "AGENDADA", dtHorario: "2026-11-11T09:59:00Z" }, agora)).toBe(false);
+  });
+});
+
+describe("contato válido (cadastro de balcão sem telefone)", () => {
+  const pessoa = (nrCelular: string, nrContatoRecado: string) => ({ nrCelular, nrContatoRecado });
+  it("sem celular e sem recado não tem contato; só o recado já basta", () => {
+    expect(temContatoValido(pessoa("", ""))).toBe(false);
+    expect(temContatoValido(pessoa("  ", " "))).toBe(false);
+    expect(temContatoValido(pessoa("", "(11) 96666-0000"))).toBe(true);
+    expect(temContatoValido(pessoa("(11) 97777-0000", ""))).toBe(true);
+  });
+  it("depois do prazo, a consulta de quem não tem contato não é liberada", () => {
+    const c = { cdConsulta: 1, cdHorario: 1, cdCidadao: 1, cdOrientacao: null, dtAgendamento: "2026-11-02T10:00:00Z", dtHorario: "2026-11-12T10:00:00Z",
+      dtConfirmacao: null, dsCanalConfirmacao: null, dsStatus: "AGENDADA" as const, vlProbFalta: .2, dsRiscoFalta: "BAIXO" as const, nmUnidade: "UBS" };
+    const depois = new Date("2026-11-11T12:00:00Z");
+    expect(deveLiberar(c, pessoa("", ""), depois)).toBe(false);
+    expect(deveLiberar(c, pessoa("", "(11) 96666-0000"), depois)).toBe(true);
+  });
+});
+
+describe("consulta e orientação do dia", () => {
+  const dia = "2026-11-11";
+  const c = (cdConsulta: number, cdCidadao: number, dtHorario: string, dsStatus: Consulta["dsStatus"] = "AGENDADA"): Consulta => ({
+    cdConsulta, cdHorario: cdConsulta, cdCidadao, cdOrientacao: null, dtAgendamento: "2026-11-01T10:00:00", dtHorario,
+    dtConfirmacao: null, dsCanalConfirmacao: null, dsStatus, vlProbFalta: .2, dsRiscoFalta: "BAIXO", nmUnidade: "UBS",
+  });
+  it("consultaNoDia considera só agendada/confirmada da pessoa no dia, a mais cedo", () => {
+    const consultas = [c(1, 7, "2026-11-11T15:00:00"), c(2, 7, "2026-11-11T09:00:00", "CONFIRMADA"), c(3, 7, "2026-11-11T08:00:00", "LIBERADA"),
+      c(4, 7, "2026-11-11T07:00:00", "REALIZADA"), c(5, 7, "2026-11-12T08:00:00"), c(6, 8, "2026-11-11T08:00:00")];
+    expect(consultaNoDia(consultas, 7, dia)?.cdConsulta).toBe(2);
+    expect(consultaNoDia(consultas, 9, dia)).toBeUndefined();
+    expect(consultaNoDia(consultas, null, dia)).toBeUndefined();
+  });
+
+  const o = (cdOrientacao: number, dtOrientacao: string, cdCidadao?: number | null): Orientacao => ({
+    cdOrientacao, cdQueixa: 2, dsCor: "VERDE", dsDestino: "UBS", nrDor: 2, flElevadaModelo: false, dtOrientacao, ...(cdCidadao !== undefined ? { cdCidadao } : {}),
+  });
+  const e = (cdEntrada: number, cdCidadao: number | null, cdOrientacao: number, status: EntradaListaDoDia["status"] = "AGUARDANDO"): EntradaListaDoDia => ({
+    cdEntrada, cdCidadao, cdOrientacao, cdUnidade: 1, nmCidadao: "P", dsCor: "VERDE", dtEntrada: "2026-11-11T08:00:00", flPrioridade: false, flCidadao: false, status,
+  });
+  it("orientacaoDoDia vale pela lista do dia (mesmo encerrada) ou pelo vínculo do Balcão", () => {
+    expect(orientacaoDoDia([o(10, "2026-11-11T07:50:00")], [e(1, 7, 10, "ENCERRADA")], 7, dia)?.cdOrientacao).toBe(10);
+    expect(orientacaoDoDia([o(11, "2026-11-11T08:30:00", 7)], [], 7, dia)?.cdOrientacao).toBe(11);
+  });
+  it("orientacaoDoDia ignora outro dia, outra pessoa e quem não tem cadastro, e escolhe a mais recente", () => {
+    expect(orientacaoDoDia([o(10, "2026-11-10T07:50:00", 7)], [], 7, dia)).toBeUndefined();
+    expect(orientacaoDoDia([o(10, "2026-11-11T07:50:00", 8)], [e(1, 8, 10)], 7, dia)).toBeUndefined();
+    expect(orientacaoDoDia([o(10, "2026-11-11T07:50:00")], [e(1, null, 10)], null, dia)).toBeUndefined();
+    expect(orientacaoDoDia([o(10, "2026-11-11T07:50:00"), o(11, "2026-11-11T10:00:00", 7)], [e(1, 7, 10)], 7, dia)?.cdOrientacao).toBe(11);
+  });
+  it("não encaixados não conta quem já tem consulta hoje", () => {
+    const agora = new Date("2026-11-11T12:00:00");
+    const lista = [e(1, 7, 10), e(2, 8, 11), e(3, null, 12)];
+    expect(calcularIndicadores([c(1, 7, "2026-11-11T15:00:00")], lista, agora).naoEncaixadas).toBe(2);
+    expect(calcularIndicadores([c(1, 7, "2026-11-12T15:00:00")], lista, agora).naoEncaixadas).toBe(3);
   });
 });

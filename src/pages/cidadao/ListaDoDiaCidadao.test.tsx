@@ -41,3 +41,20 @@ describe("Lista do dia: entrar para receber a vaga", () => {
     expect(screen.queryByRole("link", { name: "Entrar" })).not.toBeInTheDocument();
   });
 });
+
+describe("Lista do dia: já tem consulta hoje", () => {
+  it("mostra o horário e que a orientação fica registrada", () => {
+    const hoje = new Date(); hoje.setHours(15, 30, 0, 0);
+    estado.cdCidadaoAtual = 1;
+    estado.listaDoDia = estado.listaDoDia.map((e) => ({ ...e, cdCidadao: 1 }));
+    estado.consultas = [{ cdConsulta: 1, cdHorario: 1, cdCidadao: 1, cdOrientacao: null, dtAgendamento: new Date(Date.now() - 86_400_000 * 5).toISOString(),
+      dtConfirmacao: null, dsCanalConfirmacao: null, dsStatus: "CONFIRMADA", vlProbFalta: .2, dsRiscoFalta: "BAIXO", nmUnidade: "UBS Centro", dtHorario: hoje.toISOString() }];
+    render(<ListaDoDiaCidadao />);
+    expect(screen.getByRole("status")).toHaveTextContent("Você já tem consulta hoje às 15:30. Sua orientação fica registrada para a equipe da UBS.");
+  });
+  it("sem consulta hoje, não mostra a mensagem", () => {
+    estado.cdCidadaoAtual = 1;
+    render(<ListaDoDiaCidadao />);
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
+  });
+});

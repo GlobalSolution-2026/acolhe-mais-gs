@@ -1,4 +1,4 @@
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import type { CidadaoEntrada } from "@/types";
 import { CampoFormulario } from "./CampoFormulario";
 
@@ -12,6 +12,7 @@ export interface CidadaoForm {
   nrContatoRecado: string;
   dsSenha?: string;
   dsSenhaConfirmacao?: string;
+  semTelefone?: boolean;
 }
 
 interface Props {
@@ -20,19 +21,27 @@ interface Props {
   aoEnviar: (dados: CidadaoEntrada, dsSenha?: string) => void;
   /** Criação de conta: pede senha e confirmação. */
   pedirSenha?: boolean;
+  /** Balcão e "Agendar para quem chegou": permite cadastro sem celular ("Não tem telefone"). No app, fica obrigatório. */
+  celularOpcional?: boolean;
   textoBotao: string;
   enviando: boolean;
 }
 
 /** Formulário de cadastro do cidadão (usado no agendamento, no perfil e na recepção). */
-export function FormularioCidadao({ valoresIniciais, nrCep, aoEnviar, textoBotao, enviando, pedirSenha }: Props) {
-  const { register, handleSubmit, getValues, formState: { errors } } = useForm<CidadaoForm>({ defaultValues: valoresIniciais });
+export function FormularioCidadao({ valoresIniciais, nrCep, aoEnviar, textoBotao, enviando, pedirSenha, celularOpcional }: Props) {
+  const { register, handleSubmit, getValues, control, formState: { errors } } = useForm<CidadaoForm>({
+    // Cadastro já conferido sem celular chega com "Não tem telefone" marcado.
+    defaultValues: { ...valoresIniciais, semTelefone: Boolean(celularOpcional) && valoresIniciais.nrCelular === "" },
+  });
+  const marcouSemTelefone = useWatch({ control, name: "semTelefone" });
+  const recado = useWatch({ control, name: "nrContatoRecado" }) ?? "";
+  const semTelefone = Boolean(celularOpcional) && marcouSemTelefone === true;
 
   const enviar = handleSubmit((v) => {
     aoEnviar({
       nmCidadao: v.nmCidadao.trim(),
       nrCns: v.nrCns.replace(/\D/g, ""),
-      nrCelular: v.nrCelular.trim(),
+      nrCelular: semTelefone ? "" : (v.nrCelular ?? "").trim(),
       dtNascimento: v.dtNascimento,
       dsSexo: v.dsSexo,
       nmContatoRecado: v.nmContatoRecado.trim(),
@@ -50,11 +59,22 @@ export function FormularioCidadao({ valoresIniciais, nrCep, aoEnviar, textoBotao
           required: "Informe o número do cartão SUS.",
           pattern: { value: /^\d{15}$/, message: "O cartão SUS tem 15 números." },
         })} />
-      <CampoFormulario id="nrCelular" label="Celular com DDD" placeholder="(11) 90000-0000" erro={errors.nrCelular}
-        registro={register("nrCelular", {
-          required: "Informe o celular com DDD.",
-          validate: (v) => /^\d{10,11}$/.test(v.replace(/\D/g, "")) || "Celular inválido: use DDD + número.",
-        })} />
+      {celularOpcional && (
+        <label className="flex min-h-12 items-center gap-3 font-semibold">
+          <input type="checkbox" className="h-5 w-5 accent-primaria" {...register("semTelefone")} />
+          Não tem telefone
+        </label>
+      )}
+      {!semTelefone && (
+        <CampoFormulario id="nrCelular" label="Celular com DDD" placeholder="(11) 90000-0000" erro={errors.nrCelular}
+          registro={register("nrCelular", {
+            validate: (v) => {
+              if (celularOpcional && getValues("semTelefone")) return true;
+              if (!v?.trim()) return "Informe o celular com DDD.";
+              return /^\d{10,11}$/.test(v.replace(/\D/g, "")) || "Celular inválido: use DDD + número.";
+            },
+          })} />
+      )}
       <CampoFormulario id="dtNascimento" label="Data de nascimento" tipo="date" erro={errors.dtNascimento}
         registro={register("dtNascimento", { required: "Informe a data de nascimento." })} />
       <div className="flex flex-col gap-1">
@@ -74,6 +94,11 @@ export function FormularioCidadao({ valoresIniciais, nrCep, aoEnviar, textoBotao
         registro={register("nrContatoRecado", {
           validate: (v) => !v.trim() || /^\d{10,11}$/.test(v.replace(/\D/g, "")) || "Telefone inválido: use DDD + número.",
         })} />
+      {semTelefone && !recado.trim() && (
+        <p className="rounded-[12px] bg-mentaSuave p-3 text-sm font-semibold text-primaria" role="status">
+          Sem telefone e sem contato de recado: a confirmação será presencial e a vaga não é liberada automaticamente.
+        </p>
+      )}
       {pedirSenha && (
         <>
           <CampoFormulario id="dsSenha" label="Senha (mínimo 6 caracteres)" tipo="password" alternarSenha erro={errors.dsSenha}

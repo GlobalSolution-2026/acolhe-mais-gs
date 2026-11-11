@@ -111,6 +111,7 @@ export function BalcaoAtendimento({ dados, cdUnidade, nrCep }: { dados: Orientac
           </p>
           <FormularioCidadao
             key={etapa.nrCns}
+            celularOpcional
             nrCep={etapa.existente?.nrCep ?? nrCep}
             valoresIniciais={etapa.existente ?? { nrCns: etapa.nrCns }}
             aoEnviar={(d) => void salvarCadastro(d, etapa.existente)}
