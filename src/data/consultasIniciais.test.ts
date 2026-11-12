@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { gerarHorariosIniciais } from "./horarios";
 import { gerarSemente } from "./consultasIniciais";
 import { chaveDia, ehDiaUtil, listarDiasUnidade } from "@/lib/datas";
-import { inicioPedidoConfirmacao, prazoConfirmacao, precisaConfirmar, temContatoValido } from "@/services/regrasAgendamento";
+import { classificarRiscoFalta, inicioPedidoConfirmacao, prazoConfirmacao, precisaConfirmar, temContatoValido } from "@/services/regrasAgendamento";
 
 for (const data of ["2026-11-05T10:30:00", "2026-11-07T00:00:01", "2026-11-08T23:30:00", "2026-11-06T23:52:00"]) {
   describe(`semente ${data}`, () => {
@@ -51,8 +51,9 @@ for (const data of ["2026-11-05T10:30:00", "2026-11-07T00:00:01", "2026-11-08T23
       for (const c of s.consultas) {
         const antecedencia = (new Date(c.dtHorario).getTime() - new Date(c.dtAgendamento).getTime()) / 86400000;
         expect(c.dsRiscoFalta).toBe(antecedencia >= 7 ? "ALTO" : "BAIXO");
-        expect(c.vlProbFalta).toBeGreaterThanOrEqual(c.dsRiscoFalta === "ALTO" ? .5 : .05);
-        expect(c.vlProbFalta).toBeLessThanOrEqual(c.dsRiscoFalta === "ALTO" ? .95 : .45);
+        expect(c.vlProbFalta).toBeGreaterThanOrEqual(c.dsRiscoFalta === "ALTO" ? .6 : .05);
+        expect(c.vlProbFalta).toBeLessThanOrEqual(c.dsRiscoFalta === "ALTO" ? .95 : .59);
+        expect(classificarRiscoFalta(c.vlProbFalta)).toBe(c.dsRiscoFalta);
         if (c.dsStatus === "CONFIRMADA") { expect(c.dtConfirmacao).not.toBeNull(); expect(c.dsCanalConfirmacao).not.toBeNull(); }
         if (c.dtConfirmacao) {
           expect(new Date(c.dtConfirmacao).getTime()).toBeGreaterThanOrEqual(inicioPedidoConfirmacao(c)?.getTime() ?? Infinity);

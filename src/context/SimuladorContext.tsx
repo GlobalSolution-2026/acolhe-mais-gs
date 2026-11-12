@@ -39,7 +39,7 @@ function estadoInicial(): EstadoSimulador {
     dtSemente: chaveDia(agora.toISOString()),
     // 4: perguntas de marcar no questionário (respostas antigas em "SIM"/"NAO" deixam de valer).
     // 5: lista do dia com cdOrientacao obrigatório (ACM_LISTA_DIA.id_orientacao).
-    versaoSemente: 5,
+    versaoSemente: 6,
     unidades: unidadesIniciais,
     horarios: semente.horarios,
     cidadaos: semente.cidadaos,
@@ -60,7 +60,7 @@ function lerStorage(): EstadoSimulador | null {
     const bruto = localStorage.getItem(CHAVE);
     if (!bruto) return null;
     const { perfil: _perfilAntigo, ...salvo } = JSON.parse(bruto) as Partial<EstadoSimulador> & { perfil?: unknown };
-    if (salvo.versaoSemente !== 5 || salvo.dtSemente !== chaveDia(new Date().toISOString())) return null;
+    if (salvo.versaoSemente !== 6 || salvo.dtSemente !== chaveDia(new Date().toISOString())) return null;
     return { ...estadoInicial(), ...salvo };
   } catch {
     return null;

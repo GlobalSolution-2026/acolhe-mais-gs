@@ -3,7 +3,7 @@ import type { Orientacao } from "@/types/orientacao";
 import { unidadesIniciais } from "./unidades";
 import { CONFIRMACAO_RISCO_BAIXO_DIAS_UTEIS, PRAZO_FINAL_CONFIRMACAO_DIAS_UTEIS } from "./configuracoes";
 import { chaveDia, subtrairDiasUteis } from "@/lib/datas";
-import { inicioPedidoConfirmacao, prazoConfirmacao } from "@/services/regrasAgendamento";
+import { classificarRiscoFalta, inicioPedidoConfirmacao, prazoConfirmacao } from "@/services/regrasAgendamento";
 
 export interface Semente {
   cidadaos: Cidadao[];
@@ -70,7 +70,9 @@ export function gerarSemente(horariosBase: Horario[], agora: Date = new Date()):
       cdOrientacao = orientacoes.length + 1;
       orientacoes.push({ cdOrientacao, cdCidadao, cdQueixa: 1 + Math.floor(rand() * 5), dsCor: rand() < .5 ? "VERDE" : "AZUL", dsDestino: "UBS", nrDor: Math.floor(rand() * 5), flElevadaModelo: false, dtOrientacao: new Date(agendamento - H).toISOString() });
     }
-    const c: Consulta = { cdConsulta: consultas.length + 1, cdHorario: h.cdHorario, cdCidadao, cdOrientacao, dtAgendamento: new Date(agendamento).toISOString(), dtHorario: h.dtHorario, dtConfirmacao: null, dsCanalConfirmacao: null, dsStatus: status, dsRiscoFalta: riscoAlto ? "ALTO" : "BAIXO", vlProbFalta: Number((riscoAlto ? .5 + rand() * .45 : .05 + rand() * .4).toFixed(2)), nmUnidade: unidadesIniciais.find((u) => u.cdUnidade === h.cdUnidade)?.nmUnidade ?? "UBS" };
+    // Faixas do Modelo 1: alto 0,60–0,95; baixo 0,05–0,59. O risco sai do limiar.
+    const prob = Number((riscoAlto ? .6 + rand() * .35 : .05 + rand() * .54).toFixed(2));
+    const c: Consulta = { cdConsulta: consultas.length + 1, cdHorario: h.cdHorario, cdCidadao, cdOrientacao, dtAgendamento: new Date(agendamento).toISOString(), dtHorario: h.dtHorario, dtConfirmacao: null, dsCanalConfirmacao: null, dsStatus: status, dsRiscoFalta: classificarRiscoFalta(prob), vlProbFalta: prob, nmUnidade: unidadesIniciais.find((u) => u.cdUnidade === h.cdUnidade)?.nmUnidade ?? "UBS" };
     if (status === "CONFIRMADA" || status === "REALIZADA") {
       const inicio = inicioPedidoConfirmacao(c)?.getTime();
       const prazo = prazoConfirmacao(c)?.getTime();

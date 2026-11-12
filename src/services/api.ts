@@ -8,7 +8,7 @@ import type { CanalConfirmacao, Cidadao, FichaSaude, CidadaoEntrada, Consulta, E
 import type { Orientacao, VerificacaoUrgenciaEntrada } from "@/types/orientacao";
 import { idadeEm } from "@/lib/datas";
 import { podeVincular } from "./balcao";
-import { acoesPresenca, podeCancelar, segundosRestantesOferta, temContatoValido } from "./regrasAgendamento";
+import { acoesPresenca, classificarRiscoFalta, podeCancelar, segundosRestantesOferta } from "./regrasAgendamento";
 import { liberarConsulta } from "./simulacao";
 
 export const API_URL = import.meta.env["VITE_API_URL"] as string | undefined;
@@ -153,25 +153,35 @@ export async function listarConsultas(): Promise<Consulta[]> {
 /** API Flask do modelo de IA. */
 export const FLASK_URL = import.meta.env["VITE_FLASK_URL"] as string | undefined;
 
+/**
+ * Atributos do Modelo 1 (Random Forest).
+ * Limitações desta versão:
+ * - smsRecebido é sempre false: o lembrete ainda não foi enviado no momento do agendamento.
+ * - bairro não é enviado: a API Flask usa "OUTROS".
+ */
 export interface PrevisaoFaltaEntrada {
   idade: number;
   sexo: "F" | "M";
   antecedenciaDias: number;
   diaSemana: number;
   smsRecebido: boolean;
+  /** Consultas do cidadão com status FALTA antes deste agendamento. */
+  faltasAnteriores: number;
 }
 
 // POST /prever-falta (API Flask)
 export async function preverFalta(dados: PrevisaoFaltaEntrada): Promise<{ dsRiscoFalta: "BAIXO" | "ALTO"; vlProbFalta: number }> {
+  // Corpo: { idade, sexo, antecedenciaDias, diaSemana, smsRecebido, faltasAnteriores } (sem bairro).
   // const res = await fetch(`${FLASK_URL}/prever-falta`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(dados) });
   // if (!res.ok) { const erro: ErroResponse = await res.json(); throw new Error(erro.erro); }
-  // return res.json();
+  // const { vlProbFalta } = await res.json();
+  // return { dsRiscoFalta: classificarRiscoFalta(vlProbFalta), vlProbFalta };
   await esperar();
-  const alto = dados.antecedenciaDias >= 7;
-  const vlProbFalta = alto
-    ? 0.5 + Math.round(Math.random() * 45) / 100
-    : Math.round(Math.random() * 45) / 100;
-  return { dsRiscoFalta: alto ? "ALTO" : "BAIXO", vlProbFalta };
+  // Simulação: alto 0,60–0,95; baixo 0,05–0,59 (em centésimos, sem erro de ponto flutuante).
+  const vlProbFalta = dados.antecedenciaDias >= 7
+    ? (60 + Math.round(Math.random() * 35)) / 100
+    : (5 + Math.round(Math.random() * 54)) / 100;
+  return { dsRiscoFalta: classificarRiscoFalta(vlProbFalta), vlProbFalta };
 }
 
 // POST /consultas
@@ -191,12 +201,14 @@ export async function agendarConsulta(dados: { cdHorario: number; cdCidadao: num
 
   const antecedenciaDias = Math.max(0, Math.ceil((new Date(horario.dtHorario).getTime() - Date.now()) / 86_400_000));
   const idade = idadeEm(cidadao.dtNascimento, new Date()) ?? 0;
+  const faltasAnteriores = e.consultas.filter((c) => c.cdCidadao === dados.cdCidadao && c.dsStatus === "FALTA" && new Date(c.dtHorario).getTime() < Date.now()).length;
   const previsao = await preverFalta({
     idade,
     sexo: cidadao.dsSexo,
     antecedenciaDias,
     diaSemana: new Date(horario.dtHorario).getDay(),
-    smsRecebido: temContatoValido(cidadao),
+    smsRecebido: false,
+    faltasAnteriores,
   });
 
   const consulta: Consulta = {

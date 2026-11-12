@@ -17,3 +17,6 @@ export const PRAZO_FINAL_CONFIRMACAO_DIAS_UTEIS = 1;
 
 /** Cada minuto simulado dura dez segundos reais. */
 export const ESCALA_DEMO_SEGUNDOS_POR_MIN = 10;
+
+/** Modelo 1 (risco de falta): pontuação a partir da qual o risco é ALTO. */
+export const LIMIAR_RISCO_ALTO = 0.6;

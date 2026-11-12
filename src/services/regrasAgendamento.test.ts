@@ -4,6 +4,7 @@ import type { Orientacao } from "@/types/orientacao";
 import {
   acoesPresenca,
   calcularIndicadores,
+  classificarRiscoFalta,
   consultaNoDia,
   orientacaoDoDia,
   podeCancelar,
@@ -44,6 +45,12 @@ function consulta(parcial: Partial<Consulta> = {}): Consulta {
 
 const comContato: Pick<Cidadao, "nrCelular" | "nrContatoRecado"> = { nrCelular: "(11) 90000-0000", nrContatoRecado: "" };
 const semContato: Pick<Cidadao, "nrCelular" | "nrContatoRecado"> = { nrCelular: "", nrContatoRecado: "" };
+
+describe("classificarRiscoFalta", () => {
+  it.each([[0.05, "BAIXO"], [0.59, "BAIXO"], [0.6, "ALTO"], [0.95, "ALTO"]] as const)("%s → %s", (p, risco) => {
+    expect(classificarRiscoFalta(p)).toBe(risco);
+  });
+});
 
 describe("prazo de confirmação por risco", () => {
   it("risco BAIXO, consulta de terça: pedido na sexta (2 dias úteis) e prazo na segunda (1 dia útil)", () => {

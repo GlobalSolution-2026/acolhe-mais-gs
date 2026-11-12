@@ -9,6 +9,7 @@ import {
   CONFIRMACAO_RISCO_ALTO_DIAS_UTEIS,
   CONFIRMACAO_RISCO_BAIXO_DIAS_UTEIS,
   PRAZO_FINAL_CONFIRMACAO_DIAS_UTEIS,
+  LIMIAR_RISCO_ALTO,
 } from "@/data/configuracoes";
 import { chaveDia, subtrairDiasUteis } from "@/lib/datas";
 import type { Cidadao, Consulta, EntradaListaDoDia, OfertaVaga, Horario } from "@/types";
@@ -17,6 +18,11 @@ import type { Orientacao } from "@/types/orientacao";
 /** Contato válido: celular ou telefone de recado preenchido. */
 export function temContatoValido(c: Pick<Cidadao, "nrCelular" | "nrContatoRecado">): boolean {
   return Boolean(c.nrCelular.trim() || c.nrContatoRecado.trim());
+}
+
+/** Risco de falta pela pontuação do modelo: ALTO quando vlProbFalta >= LIMIAR_RISCO_ALTO. */
+export function classificarRiscoFalta(vlProbFalta: number): Consulta["dsRiscoFalta"] {
+  return vlProbFalta >= LIMIAR_RISCO_ALTO ? "ALTO" : "BAIXO";
 }
 
 /** Prazo final sem a regra de dispensa: 1 dia útil antes da consulta. */
