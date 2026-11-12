@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { FiEdit2, FiHeart, FiLogOut, FiSmartphone } from "react-icons/fi";
+import { AvisoPrevia } from "@/components/AvisoPrevia";
 import { ResumoFicha } from "@/components/ResumoFicha";
 import { fmtDiaHora } from "@/lib/datas";
 import { sair } from "@/services/api";
@@ -47,6 +48,7 @@ export function Perfil() {
           </p>
           <section className="flex flex-col gap-3 rounded-[12px] border border-borda bg-branco p-4 shadow-leve">
             <h2 className="flex items-center gap-2 text-lg font-extrabold text-primaria"><FiHeart /> Ficha de saúde</h2>
+            <AvisoPrevia />
             {ficha ? (
               <>
                 <ResumoFicha ficha={ficha} cidadao={cadastro} />

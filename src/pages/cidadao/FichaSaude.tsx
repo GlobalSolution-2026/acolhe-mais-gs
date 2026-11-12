@@ -2,6 +2,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import { FiPlus, FiTrash2 } from "react-icons/fi";
+import { AvisoPrevia } from "@/components/AvisoPrevia";
 import { CampoFormulario } from "@/components/CampoFormulario";
 import { EstadoVazio } from "@/components/EstadoVazio";
 import { MensagemErro } from "@/components/MensagemErro";
@@ -84,6 +85,7 @@ function FormularioFicha({ cdCidadao }: { cdCidadao: number }) {
   return (
     <div className="flex flex-col gap-4">
       <h1 className="text-2xl font-extrabold text-primaria">Ficha de saúde</h1>
+      <AvisoPrevia />
       <p className="text-base text-textoSuave">Opcional. Ajuda quem for socorrer você numa emergência.</p>
       {ficha && <p className="text-sm font-semibold text-textoSuave">Última atualização: {fmtDiaHora(ficha.dtAtualizacao, false)}</p>}
       {erro && <MensagemErro mensagem={erro} />}

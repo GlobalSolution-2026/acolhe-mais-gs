@@ -1,4 +1,5 @@
 import { FiHeart, FiPhoneCall } from "react-icons/fi";
+import { AvisoPrevia } from "@/components/AvisoPrevia";
 import { ResumoFicha } from "@/components/ResumoFicha";
 import { useSimulador } from "@/context/SimuladorContext";
 
@@ -19,6 +20,7 @@ export function Emergencia() {
       {cadastro && ficha && (
         <section className="rounded-[12px] border-2 border-primaria bg-branco p-4" aria-label="Ficha de emergência">
           <h2 className="flex items-center gap-2 text-xl font-extrabold text-primaria"><FiHeart /> Ficha de emergência</h2>
+          <AvisoPrevia className="mt-2" />
           <p className="mb-3 text-textoSuave">Mostre ao SAMU ou a quem estiver socorrendo.</p>
           <p className="mb-3 text-lg font-extrabold">{cadastro.nmCidadao}</p>
           <ResumoFicha ficha={ficha} cidadao={cadastro} contato />

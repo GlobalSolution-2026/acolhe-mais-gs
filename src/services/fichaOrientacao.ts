@@ -87,8 +87,13 @@ export function respostasEfetivas(fontes: FontesOrientacao, hoje: Date): DadosDa
 }
 
 /** "Usamos dados do seu cadastro e da sua ficha de saúde: idade, sexo e diabetes." */
+/** A orientação usou dado da ficha de saúde (além de idade e sexo do cadastro)? */
+export function usouFicha(usados: string[]): boolean {
+  return usados.some((u) => u !== "idade" && u !== "sexo");
+}
+
 export function textoAvisoFicha(usados: string[]): string {
-  const comFicha = usados.some((u) => u !== "idade" && u !== "sexo");
+  const comFicha = usouFicha(usados);
   const lista = usados.length > 1 ? `${usados.slice(0, -1).join(", ")} e ${usados[usados.length - 1]}` : (usados[0] ?? "");
   return `Usamos dados do seu cadastro${comFicha ? " e da sua ficha de saúde" : ""}: ${lista}.`;
 }

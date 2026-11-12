@@ -1,11 +1,12 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { FiAlertTriangle, FiInfo } from "react-icons/fi";
+import { AvisoPrevia } from "@/components/AvisoPrevia";
 import { EstadoVazio } from "@/components/EstadoVazio";
 import { BotaoPerguntaAnterior, PerguntaAtual } from "@/components/RespostasPergunta";
 import { useSimulador } from "@/context/SimuladorContext";
 import { obterQueixa } from "@/data/queixas";
-import { respostasEfetivas, textoAvisoFicha } from "@/services/fichaOrientacao";
+import { respostasEfetivas, textoAvisoFicha, usouFicha } from "@/services/fichaOrientacao";
 import { proximoPasso } from "@/services/regrasOrientacao";
 
 function Encerramento({ titulo, children }: { titulo: string; children: React.ReactNode }) {
@@ -44,9 +45,12 @@ export function Orientacao() {
     <div className="flex flex-col gap-5">
       <p className="text-base font-bold text-textoSuave">{obterQueixa(atual.cdQueixa).nmQueixa}</p>
       {efetivas.usados.length > 0 && (
-        <p className="-mt-3 flex items-start gap-2 text-sm text-textoSuave">
-          <FiInfo className="mt-0.5 shrink-0" aria-hidden /> {textoAvisoFicha(efetivas.usados)}
-        </p>
+        <div className="-mt-3 flex flex-col gap-1">
+          <p className="flex items-start gap-2 text-sm text-textoSuave">
+            <FiInfo className="mt-0.5 shrink-0" aria-hidden /> {textoAvisoFicha(efetivas.usados)}
+          </p>
+          {usouFicha(efetivas.usados) && <AvisoPrevia />}
+        </div>
       )}
 
       {passo.tipo === "PERGUNTA" && (
