@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { gerarHorariosIniciais } from "./horarios";
 import { gerarSemente } from "./consultasIniciais";
-import { chaveDia, ehDiaUtil, listarDiasUnidade } from "@/lib/datas";
+import { chaveDia, isDiaUtil, listarDiasUnidade } from "@/lib/datas";
 import { classificarRiscoFalta, inicioPedidoConfirmacao, prazoConfirmacao, precisaConfirmar, temContatoValido } from "@/services/regrasAgendamento";
 
 for (const data of ["2026-11-05T10:30:00", "2026-11-07T00:00:01", "2026-11-08T23:30:00", "2026-11-06T23:52:00"]) {
@@ -11,10 +11,10 @@ for (const data of ["2026-11-05T10:30:00", "2026-11-07T00:00:01", "2026-11-08T23
     const s = gerarSemente(horarios, agora);
     it("reproduz a mesma distribuição, só com dias úteis: 8 passados, hoje (se útil) e 10 futuros", () => {
       expect(gerarSemente(horarios, agora)).toEqual(s);
-      const hojeUtil = ehDiaUtil(agora);
+      const hojeUtil = isDiaUtil(agora);
       expect(listarDiasUnidade(horarios, 1)).toHaveLength(hojeUtil ? 19 : 18);
       if (hojeUtil) expect(listarDiasUnidade(horarios, 1)).toContain(chaveDia(agora.toISOString()));
-      expect(horarios.every((h) => ehDiaUtil(new Date(h.dtHorario)))).toBe(true);
+      expect(horarios.every((h) => isDiaUtil(new Date(h.dtHorario)))).toBe(true);
     });
     it("nunca realizada/falta futura e unidade sempre preenchida", () => {
       for (const c of s.consultas) {

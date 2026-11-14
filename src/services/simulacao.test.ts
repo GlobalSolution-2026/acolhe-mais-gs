@@ -4,7 +4,8 @@ import type { EntradaListaDoDia, OfertaVaga } from "@/types";
 import { escolherDestinatarioOferta, listarPendentesConfirmacao, ofertasDoCidadao, prazoVencidoSemContato, segundosRestantesOferta, tempoRestanteOferta } from "./regrasAgendamento";
 import { finalizarOferta, liberarConsulta, oferecerHorario, simularPrazo, vencerOfertas } from "./simulacao";
 
-const agora = new Date("2026-11-05T10:00:00Z");
+// Hora local: as vagas da lista do dia precisam ser do mesmo dia (qui., 05/11, 08:00; vagas às 12:00).
+const agora = new Date(2026, 10, 5, 8, 0, 0);
 const H = 3_600_000;
 const iso = (horas: number) => new Date(agora.getTime() + horas * H).toISOString();
 const entrada = (id: number): EntradaListaDoDia => ({ cdEntrada: id, cdCidadao: id, cdOrientacao: id, cdUnidade: 1, nmCidadao: `Pessoa ${id}`, dsCor: "VERDE", dtEntrada: iso(-id), flPrioridade: id === 1, flCidadao: id === 3, status: "AGUARDANDO" });
@@ -14,8 +15,8 @@ function estado(): EstadoSimulador {
   return { dtSemente: "2026-11-05", unidades: [], cdUnidadeRecepcao: 1, cdCidadaoAtual: null, orientacoes: [], orientacaoAtual: null, // Na fila estão outras pessoas (11 a 13), sem consulta própria nos dias das vagas.
     ofertas: [], listaDoDia: [entrada(1), entrada(2), entrada(3)].map((x) => ({ ...x, cdCidadao: 10 + x.cdEntrada })),
     cidadaos: [1, 2, 3, 4].map((id) => ({ cdCidadao: id, nmCidadao: `Pessoa ${id}`, nrCns: String(id), dtNascimento: "1980-01-01", dsSexo: "F", nrCelular: id === 4 ? "" : "11999999999", nmContatoRecado: "", nrContatoRecado: "", nrCep: "04010-100" })),
-    horarios: [1, 2, 3, 4].map((id) => ({ cdHorario: id, cdUnidade: id === 3 ? 2 : 1, dtHorario: iso(id === 3 ? 120 : 48), nrDuracaoMin: 20, flOcupado: true })),
-    consultas: [1, 2, 3, 4].map((id) => ({ cdConsulta: id, cdHorario: id, cdCidadao: id, cdOrientacao: null, dtAgendamento: iso(-72), dtHorario: iso(id === 3 ? 120 : 48), dtConfirmacao: null, dsCanalConfirmacao: null, dsStatus: "AGENDADA", dsRiscoFalta: "BAIXO", vlProbFalta: .2, nmUnidade: "UBS" })) };
+    horarios: [1, 2, 3, 4].map((id) => ({ cdHorario: id, cdUnidade: id === 3 ? 2 : 1, dtHorario: iso(id === 3 ? 120 : 4), nrDuracaoMin: 20, flOcupado: true })),
+    consultas: [1, 2, 3, 4].map((id) => ({ cdConsulta: id, cdHorario: id, cdCidadao: id, cdOrientacao: null, dtAgendamento: iso(-72), dtHorario: iso(id === 3 ? 120 : 4), dtConfirmacao: null, dsCanalConfirmacao: null, dsStatus: "AGENDADA", dsRiscoFalta: "BAIXO", vlProbFalta: .2, nmUnidade: "UBS" })) };
 }
 
 describe("destinatário das ofertas", () => {
@@ -26,7 +27,7 @@ describe("destinatário das ofertas", () => {
     expect(escolherDestinatarioOferta([entrada(1), entrada(2)], [oferta(1, status)], vaga(2), null, [])?.cdCidadao).toBe(1);
   });
   it.each(["RECUSADA", "EXPIRADA"] as const)("repasse após %s", (status) => {
-    const e = estado(); e.horarios[0] = { ...e.horarios[0], cdHorario: 1, cdUnidade: 1, dtHorario: iso(48), nrDuracaoMin: 20, flOcupado: false };
+    const e = estado(); e.horarios[0] = { ...e.horarios[0], cdHorario: 1, cdUnidade: 1, dtHorario: iso(4), nrDuracaoMin: 20, flOcupado: false };
     const oferecido = oferecerHorario(e, 1, agora);
     const proximo = finalizarOferta(oferecido, 1, status, agora);
     expect(proximo.ofertas).toHaveLength(2);
@@ -44,6 +45,15 @@ describe("destinatário das ofertas", () => {
     const e = estado(); e.horarios = e.horarios.map((h) => ({ ...h, flOcupado: false })); e.ofertas = [oferta(1)];
     const novo = vencerOfertas(e, new Date(agora.getTime() + 300_000));
     expect(novo.ofertas.map((o) => o.status)).toEqual(["EXPIRADA", "PENDENTE"]);
+  });
+  it("só oferece horário de hoje: vaga de outro dia não vai para a lista do dia", () => {
+    const e = estado(); e.horarios = [{ cdHorario: 1, cdUnidade: 1, dtHorario: iso(48), nrDuracaoMin: 20, flOcupado: false }];
+    expect(oferecerHorario(e, 1, agora).ofertas).toHaveLength(0);
+  });
+  it("em dia não útil não oferece vaga (lista do dia só em dia útil)", () => {
+    const sabado = new Date(2026, 10, 14, 8, 0, 0);
+    const e = estado(); e.horarios = [{ cdHorario: 1, cdUnidade: 1, dtHorario: new Date(2026, 10, 14, 12).toISOString(), nrDuracaoMin: 20, flOcupado: false }];
+    expect(oferecerHorario(e, 1, sabado).ofertas).toHaveLength(0);
   });
   it("respeita exatamente 60 minutos de antecedência", () => {
     const e = estado(); e.horarios = [{ cdHorario: 1, cdUnidade: 1, dtHorario: iso(1), nrDuracaoMin: 20, flOcupado: false }];
@@ -71,7 +81,7 @@ describe("simulação do prazo", () => {
     expect(simularPrazo(e, agora).resumo).toMatchObject({ vagasOferecidas: 0, vagasDeVoltaNaAgenda: 2 });
   });
   it("confirmada e marcada com menos de 1 dia útil de antecedência são mantidas", () => {
-    const e = estado(); e.consultas = e.consultas.map((c, i) => i === 0 ? { ...c, dsStatus: "CONFIRMADA" } : { ...c, dtAgendamento: iso(47) });
+    const e = estado(); e.consultas = e.consultas.map((c, i) => i === 0 ? { ...c, dsStatus: "CONFIRMADA" } : { ...c, dtAgendamento: iso(3) });
     expect(simularPrazo(e, agora).resumo.consultasLiberadas).toBe(0);
   });
   it("sem consultas retorna resumo vazio", () => {
@@ -122,8 +132,8 @@ describe("liberarConsulta (prazo e cancelamento)", () => {
 });
 
 describe("quem já tem consulta no dia da vaga é pulado", () => {
-  /** Consulta ativa extra da pessoa no mesmo dia da vaga 2 (que fica a 48 h). */
-  const comConsultaNoDia = (cdCidadao: number, dsStatus: "AGENDADA" | "CONFIRMADA" | "LIBERADA" = "AGENDADA", horas = 49) => {
+  /** Consulta ativa extra da pessoa no mesmo dia da vaga 2 (que fica a 4 h). */
+  const comConsultaNoDia = (cdCidadao: number, dsStatus: "AGENDADA" | "CONFIRMADA" | "LIBERADA" = "AGENDADA", horas = 5) => {
     const e = estado();
     e.consultas = [...e.consultas, { ...e.consultas[0]!, cdConsulta: 50, cdHorario: 50, cdCidadao, dtHorario: iso(horas), dsStatus }];
     return e;
@@ -151,7 +161,7 @@ describe("cadastro sem telefone e sem recado", () => {
     expect(novoEstado.horarios.find((h) => h.cdHorario === 1)?.flOcupado).toBe(true);
     expect(resumo.mantidasSemContato).toBe(2);
     // Depois do prazo (e antes do horário), segue em Pendentes como "prazo vencido – sem contato".
-    const depois = new Date(agora.getTime() + 30 * H);
+    const depois = new Date(agora.getTime() + H);
     expect(listarPendentesConfirmacao(novoEstado.consultas, novoEstado.horarios, novoEstado.cidadaos, 1, depois).map((c) => c.cdConsulta)).toContain(1);
     expect(prazoVencidoSemContato(novoEstado.consultas[0]!, novoEstado.cidadaos[0], depois)).toBe(true);
   });

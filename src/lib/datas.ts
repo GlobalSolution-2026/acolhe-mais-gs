@@ -1,4 +1,5 @@
 import type { Horario } from "@/types";
+import { ehFeriado } from "./feriados";
 
 export const primeiraMaiuscula = (texto: string) => texto.charAt(0).toLocaleUpperCase("pt-BR") + texto.slice(1);
 
@@ -33,9 +34,23 @@ export function idadeEm(dtNascimento: string, hoje: Date): number | null {
   return hoje.getFullYear() - a - (fezAniversario ? 0 : 1);
 }
 
-/** Segunda a sexta. */
-export function ehDiaUtil(data: Date): boolean {
-  return data.getDay() !== 0 && data.getDay() !== 6;
+/** Fonte única de dia útil: falso para sábado, domingo e feriado nacional (src/lib/feriados.ts). */
+export function isDiaUtil(data: Date): boolean {
+  return data.getDay() !== 0 && data.getDay() !== 6 && !ehFeriado(data);
+}
+
+/** Próximo dia útil depois da data, mantendo o horário (ex.: sáb. 10:00 → seg. 10:00). */
+export function proximoDiaUtil(data: Date): Date {
+  const resultado = new Date(data);
+  do resultado.setDate(resultado.getDate() + 1); while (!isDiaUtil(resultado));
+  return resultado;
+}
+
+/** "segunda-feira, 16/11" (aviso do modo demonstração). */
+export function fmtDiaSemanaData(data: Date): string {
+  const semana = data.toLocaleDateString("pt-BR", { weekday: "long" });
+  const dia = data.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
+  return `${semana}, ${dia}`;
 }
 
 /** Volta N dias úteis a partir da data, mantendo o horário (ex.: seg. 09:00 menos 1 = sex. 09:00). */
@@ -44,7 +59,7 @@ export function subtrairDiasUteis(data: Date, quantidade: number): Date {
   let restantes = quantidade;
   while (restantes > 0) {
     resultado.setDate(resultado.getDate() - 1);
-    if (ehDiaUtil(resultado)) restantes--;
+    if (isDiaUtil(resultado)) restantes--;
   }
   return resultado;
 }
@@ -55,9 +70,9 @@ export function chaveDia(iso: string): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
-/** Fonte única dos dias disponíveis de uma unidade. */
+/** Fonte única dos dias disponíveis de uma unidade (só dias úteis). */
 export function listarDiasUnidade(horarios: Horario[], cdUnidade: number): string[] {
-  return [...new Set(horarios.filter((h) => h.cdUnidade === cdUnidade).map((h) => chaveDia(h.dtHorario)))].sort();
+  return [...new Set(horarios.filter((h) => h.cdUnidade === cdUnidade && isDiaUtil(new Date(h.dtHorario))).map((h) => chaveDia(h.dtHorario)))].sort();
 }
 
 export function rotuloDia(iso: string, longo = false, agora = new Date()): string {

@@ -20,7 +20,7 @@ import {
   precisaConfirmar,
   temContatoValido,
 } from "./regrasAgendamento";
-import { ehDiaUtil, subtrairDiasUteis } from "@/lib/datas";
+import { isDiaUtil, subtrairDiasUteis } from "@/lib/datas";
 
 const HORA = 3_600_000;
 const base = new Date("2026-11-10T12:00:00.000Z");
@@ -68,8 +68,8 @@ describe("prazo de confirmação por risco", () => {
   it("nenhum pedido nem prazo cai no fim de semana", () => {
     for (const dia of [16, 17, 18, 19, 20]) for (const risco of ["BAIXO", "ALTO"] as const) {
       const c = consulta({ dsRiscoFalta: risco, dtHorario: new Date(`2026-11-${dia}T14:00:00`).toISOString() });
-      expect(ehDiaUtil(inicioPedidoConfirmacao(c) ?? new Date(0))).toBe(true);
-      expect(ehDiaUtil(prazoConfirmacao(c) ?? new Date(0))).toBe(true);
+      expect(isDiaUtil(inicioPedidoConfirmacao(c) ?? new Date(0))).toBe(true);
+      expect(isDiaUtil(prazoConfirmacao(c) ?? new Date(0))).toBe(true);
     }
   });
 

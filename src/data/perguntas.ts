@@ -92,7 +92,15 @@ export const perguntas: Pergunta[] = [
   q(GRIPAL, "P2", 12, "ALARME", SN, "{Voce} sente pressão ou dor no peito que não passa?", { cor: "VERMELHO", sinal: "Dor ou pressão no peito" }),
   q(GRIPAL, "P3", 13, "ALARME", SN, "Os lábios ou o rosto estão roxos ou azulados?", { cor: "VERMELHO", sinal: "Lábios ou rosto roxos" }),
   q(GRIPAL, "P4", 14, "ALARME", "MULTIPLA", ALGUM_SINAL, { cor: "VERMELHO", sinal: "Confusão, sonolência ou desmaio", opcoes: marque(ESTADO_MENTAL) }),
-  q(GRIPAL, "P5", 15, "LARANJA", SN, "Tem oxímetro e a saturação está abaixo de 95%?", { sinal: "Saturação abaixo de 95%" }),
+  // Só "SIM" é sinal de alarme; "NAO" e "SEM_OXIMETRO" seguem sem sinal (a falta de ar já foi perguntada em P1).
+  q(GRIPAL, "P5", 15, "LARANJA", "OPCOES", "Se {voce} tem oxímetro, a saturação está abaixo de 95%?", {
+    sinal: "Saturação abaixo de 95%",
+    opcoes: [
+      { valor: "SIM", rotulo: "Sim, abaixo de 95%" },
+      { valor: "NAO", rotulo: "Não, 95% ou mais" },
+      { valor: "SEM_OXIMETRO", rotulo: "Não tenho oxímetro" },
+    ],
+  }),
   q(GRIPAL, "P6", 16, "URGENCIA", SNS, "Tem febre há mais de 3 dias, ou a febre voltou depois de 2 dias sem febre?", { cor: "AMARELO", sinal: "Febre há mais de 3 dias ou que voltou" }),
   q(GRIPAL, "P7", 17, "URGENCIA", "MULTIPLA", ALGUM_SINAL, {
     cor: "AMARELO", sinal: "Urinando pouco ou sem beber líquidos",

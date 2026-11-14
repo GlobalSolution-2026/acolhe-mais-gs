@@ -8,8 +8,9 @@ import { useSimulador } from "@/context/SimuladorContext";
 import { fmtDiaHora } from "@/lib/datas";
 import { agendarConsulta, atualizarCidadao, buscarCidadaoPorCns, cadastrarCidadao, incluirNaListaDoDia, vincularOrientacao } from "@/services/api";
 import { horariosLivresBalcao, podeVincular, type OrientacaoBalcao } from "@/services/balcao";
-import { posicaoNaFila } from "@/services/regrasAgendamento";
+import { listaDoDiaAberta, MENSAGEM_LISTA_SO_DIA_UTIL, posicaoNaFila } from "@/services/regrasAgendamento";
 import type { Cidadao, CidadaoEntrada } from "@/types";
+import { agora as agoraApp } from "@/lib/relogio";
 
 type Etapa =
   | { tipo: "CNS" }
@@ -30,7 +31,7 @@ export function BalcaoAtendimento({ dados, cdUnidade, nrCep }: { dados: Orientac
   const { register, handleSubmit, formState: { errors } } = useForm<{ nrCns: string }>();
 
   // Qualquer horário futuro livre da UBS da recepção; sugere o mais próximo.
-  const livres = horariosLivresBalcao(estado.horarios, estado.ofertas, cdUnidade, new Date());
+  const livres = horariosLivresBalcao(estado.horarios, estado.ofertas, cdUnidade, agoraApp());
   const escolhido = livres.find((h) => h.cdHorario === cdHorario) ?? livres[0];
 
   const executar = async (fn: () => Promise<void>) => {
@@ -141,9 +142,13 @@ export function BalcaoAtendimento({ dados, cdUnidade, nrCep }: { dados: Orientac
           ) : (
             <>
               <p className="rounded-[12px] bg-mentaSuave p-3 font-semibold text-textoSuave">Sem horário livre nesta UBS.</p>
-              <button onClick={() => void colocarNaLista(etapa.cidadao)} disabled={enviando} className="btn bg-primaria text-branco hover:bg-primariaEscura disabled:opacity-60">
-                <FiList /> {enviando ? "Aguarde..." : `Colocar na lista do dia (${nomeCor})`}
-              </button>
+              {listaDoDiaAberta(agoraApp()) ? (
+                <button onClick={() => void colocarNaLista(etapa.cidadao)} disabled={enviando} className="btn bg-primaria text-branco hover:bg-primariaEscura disabled:opacity-60">
+                  <FiList /> {enviando ? "Aguarde..." : `Colocar na lista do dia (${nomeCor})`}
+                </button>
+              ) : (
+                <p className="rounded-[12px] bg-mentaSuave p-3 font-semibold text-textoSuave" role="status">{MENSAGEM_LISTA_SO_DIA_UTIL}</p>
+              )}
             </>
           )}
         </div>

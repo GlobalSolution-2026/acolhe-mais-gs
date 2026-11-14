@@ -8,6 +8,8 @@ import { useSimulador } from "@/context/SimuladorContext";
 import { rotaPai } from "@/services/navegacao";
 import { listarPendentesConfirmacao, ofertasDoCidadao, precisaConfirmar } from "@/services/regrasAgendamento";
 import { ModoDemonstracao } from "./ModoDemonstracao";
+import { agora as agoraApp, diaSimulado } from "@/lib/relogio";
+import { fmtDiaSemanaData } from "@/lib/datas";
 
 export function Aba({ to, label, icone: Icone }: { to: NonNullable<LinkProps["to"]>; label: string; icone: IconType }) {
   return (
@@ -46,12 +48,14 @@ export function LayoutCompartilhado({ cidadao, barra }: { cidadao: boolean; barr
   const cdHorario = Number(new URLSearchParams(searchStr).get("horario"));
   const cdUnidade = estado.horarios.find((h) => h.cdHorario === cdHorario)?.cdUnidade;
   const pai = rotaPai(pathname, cdUnidade);
-  const agora = new Date();
+  const agora = agoraApp();
   const avisos = cidadao
     ? estado.consultas.filter((c) => c.cdCidadao === estado.cdCidadaoAtual && precisaConfirmar(c, agora)).length +
       ofertasDoCidadao(estado.ofertas, estado.listaDoDia).length
     : listarPendentesConfirmacao(estado.consultas, estado.horarios, estado.cidadaos, estado.cdUnidadeRecepcao, agora).length;
   const ubs = estado.unidades.filter((u) => u.tpUnidade === "UBS");
+  // DEMONSTRAÇÃO: hoje não é dia útil e o app está simulando o próximo.
+  const simulado = diaSimulado();
 
   return (
     <div className="mx-auto flex min-h-screen w-full max-w-md flex-col border-x border-borda bg-branco text-[18px]">
@@ -100,6 +104,12 @@ export function LayoutCompartilhado({ cidadao, barra }: { cidadao: boolean; barr
           </div>
         )}
       </header>
+
+      {simulado && (
+        <p className="border-b-2 border-dashed border-primaria/40 bg-mentaSuave px-4 py-2 text-center text-base font-bold text-primaria" role="status">
+          Demonstração: simulando {fmtDiaSemanaData(simulado)}
+        </p>
+      )}
 
       <main className="flex-1 p-4 pb-44">
         <Outlet />

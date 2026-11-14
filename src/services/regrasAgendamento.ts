@@ -11,7 +11,7 @@ import {
   PRAZO_FINAL_CONFIRMACAO_DIAS_UTEIS,
   LIMIAR_RISCO_ALTO,
 } from "@/data/configuracoes";
-import { chaveDia, subtrairDiasUteis } from "@/lib/datas";
+import { chaveDia, isDiaUtil, subtrairDiasUteis } from "@/lib/datas";
 import type { Cidadao, Consulta, EntradaListaDoDia, OfertaVaga, Horario } from "@/types";
 import type { Orientacao } from "@/types/orientacao";
 
@@ -162,8 +162,19 @@ export function escolherDestinatarioOferta(fila: EntradaListaDoDia[], ofertas: O
       (o.cdHorario === horario.cdHorario && (o.status === "RECUSADA" || o.status === "EXPIRADA")))));
 }
 
+/** A lista do dia só funciona em dia útil. */
+export const MENSAGEM_LISTA_SO_DIA_UTIL = "A lista do dia funciona só em dias úteis.";
+export function listaDoDiaAberta(agora: Date): boolean {
+  return isDiaUtil(agora);
+}
+
+/**
+ * Vaga para a lista do dia (oferta manual, automática e repasse): horário livre de HOJE (dia útil),
+ * começando daqui a pelo menos ANTECEDENCIA_MINIMA_LISTA_DIA_MIN minutos e sem oferta pendente.
+ */
 export function horarioOferecivel(h: Horario, ofertas: OfertaVaga[], agora: Date): boolean {
-  return !h.flOcupado && new Date(h.dtHorario).getTime() >= agora.getTime() + ANTECEDENCIA_MINIMA_LISTA_DIA_MIN * 60_000 &&
+  return !h.flOcupado && listaDoDiaAberta(agora) && chaveDia(h.dtHorario) === chaveDia(agora.toISOString()) &&
+    new Date(h.dtHorario).getTime() >= agora.getTime() + ANTECEDENCIA_MINIMA_LISTA_DIA_MIN * 60_000 &&
     !ofertas.some((o) => o.cdHorario === h.cdHorario && o.status === "PENDENTE");
 }
 

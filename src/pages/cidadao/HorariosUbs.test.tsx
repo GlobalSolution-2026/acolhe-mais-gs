@@ -48,3 +48,29 @@ describe("HorariosUbs: entrar na lista do dia exige login", () => {
     expect(navigate).toHaveBeenCalledWith({ to: "/cidadao/lista-do-dia" });
   });
 });
+
+describe("HorariosUbs: dias não úteis", () => {
+  const livre = (cdHorario: number, d: Date) => ({ cdHorario, cdUnidade: 2, dtHorario: d.toISOString(), nrDuracaoMin: 20, flOcupado: false });
+
+  it("em dia não útil, sem horário livre, não oferece a lista do dia", async () => {
+    vi.setSystemTime(new Date(2026, 10, 14, 10)); // sábado
+    render(<HorariosUbs cdUnidade={2} />);
+    expect(await screen.findByText("A lista do dia funciona só em dias úteis. Volte em um dia útil ou escolha outra UBS.", {}, { timeout: 3000 })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /lista do dia/ })).not.toBeInTheDocument();
+  });
+
+  it("em dia não útil, com horário livre, esconde \"Prefiro entrar na lista do dia\"", async () => {
+    vi.setSystemTime(new Date(2026, 10, 14, 10));
+    estado.horarios = [livre(2, new Date(2026, 10, 16, 9))];
+    render(<HorariosUbs cdUnidade={2} />);
+    expect(await screen.findByText(/16\/11/, {}, { timeout: 3000 })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Prefiro entrar na lista do dia/ })).not.toBeInTheDocument();
+  });
+
+  it("não exibe horários em feriado (sex., 20/11)", async () => {
+    estado.horarios = [livre(2, new Date(2026, 10, 20, 9)), livre(3, new Date(2026, 10, 23, 9))];
+    render(<HorariosUbs cdUnidade={2} />);
+    expect(await screen.findByText(/23\/11/, {}, { timeout: 3000 })).toBeInTheDocument();
+    expect(screen.queryByText(/20\/11/)).not.toBeInTheDocument();
+  });
+});

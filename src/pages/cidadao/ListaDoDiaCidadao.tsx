@@ -5,6 +5,7 @@ import { SeloDemonstracao } from "@/components/SeloDemonstracao";
 import { useSimulador } from "@/context/SimuladorContext";
 import { chaveDia, fmtHora } from "@/lib/datas";
 import { consultaNoDia, posicaoNaFila } from "@/services/regrasAgendamento";
+import { agora as agoraApp } from "@/lib/relogio";
 
 export function ListaDoDiaCidadao() {
   const { estado } = useSimulador();
@@ -22,7 +23,7 @@ export function ListaDoDiaCidadao() {
   const fila = estado.listaDoDia.filter((e) => e.cdUnidade === minha.cdUnidade);
   const posicao = posicaoNaFila(fila, minha.cdEntrada);
   const unidade = estado.unidades.find((u) => u.cdUnidade === minha.cdUnidade);
-  const consultaHoje = consultaNoDia(estado.consultas, minha.cdCidadao, chaveDia(new Date().toISOString()));
+  const consultaHoje = consultaNoDia(estado.consultas, minha.cdCidadao, chaveDia(agoraApp().toISOString()));
 
   return (
     <div className="flex flex-col gap-4">

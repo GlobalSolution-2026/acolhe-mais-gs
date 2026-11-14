@@ -41,6 +41,31 @@ describe("Lista do dia (recepção): quem já tem consulta hoje", () => {
   });
 });
 
+describe("Lista do dia (recepção): só encaixe no mesmo dia, em dia útil", () => {
+  const livre = (cdHorario: number, dtHorario: string) => ({ cdHorario, cdUnidade: 1, dtHorario, nrDuracaoMin: 20, flOcupado: false });
+  const amanhaAs8 = () => { const d = new Date(); d.setDate(d.getDate() + 1); d.setHours(8, 0, 0, 0); return d.toISOString(); };
+
+  it("oferece só horário livre de hoje com pelo menos 1 hora de antecedência", () => {
+    estado.horarios = [livre(1, hojeAs(10, 30)), livre(2, amanhaAs8()), livre(3, hojeAs(14, 0))];
+    render(<ListaDoDia />);
+    expect(screen.getByRole("button", { name: /Oferecer vaga de/ })).toHaveTextContent(/às 14:00/);
+  });
+
+  it("sem horário de hoje, avisa que não há horário com antecedência suficiente", () => {
+    estado.horarios = [livre(2, amanhaAs8())];
+    render(<ListaDoDia />);
+    expect(screen.queryByRole("button", { name: /Oferecer vaga de/ })).not.toBeInTheDocument();
+    expect(screen.getByText("Nenhum horário livre com antecedência suficiente para oferecer agora.")).toBeInTheDocument();
+  });
+
+  it("em dia não útil, a aba mostra que a lista do dia funciona só em dias úteis", () => {
+    vi.setSystemTime(new Date(2026, 10, 14, 10)); // sábado
+    render(<ListaDoDia />);
+    expect(screen.getByText("A lista do dia funciona só em dias úteis.")).toBeInTheDocument();
+    expect(screen.queryByText("Rosa Lima")).not.toBeInTheDocument();
+  });
+});
+
 describe("Lista do dia (recepção): selo da entrada da fila", () => {
   it("mostra a orientação da fila e, abaixo, a outra orientação do dia com o horário", () => {
     estado.orientacoes.push({ cdOrientacao: 12, cdQueixa: 3, dsCor: "VERDE", dsDestino: "UBS", nrDor: 3, flElevadaModelo: false, dtOrientacao: hojeAs(15, 41), cdCidadao: 7 });

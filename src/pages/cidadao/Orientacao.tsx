@@ -8,6 +8,7 @@ import { useSimulador } from "@/context/SimuladorContext";
 import { obterQueixa } from "@/data/queixas";
 import { respostasEfetivas, textoAvisoFicha, usouFicha } from "@/services/fichaOrientacao";
 import { proximoPasso } from "@/services/regrasOrientacao";
+import { agora as agoraApp } from "@/lib/relogio";
 
 function Encerramento({ titulo, children }: { titulo: string; children: React.ReactNode }) {
   return (
@@ -23,7 +24,7 @@ export function Orientacao() {
   const navigate = useNavigate();
   const atual = estado.orientacaoAtual;
   // Respostas digitadas + as que vêm do cadastro e da ficha (só quando a orientação é PARA_MIM).
-  const efetivas = respostasEfetivas(estado, new Date());
+  const efetivas = respostasEfetivas(estado, agoraApp());
   const passo = atual && efetivas ? proximoPasso(atual.cdQueixa, efetivas.respostas) : null;
 
   useEffect(() => {

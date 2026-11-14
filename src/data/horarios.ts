@@ -1,17 +1,17 @@
 import type { Horario } from "@/types";
-import { ehDiaUtil } from "@/lib/datas";
+import { isDiaUtil } from "@/lib/datas";
 
 /** Oito dias úteis anteriores, hoje (se for dia útil) e dez dias úteis posteriores. */
 export function gerarHorariosIniciais(base: Date = new Date()): Horario[] {
   const hoje = new Date(base);
   hoje.setHours(0, 0, 0, 0);
-  const dias: Date[] = ehDiaUtil(hoje) ? [hoje] : [];
+  const dias: Date[] = isDiaUtil(hoje) ? [hoje] : [];
   for (const [sentido, quantidade] of [[-1, 8], [1, 10]] as const) {
     const d = new Date(hoje);
     let encontrados = 0;
     while (encontrados < quantidade) {
       d.setDate(d.getDate() + sentido);
-      if (ehDiaUtil(d)) { dias.push(new Date(d)); encontrados++; }
+      if (isDiaUtil(d)) { dias.push(new Date(d)); encontrados++; }
     }
   }
   dias.sort((a, b) => a.getTime() - b.getTime());

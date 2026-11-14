@@ -141,7 +141,7 @@ describe("Balcão: identificação e agendamento", () => {
   it("sem cadastro: cadastro de balcão sem senha, vincula e agenda no horário livre mais próximo", async () => {
     estado.cidadaos = [maria];
     estado.credenciais = [];
-    estado.horarios = [horario(1, 72), horario(2, 3), horario(3, 2, true), horario(4, -1)];
+    estado.horarios = [horario(1, 24), horario(2, 3), horario(3, 2, true), horario(4, -1)];
     await codigoVerde();
     await buscarCns("999888777666555");
     expect(await screen.findByText("Cadastro de balcão", {}, ESPERA)).toBeInTheDocument();

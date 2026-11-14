@@ -7,9 +7,11 @@ import { EstadoVazio } from "@/components/EstadoVazio";
 import { MensagemErro } from "@/components/MensagemErro";
 import { useSimulador } from "@/context/SimuladorContext";
 import { useEntrarNaListaDoDia } from "@/hooks/useEntrarNaListaDoDia";
-import { chaveDia, listarDiasUnidade, rotuloDia } from "@/lib/datas";
+import { chaveDia, isDiaUtil, listarDiasUnidade, rotuloDia } from "@/lib/datas";
+import { listaDoDiaAberta } from "@/services/regrasAgendamento";
 import { listarHorarios } from "@/services/api";
 import type { Horario } from "@/types";
+import { agora as agoraApp } from "@/lib/relogio";
 
 export function HorariosUbs({ cdUnidade }: { cdUnidade: number }) {
   const { estado } = useSimulador();
@@ -30,7 +32,7 @@ export function HorariosUbs({ cdUnidade }: { cdUnidade: number }) {
   useEffect(() => { void carregar(); }, [carregar, estado.horarios]);
 
   const unidade = estado.unidades.find((u) => u.cdUnidade === cdUnidade);
-  const livres = useMemo(() => (horarios ?? []).filter((h) => !h.flOcupado && new Date(h.dtHorario).getTime() > Date.now() && !estado.horarios.find((atual) => atual.cdHorario === h.cdHorario)?.flOcupado), [horarios, estado.horarios]);
+  const livres = useMemo(() => (horarios ?? []).filter((h) => !h.flOcupado && isDiaUtil(new Date(h.dtHorario)) && new Date(h.dtHorario).getTime() > agoraApp().getTime() && !estado.horarios.find((atual) => atual.cdHorario === h.cdHorario)?.flOcupado), [horarios, estado.horarios]);
   const porDia = useMemo(() => {
     return listarDiasUnidade(estado.horarios, cdUnidade)
       .map((dia): [string, Horario[]] => [dia, livres.filter((h) => chaveDia(h.dtHorario) === dia)])
@@ -39,6 +41,8 @@ export function HorariosUbs({ cdUnidade }: { cdUnidade: number }) {
 
   const resultado = estado.orientacaoAtual?.resultado;
   const podeEntrarNaLista = resultado?.dsCor === "VERDE" || resultado?.dsCor === "AZUL";
+  // A lista do dia funciona só em dias úteis.
+  const listaAberta = listaDoDiaAberta(agoraApp());
   const aoEntrarNaLista = () => {
     if (!podeEntrarNaLista) return;
     // Mesmo padrão do agendamento: sem login, vai para Entrar e volta para a lista do dia desta UBS.
@@ -57,7 +61,11 @@ export function HorariosUbs({ cdUnidade }: { cdUnidade: number }) {
       {horarios && livres.length === 0 && (
         <>
           <EstadoVazio mensagem="Nenhum horário livre nesta UBS" />
-          {podeEntrarNaLista ? (
+          {!listaAberta ? (
+            <p className="rounded-[12px] bg-mentaSuave p-3 font-semibold" role="status">
+              A lista do dia funciona só em dias úteis. Volte em um dia útil ou escolha outra UBS.
+            </p>
+          ) : podeEntrarNaLista ? (
             <button onClick={aoEntrarNaLista} className="btn bg-primaria text-branco hover:bg-primariaEscura">
               <FiList /> Entrar na lista do dia
             </button>
@@ -70,7 +78,7 @@ export function HorariosUbs({ cdUnidade }: { cdUnidade: number }) {
       )}
       {porDia.map(([dia, lista]) => (
         <section key={dia}>
-          <h2 className="mb-2 font-extrabold">{rotuloDia(lista[0]?.dtHorario ?? dia, true)}</h2>
+          <h2 className="mb-2 font-extrabold">{rotuloDia(lista[0]?.dtHorario ?? dia, true, agoraApp())}</h2>
           <div className="grid grid-cols-3 gap-2">
             {lista.map((h) => (
               <CardHorario key={h.cdHorario} horario={h}
@@ -79,7 +87,7 @@ export function HorariosUbs({ cdUnidade }: { cdUnidade: number }) {
           </div>
         </section>
       ))}
-      {horarios && livres.length > 0 && (
+      {horarios && livres.length > 0 && listaAberta && (
         <button onClick={aoEntrarNaLista} className="btn border border-borda bg-branco text-primaria">
           <FiList /> Prefiro entrar na lista do dia
         </button>

@@ -9,6 +9,7 @@ import { chaveDia, fmtHora, listarDiasUnidade, rotuloDia } from "@/lib/datas";
 import { agendarConsulta, cadastrarCidadao, registrarPresenca } from "@/services/api";
 import { acoesPresenca, orientacaoDoDia } from "@/services/regrasAgendamento";
 import type { CidadaoEntrada, Consulta, Horario } from "@/types";
+import { agora as agoraApp } from "@/lib/relogio";
 
 const ROTULO_STATUS: Record<Consulta["dsStatus"], string> = {
   AGENDADA: "Agendada",
@@ -30,10 +31,10 @@ export function Agenda() {
     () => listarDiasUnidade(estado.horarios, cdUnidade),
     [estado.horarios, cdUnidade],
   );
-  const [dia, setDia] = useState(() => chaveDia(new Date().toISOString()));
+  const [dia, setDia] = useState(() => chaveDia(agoraApp().toISOString()));
   const assinaturaDias = dias.join(",");
   useEffect(() => {
-    const hoje = chaveDia(new Date().toISOString());
+    const hoje = chaveDia(agoraApp().toISOString());
     setDia(dias.find((d) => d >= hoje) ?? dias[dias.length - 1] ?? "");
   }, [assinaturaDias, cdUnidade]);
 
@@ -77,13 +78,14 @@ export function Agenda() {
   return (
     <div className="flex flex-col gap-4">
       <h1 className="text-2xl font-extrabold text-primaria">Agenda — {unidade?.nmUnidade}</h1>
+      <p className="-mt-3 text-sm text-textoSuave">Risco alto: probabilidade de falta de 60% ou mais.</p>
       <div className="flex flex-col gap-1">
         <label htmlFor="dia" className="font-semibold">Dia</label>
         <select id="dia" value={dia} onChange={(e) => setDia(e.target.value)}
           className="min-h-12 rounded-[12px] border border-borda bg-branco px-4">
           {dias.map((d) => {
             const h = estado.horarios.find((x) => chaveDia(x.dtHorario) === d);
-            return <option key={d} value={d}>{h ? rotuloDia(h.dtHorario) : d}</option>;
+            return <option key={d} value={d}>{h ? rotuloDia(h.dtHorario, false, agoraApp()) : d}</option>;
           })}
         </select>
       </div>
@@ -108,7 +110,7 @@ export function Agenda() {
                 <p className="font-bold">{nomePaciente(consulta)}</p>
                 {(() => {
                   // Lembrete para quem vai atender: a pessoa procurou ajuda hoje.
-                  const hoje = chaveDia(new Date().toISOString());
+                  const hoje = chaveDia(agoraApp().toISOString());
                   const ativa = consulta.dsStatus === "AGENDADA" || consulta.dsStatus === "CONFIRMADA";
                   const o = ativa && chaveDia(consulta.dtHorario) === hoje && orientacaoDoDia(estado.orientacoes, estado.listaDoDia, consulta.cdCidadao, hoje);
                   return o && <SeloOrientacaoHoje orientacao={o} hoje={hoje} />;
@@ -118,7 +120,7 @@ export function Agenda() {
                 </p>
                 {(() => {
                   // Presença só no dia da consulta; falta só depois do horário.
-                  const pode = acoesPresenca(consulta, new Date());
+                  const pode = acoesPresenca(consulta, agoraApp());
                   if (!pode.presenca && !pode.falta) return null;
                   return (
                     <div className={`grid gap-2 ${pode.presenca && pode.falta ? "grid-cols-2" : "grid-cols-1"}`}>
@@ -135,7 +137,7 @@ export function Agenda() {
                 })()}
               </>
             )}
-            {!h.flOcupado && new Date(h.dtHorario).getTime() > Date.now() && (
+            {!h.flOcupado && new Date(h.dtHorario).getTime() > agoraApp().getTime() && (
               formAberto === h.cdHorario ? (
                 <div className="flex flex-col gap-3 border-t border-borda pt-3">
                   <p className="font-bold">Agendar para quem chegou sem celular</p>

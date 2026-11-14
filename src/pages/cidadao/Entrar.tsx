@@ -39,7 +39,7 @@ export function Entrar({ cdHorario, cdOferta, destino, cdUnidade }: { cdHorario:
       {cdHorario > 0 && <p className="rounded-[12px] bg-mentaSuave p-3 font-semibold">Entre para concluir o agendamento.</p>}
       {destino === "lista-do-dia" && (
         <p className="rounded-[12px] bg-mentaSuave p-3 font-semibold">
-          {cdUnidade ? `Entre para entrar na lista do dia da ${nomeUbs}.` : "Entre para receber a vaga da lista do dia no seu nome."}
+          {cdUnidade ? `Faça login para entrar na lista do dia da ${nomeUbs}.` : "Entre para receber a vaga da lista do dia no seu nome."}
         </p>
       )}
       {erro && <MensagemErro mensagem={erro} />}

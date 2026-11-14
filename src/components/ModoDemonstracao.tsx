@@ -6,7 +6,7 @@ import { useSimulador } from "@/context/SimuladorContext";
 import { CONTA_DEMO } from "@/data/contaDemo";
 
 export function ModoDemonstracao({ onConcluir }: { onConcluir?: () => void }) {
-  const { reiniciarDemonstracao, simularPassagemPrazo, vencerPrazoOfertas, encerrarDia } = useSimulador();
+  const { reiniciarDemonstracao, simularPassagemPrazo, vencerPrazoOfertas, encerrarDia, simularDiaUtil, alterarSimulacaoDiaUtil } = useSimulador();
   const navigate = useNavigate();
   const [confirmando, setConfirmando] = useState(false);
   const [resumo, setResumo] = useState<ResumoSimulacao | null>(null);
@@ -48,6 +48,16 @@ export function ModoDemonstracao({ onConcluir }: { onConcluir?: () => void }) {
             <p>Senha: <strong className="select-all">{CONTA_DEMO.dsSenha}</strong></p>
           </div>
         )}
+        <label className="flex items-start gap-3 rounded-[12px] border border-borda bg-branco p-3">
+          <input type="checkbox" checked={simularDiaUtil} onChange={(e) => alterarSimulacaoDiaUtil(e.target.checked)}
+            className="mt-1 h-5 w-5 shrink-0 accent-primaria" />
+          <span>
+            <span className="block font-semibold">Simular o próximo dia útil</span>
+            <span className="block text-sm text-textoSuave">
+              Em sábado, domingo ou feriado, o app trata o próximo dia útil como hoje (lista do dia, agenda e ofertas). Ao mudar, a demonstração reinicia.
+            </span>
+          </span>
+        </label>
         <button onClick={trocar} className="btn bg-primaria text-branco hover:bg-primariaEscura">
           <FiRepeat /> {cidadao ? "Ver como a UBS vê" : "Voltar para o cidadão"}
         </button>

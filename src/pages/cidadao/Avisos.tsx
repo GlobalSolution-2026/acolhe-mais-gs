@@ -8,13 +8,14 @@ import { fmtDiaHora } from "@/lib/datas";
 import { confirmarConsulta } from "@/services/api";
 import { ofertasDoCidadao, tempoRestanteOferta, precisaConfirmar, prazoConfirmacao } from "@/services/regrasAgendamento";
 import type { OfertaVaga } from "@/types";
+import { agora as agoraApp } from "@/lib/relogio";
 
 function CardOferta({ oferta }: { oferta: OfertaVaga }) {
   const { estado, responderOferta } = useSimulador();
   const navigate = useNavigate();
-  const [agora, setAgora] = useState(() => new Date());
+  const [agora, setAgora] = useState(() => agoraApp());
   useEffect(() => {
-    const t = setInterval(() => setAgora(new Date()), 1000);
+    const t = setInterval(() => setAgora(agoraApp()), 1000);
     return () => clearInterval(t);
   }, []);
   const horario = estado.horarios.find((h) => h.cdHorario === oferta.cdHorario);
@@ -44,7 +45,7 @@ function CardOferta({ oferta }: { oferta: OfertaVaga }) {
 export function Avisos() {
   const { estado } = useSimulador();
   const [confirmando, setConfirmando] = useState(false);
-  const agora = new Date();
+  const agora = agoraApp();
 
   const ofertas = ofertasDoCidadao(estado.ofertas, estado.listaDoDia);
   const confirmacoes = estado.consultas.filter(

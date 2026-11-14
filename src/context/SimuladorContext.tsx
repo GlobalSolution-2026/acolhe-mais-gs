@@ -6,9 +6,12 @@ import { gerarHorariosIniciais } from "@/data/horarios";
 import { gerarSemente } from "@/data/consultasIniciais";
 import { conectarStore } from "@/services/api";
 import { oferecerHorario, finalizarOferta, simularPrazo, vencerOfertas, type ResumoSimulacao } from "@/services/simulacao";
+import { listaDoDiaAberta } from "@/services/regrasAgendamento";
 import { iniciarQuestionario, responderNoQuestionario, trocarQueixaNoQuestionario, voltarNoQuestionario } from "@/services/regrasOrientacao";
 import { chaveDia } from "@/lib/datas";
 import { credenciaisIniciais, fichasIniciais } from "@/data/contaDemo";
+import { agora as agoraApp, carregarPreferenciaSimulacao, definirSimulacaoDiaUtil, simulacaoDiaUtilLigada } from "@/lib/relogio";
+import { carregarFeriados } from "@/lib/feriados";
 
 export interface EstadoSimulador {
   dtSemente: string;
@@ -33,13 +36,14 @@ export interface EstadoSimulador {
 const CHAVE = "acolhe-plus:simulador:v2";
 
 function estadoInicial(): EstadoSimulador {
-  const agora = new Date();
+  const agora = agoraApp();
   const semente = gerarSemente(gerarHorariosIniciais(agora), agora);
   return {
     dtSemente: chaveDia(agora.toISOString()),
     // 4: perguntas de marcar no questionário (respostas antigas em "SIM"/"NAO" deixam de valer).
     // 5: lista do dia com cdOrientacao obrigatório (ACM_LISTA_DIA.id_orientacao).
-    versaoSemente: 6,
+    // 7: feriados nacionais e relógio da demonstração (próximo dia útil).
+    versaoSemente: 7,
     unidades: unidadesIniciais,
     horarios: semente.horarios,
     cidadaos: semente.cidadaos,
@@ -60,7 +64,7 @@ function lerStorage(): EstadoSimulador | null {
     const bruto = localStorage.getItem(CHAVE);
     if (!bruto) return null;
     const { perfil: _perfilAntigo, ...salvo } = JSON.parse(bruto) as Partial<EstadoSimulador> & { perfil?: unknown };
-    if (salvo.versaoSemente !== 6 || salvo.dtSemente !== chaveDia(new Date().toISOString())) return null;
+    if (salvo.versaoSemente !== 7 || salvo.dtSemente !== chaveDia(agoraApp().toISOString())) return null;
     return { ...estadoInicial(), ...salvo };
   } catch {
     return null;
@@ -96,6 +100,10 @@ interface SimuladorValor {
   vencerPrazoOfertas: () => void;
   /** DEMONSTRAÇÃO: quem não foi encaixado ganha prioridade no próximo dia. */
   encerrarDia: () => void;
+  /** DEMONSTRAÇÃO: em dia não útil, simula o próximo dia útil como hoje. */
+  simularDiaUtil: boolean;
+  /** DEMONSTRAÇÃO: liga/desliga a simulação e reinicia a demonstração (as datas mudam). */
+  alterarSimulacaoDiaUtil: (ligada: boolean) => void;
 }
 
 // Preserve only the Context identity across module updates, never its state/value.
@@ -112,13 +120,26 @@ export function SimuladorProvider({ children }: { children: ReactNode }) {
   // Só grava depois que o estado salvo (ou a semente nova) já foi aplicado.
   const [carregado, setCarregado] = useState(false);
 
+  const [simularDiaUtil, setSimularDiaUtil] = useState(simulacaoDiaUtilLigada);
+  // Muda quando os feriados da BrasilAPI chegam, para as telas recalcularem os dias úteis.
+  const [, setVersaoFeriados] = useState(0);
+
   useEffect(() => {
+    // A preferência vem antes do estado salvo: ela define o "hoje" da semente.
+    carregarPreferenciaSimulacao();
+    setSimularDiaUtil(simulacaoDiaUtilLigada());
     const salvo = lerStorage();
-    if (salvo) {
-      ref.current = salvo;
-      setEstado(salvo);
+    // Sem estado salvo, só refaz a semente se a preferência mudou o "hoje" da demonstração.
+    const inicial = salvo ?? (ref.current.dtSemente !== chaveDia(agoraApp().toISOString()) ? estadoInicial() : null);
+    if (inicial) {
+      ref.current = inicial;
+      setEstado(inicial);
     }
     setCarregado(true);
+    const ano = new Date().getFullYear();
+    let ativo = true;
+    void Promise.all([carregarFeriados(ano), carregarFeriados(ano + 1)]).then(() => { if (ativo) setVersaoFeriados((v) => v + 1); });
+    return () => { ativo = false; };
   }, []);
 
   useEffect(() => {
@@ -187,7 +208,7 @@ export function SimuladorProvider({ children }: { children: ReactNode }) {
   const entrarNaListaDoDia = useCallback(
     (cdUnidade: number, dsCor: EntradaListaDoDia["dsCor"], cdOrientacao: number) =>
       atualizarEstado((e) => {
-        if (e.listaDoDia.some((x) => x.flCidadao && x.status === "AGUARDANDO")) return e;
+        if (!listaDoDiaAberta(agoraApp()) || e.listaDoDia.some((x) => x.flCidadao && x.status === "AGUARDANDO")) return e;
         const nome = e.cidadaos.find((c) => c.cdCidadao === e.cdCidadaoAtual)?.nmCidadao ?? "Você";
         const entrada: EntradaListaDoDia = {
           cdEntrada: Math.max(0, ...e.listaDoDia.map((x) => x.cdEntrada)) + 1,
@@ -196,7 +217,7 @@ export function SimuladorProvider({ children }: { children: ReactNode }) {
           cdOrientacao,
           nmCidadao: nome,
           dsCor,
-          dtEntrada: new Date().toISOString(),
+          dtEntrada: agoraApp().toISOString(),
           flPrioridade: false,
           flCidadao: true,
           status: "AGUARDANDO",
@@ -207,29 +228,29 @@ export function SimuladorProvider({ children }: { children: ReactNode }) {
   );
 
   const oferecerVaga = useCallback(
-    (cdHorario: number) => atualizarEstado((e) => oferecerHorario(e, cdHorario, new Date())),
+    (cdHorario: number) => atualizarEstado((e) => oferecerHorario(e, cdHorario, agoraApp())),
     [atualizarEstado],
   );
 
   const responderOferta = useCallback(
     (cdOferta: number, resposta: "ACEITA" | "RECUSADA" | "EXPIRADA") =>
-      atualizarEstado((e) => finalizarOferta(e, cdOferta, resposta, new Date())),
+      atualizarEstado((e) => finalizarOferta(e, cdOferta, resposta, agoraApp())),
     [atualizarEstado],
   );
 
   const simularPassagemPrazo = useCallback(() => {
-    const { novoEstado, resumo } = simularPrazo(ref.current, new Date());
+    const { novoEstado, resumo } = simularPrazo(ref.current, agoraApp());
     atualizarEstado(() => novoEstado);
     return resumo;
   }, [atualizarEstado]);
 
   const vencerPrazoOfertas = useCallback(
-    () => atualizarEstado((e) => vencerOfertas(e, new Date(), true)), [atualizarEstado],
+    () => atualizarEstado((e) => vencerOfertas(e, agoraApp(), true)), [atualizarEstado],
   );
 
   useEffect(() => {
     const timer = setInterval(() => {
-      const novo = vencerOfertas(ref.current, new Date());
+      const novo = vencerOfertas(ref.current, agoraApp());
       if (novo !== ref.current) atualizarEstado(() => novo);
     }, 1000);
     return () => clearInterval(timer);
@@ -244,12 +265,19 @@ export function SimuladorProvider({ children }: { children: ReactNode }) {
     [atualizarEstado],
   );
 
+  const alterarSimulacaoDiaUtil = useCallback((ligada: boolean) => {
+    definirSimulacaoDiaUtil(ligada);
+    setSimularDiaUtil(ligada);
+    reiniciarDemonstracao();
+  }, [reiniciarDemonstracao]);
+
   return (
     <SimuladorContext.Provider
       value={{
         estado, obterEstado, atualizarEstado, reiniciarDemonstracao, selecionarUnidadeRecepcao,
         iniciarOrientacao, trocarQueixa, responder, voltarPergunta, definirResultado,
         definirCidadaoAtual, entrarNaListaDoDia, oferecerVaga, responderOferta, simularPassagemPrazo, vencerPrazoOfertas, encerrarDia,
+        simularDiaUtil, alterarSimulacaoDiaUtil,
       }}
     >
       {children}

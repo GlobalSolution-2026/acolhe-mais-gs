@@ -1,5 +1,5 @@
 /** Regras do atendimento no balcão (funções puras, sem React). */
-import { chaveDia } from "@/lib/datas";
+import { chaveDia, isDiaUtil } from "@/lib/datas";
 import type { Consulta, Horario, OfertaVaga } from "@/types";
 import type { Orientacao } from "@/types/orientacao";
 
@@ -37,7 +37,7 @@ export function avaliarCodigo(cd: number, orientacoes: Orientacao[], consultas: 
 /** Horários futuros livres da UBS, sem oferta pendente, do mais próximo ao mais distante. */
 export function horariosLivresBalcao(horarios: Horario[], ofertas: OfertaVaga[], cdUnidade: number, agora: Date): Horario[] {
   return horarios
-    .filter((h) => h.cdUnidade === cdUnidade && !h.flOcupado && new Date(h.dtHorario).getTime() > agora.getTime() &&
+    .filter((h) => h.cdUnidade === cdUnidade && !h.flOcupado && isDiaUtil(new Date(h.dtHorario)) && new Date(h.dtHorario).getTime() > agora.getTime() &&
       !ofertas.some((o) => o.cdHorario === h.cdHorario && o.status === "PENDENTE"))
     .sort((a, b) => a.dtHorario.localeCompare(b.dtHorario));
 }

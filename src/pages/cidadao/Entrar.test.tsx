@@ -80,7 +80,7 @@ describe("Entrar vindo da tela de horários (lista do dia da UBS)", () => {
       </SimuladorProvider>,
     );
     await waitFor(() => expect(visto?.orientacaoAtual?.resultado?.cdOrientacao).toBe(88));
-    expect(screen.getByText(/Entre para entrar na lista do dia da /)).toBeInTheDocument();
+    expect(screen.getByText(/Faça login para entrar na lista do dia da /)).toBeInTheDocument();
     expect(visto?.listaDoDia.some((e) => e.flCidadao)).toBe(false);
     const orientacaoAntes = visto?.orientacaoAtual;
     fireEvent.change(screen.getByLabelText("Cartão SUS (CNS)"), { target: { value: CONTA_DEMO.nrCns } });

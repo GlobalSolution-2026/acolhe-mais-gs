@@ -14,6 +14,7 @@ import { respostasEfetivas } from "@/services/fichaOrientacao";
 import { concluirOrientacao, ordenarUbsPorCep, upaMaisProxima } from "@/services/orientacao";
 import type { Unidade } from "@/types";
 import type { OrientacaoEmAndamento, ResultadoFinal } from "@/types/orientacao";
+import { agora as agoraApp } from "@/lib/relogio";
 
 function ListaSinais({ sinais }: { sinais: string[] }) {
   if (sinais.length === 0) return null;
@@ -177,7 +178,7 @@ export function Resultado() {
   const rodando = useRef(false);
   // Mesmas respostas efetivas da tela de Orientação (digitadas + cadastro/ficha).
   const respostas = useMemo(
-    () => respostasEfetivas({ orientacaoAtual: atual, cidadaos, cdCidadaoAtual, fichas }, new Date())?.respostas,
+    () => respostasEfetivas({ orientacaoAtual: atual, cidadaos, cdCidadaoAtual, fichas }, agoraApp())?.respostas,
     [atual, cidadaos, cdCidadaoAtual, fichas],
   );
 

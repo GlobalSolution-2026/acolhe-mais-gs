@@ -7,15 +7,16 @@ import { MensagemErro } from "@/components/MensagemErro";
 import { nomeCor, nomeQueixa, SeloOrientacaoHoje } from "@/components/SeloOrientacaoHoje";
 import { aceitarOfertaPorTelefone } from "@/services/api";
 import { chaveDia, fmtDiaHora, fmtHora } from "@/lib/datas";
-import { consultaNoDia, escolherDestinatarioOferta, horarioOferecivel, orientacoesDoDia, ordenarListaDoDia, tempoRestanteOferta } from "@/services/regrasAgendamento";
+import { consultaNoDia, escolherDestinatarioOferta, horarioOferecivel, listaDoDiaAberta, MENSAGEM_LISTA_SO_DIA_UTIL, orientacoesDoDia, ordenarListaDoDia, tempoRestanteOferta } from "@/services/regrasAgendamento";
+import { agora as agoraApp } from "@/lib/relogio";
 
 export function ListaDoDia() {
   const { estado, oferecerVaga, responderOferta } = useSimulador();
   const cdUnidade = estado.cdUnidadeRecepcao;
-  const [agora, setAgora] = useState(() => new Date());
+  const [agora, setAgora] = useState(() => agoraApp());
   const [erro, setErro] = useState<string | null>(null);
   const [aceitando, setAceitando] = useState(false);
-  useEffect(() => { const t = setInterval(() => setAgora(new Date()), 1000); return () => clearInterval(t); }, []);
+  useEffect(() => { const t = setInterval(() => setAgora(agoraApp()), 1000); return () => clearInterval(t); }, []);
   const ofertas = estado.ofertas.filter((o) => o.cdUnidade === cdUnidade && o.status === "PENDENTE");
   const aceitar = async (id: number) => {
     setAceitando(true); setErro(null);
@@ -27,7 +28,7 @@ export function ListaDoDia() {
   const fila = ordenarListaDoDia(estado.listaDoDia.filter((e) => e.cdUnidade === cdUnidade));
   const hoje = chaveDia(agora.toISOString());
 
-  // Vaga oferecível: horário livre começando daqui a pelo menos 60 minutos.
+  // Vaga oferecível: horário livre de hoje começando daqui a pelo menos 60 minutos.
   const vaga = estado.horarios
     .filter((h) => h.cdUnidade === cdUnidade && horarioOferecivel(h, estado.ofertas, agora) &&
       escolherDestinatarioOferta(fila, estado.ofertas, h, [...estado.consultas].reverse().find((c) => c.cdHorario === h.cdHorario && c.dsStatus === "LIBERADA")?.cdCidadao ?? null, estado.consultas))
@@ -37,6 +38,16 @@ export function ListaDoDia() {
     if (!vaga) return;
     oferecerVaga(vaga.cdHorario);
   };
+
+  if (!listaDoDiaAberta(agora)) {
+    return (
+      <div className="flex flex-col gap-4">
+        <SeloDemonstracao />
+        <h1 className="text-2xl font-extrabold text-primaria">Lista do dia</h1>
+        <p className="rounded-[12px] bg-mentaSuave p-3 font-semibold text-textoSuave" role="status">{MENSAGEM_LISTA_SO_DIA_UTIL}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-4">

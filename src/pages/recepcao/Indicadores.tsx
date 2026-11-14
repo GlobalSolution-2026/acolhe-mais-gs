@@ -1,5 +1,6 @@
 import { useSimulador } from "@/context/SimuladorContext";
 import { calcularIndicadores } from "@/services/regrasAgendamento";
+import { agora as agoraApp } from "@/lib/relogio";
 
 function Card({ titulo, valor, explicacao }: { titulo: string; valor: string; explicacao: string }) {
   return (
@@ -21,7 +22,7 @@ export function Indicadores() {
     estado.horarios.some((h) => h.cdHorario === c.cdHorario && h.cdUnidade === cdUnidade),
   );
   const lista = estado.listaDoDia.filter((e) => e.cdUnidade === cdUnidade);
-  const i = calcularIndicadores(consultas, lista);
+  const i = calcularIndicadores(consultas, lista, agoraApp());
 
   return (
     <div className="flex flex-col gap-4">

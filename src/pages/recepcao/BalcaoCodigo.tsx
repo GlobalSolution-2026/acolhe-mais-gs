@@ -8,6 +8,7 @@ import { fmtDia } from "@/lib/datas";
 import { buscarOrientacao } from "@/services/api";
 import { avaliarCodigo, type OrientacaoBalcao } from "@/services/balcao";
 import type { Orientacao } from "@/types/orientacao";
+import { agora as agoraApp } from "@/lib/relogio";
 
 type Aviso = { tipo: "VENCIDA" | "JA_UTILIZADA"; orientacao: Orientacao } | null;
 
@@ -24,7 +25,7 @@ export function BalcaoCodigo({ onSeguir, onFazerAqui }: { onSeguir: (d: Orientac
     setAviso(null);
     try {
       const o = await buscarOrientacao(Number(codigo));
-      const r = avaliarCodigo(o.cdOrientacao, [o], obterEstado().consultas, new Date());
+      const r = avaliarCodigo(o.cdOrientacao, [o], obterEstado().consultas, agoraApp());
       if (r.tipo === "VENCIDA" || r.tipo === "JA_UTILIZADA") setAviso(r);
       else if (r.tipo === "INEXISTENTE") setErro("Código não encontrado. Confira o número com o cidadão.");
       else onSeguir({ orientacao: r.orientacao, sinais: [] }); // OK ou ENCAMINHAR: o Balcao decide pela cor.

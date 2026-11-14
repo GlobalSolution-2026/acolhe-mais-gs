@@ -7,6 +7,7 @@ import { fmtDiaHora } from "@/lib/datas";
 import { cancelarConsulta, confirmarConsulta } from "@/services/api";
 import { listarPendentesConfirmacao, prazoConfirmacao, prazoVencidoSemContato, temContatoValido } from "@/services/regrasAgendamento";
 import type { CanalConfirmacao } from "@/types";
+import { agora as agoraApp } from "@/lib/relogio";
 
 export function Pendentes() {
   const { estado } = useSimulador();
@@ -15,7 +16,7 @@ export function Pendentes() {
   const [enviando, setEnviando] = useState(false);
   const [cancelando, setCancelando] = useState<number | null>(null);
 
-  const agora = new Date();
+  const agora = agoraApp();
   const pendentes = listarPendentesConfirmacao(estado.consultas, estado.horarios, estado.cidadaos, cdUnidade, agora);
 
   const confirmar = async (cdConsulta: number, canal: CanalConfirmacao) => {
@@ -46,6 +47,7 @@ export function Pendentes() {
   return (
     <div className="flex flex-col gap-4">
       <h1 className="text-2xl font-extrabold text-primaria">Confirmações pendentes</h1>
+      <p className="-mt-3 text-sm text-textoSuave">Risco alto: probabilidade de falta de 60% ou mais.</p>
       {erro && <MensagemErro mensagem={erro} />}
       {pendentes.length === 0 && <EstadoVazio mensagem="Nenhuma consulta aguardando confirmação." />}
       {pendentes.map((c) => {

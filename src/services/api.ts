@@ -8,8 +8,9 @@ import type { CanalConfirmacao, Cidadao, FichaSaude, CidadaoEntrada, Consulta, E
 import type { Orientacao, VerificacaoUrgenciaEntrada } from "@/types/orientacao";
 import { idadeEm } from "@/lib/datas";
 import { podeVincular } from "./balcao";
-import { acoesPresenca, classificarRiscoFalta, podeCancelar, segundosRestantesOferta } from "./regrasAgendamento";
+import { acoesPresenca, classificarRiscoFalta, listaDoDiaAberta, MENSAGEM_LISTA_SO_DIA_UTIL, podeCancelar, segundosRestantesOferta } from "./regrasAgendamento";
 import { liberarConsulta } from "./simulacao";
+import { agora as agoraApp } from "@/lib/relogio";
 
 export const API_URL = import.meta.env["VITE_API_URL"] as string | undefined;
 
@@ -114,7 +115,7 @@ export async function buscarFicha(cdCidadao: number): Promise<FichaSaude | null>
 export async function salvarFicha(ficha: Omit<FichaSaude, "dtAtualizacao">): Promise<FichaSaude> {
   if (!ficha.flConsentimento) falhar({ status: 400, erro: "Marque a autorização (LGPD) para salvar a ficha." });
   await esperar();
-  const nova: FichaSaude = { ...ficha, dtAtualizacao: new Date().toISOString() };
+  const nova: FichaSaude = { ...ficha, dtAtualizacao: agoraApp().toISOString() };
   getStore().atualizarEstado((e) => ({ ...e, fichas: [...(e.fichas ?? []).filter((f) => f.cdCidadao !== ficha.cdCidadao), nova] }));
   return nova;
 }
@@ -199,9 +200,9 @@ export async function agendarConsulta(dados: { cdHorario: number; cdCidadao: num
   if (!cidadao) falhar({ status: 404, erro: "Cadastro não encontrado." });
   const unidade = e.unidades.find((u) => u.cdUnidade === horario.cdUnidade);
 
-  const antecedenciaDias = Math.max(0, Math.ceil((new Date(horario.dtHorario).getTime() - Date.now()) / 86_400_000));
-  const idade = idadeEm(cidadao.dtNascimento, new Date()) ?? 0;
-  const faltasAnteriores = e.consultas.filter((c) => c.cdCidadao === dados.cdCidadao && c.dsStatus === "FALTA" && new Date(c.dtHorario).getTime() < Date.now()).length;
+  const antecedenciaDias = Math.max(0, Math.ceil((new Date(horario.dtHorario).getTime() - agoraApp().getTime()) / 86_400_000));
+  const idade = idadeEm(cidadao.dtNascimento, agoraApp()) ?? 0;
+  const faltasAnteriores = e.consultas.filter((c) => c.cdCidadao === dados.cdCidadao && c.dsStatus === "FALTA" && new Date(c.dtHorario).getTime() < agoraApp().getTime()).length;
   const previsao = await preverFalta({
     idade,
     sexo: cidadao.dsSexo,
@@ -216,7 +217,7 @@ export async function agendarConsulta(dados: { cdHorario: number; cdCidadao: num
     cdHorario: dados.cdHorario,
     cdCidadao: dados.cdCidadao,
     cdOrientacao: dados.cdOrientacao,
-    dtAgendamento: new Date().toISOString(),
+    dtAgendamento: agoraApp().toISOString(),
     dtConfirmacao: null,
     dsCanalConfirmacao: null,
     dsStatus: "AGENDADA",
@@ -229,7 +230,7 @@ export async function agendarConsulta(dados: { cdHorario: number; cdCidadao: num
     if (atual.horarios.some((h) => h.cdHorario === dados.cdHorario && h.flOcupado)) falhar({ status: 409, erro: "Este horário acabou de ser ocupado. Escolha outro." });
     const oferta = atual.ofertas.find((o) => o.cdOferta === dados.cdOferta && o.cdHorario === dados.cdHorario && o.status === "PENDENTE");
     const entrada = atual.listaDoDia.find((x) => x.cdEntrada === oferta?.cdEntrada);
-    if (dados.cdOferta && (!oferta || !entrada || entrada.cdCidadao !== dados.cdCidadao || segundosRestantesOferta(oferta, new Date()) === 0)) falhar({ status: 409, erro: "Esta oferta venceu ou foi repassada. Confira seus avisos." });
+    if (dados.cdOferta && (!oferta || !entrada || entrada.cdCidadao !== dados.cdCidadao || segundosRestantesOferta(oferta, agoraApp()) === 0)) falhar({ status: 409, erro: "Esta oferta venceu ou foi repassada. Confira seus avisos." });
     const nova = { ...consulta, cdConsulta: Math.max(0, ...atual.consultas.map((c) => c.cdConsulta)) + 1 };
     consulta.cdConsulta = nova.cdConsulta;
     return { ...atual, horarios: atual.horarios.map((h) => h.cdHorario === dados.cdHorario ? { ...h, flOcupado: true } : h), consultas: [...atual.consultas, nova], ofertas: atual.ofertas.map((o) => o.cdOferta === dados.cdOferta ? { ...o, status: "ACEITA" } : o), listaDoDia: atual.listaDoDia.map((x) => x.cdEntrada === entrada?.cdEntrada ? { ...x, status: "ENCERRADA" } : x) };
@@ -243,7 +244,7 @@ export async function confirmarConsulta(cdConsulta: number, canal: CanalConfirma
   const s = getStore();
   const atual = s.obterEstado().consultas.find((c) => c.cdConsulta === cdConsulta);
   if (!atual) falhar({ status: 404, erro: "Consulta não encontrada." });
-  const nova: Consulta = { ...atual, dsStatus: "CONFIRMADA", dtConfirmacao: new Date().toISOString(), dsCanalConfirmacao: canal };
+  const nova: Consulta = { ...atual, dsStatus: "CONFIRMADA", dtConfirmacao: agoraApp().toISOString(), dsCanalConfirmacao: canal };
   // const res = await fetch(`${API_URL}/consultas/${cdConsulta}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(nova) });
   // if (!res.ok) { const erro: ErroResponse = await res.json(); throw new Error(erro.erro); }
   // return res.json();
@@ -257,7 +258,7 @@ export async function registrarPresenca(cdConsulta: number, status: "REALIZADA" 
   const s = getStore();
   const atual = s.obterEstado().consultas.find((c) => c.cdConsulta === cdConsulta);
   if (!atual) falhar({ status: 404, erro: "Consulta não encontrada." });
-  const pode = acoesPresenca(atual, new Date());
+  const pode = acoesPresenca(atual, agoraApp());
   if (status === "REALIZADA" && !pode.presenca) falhar({ status: 409, erro: "A presença só pode ser registrada no dia da consulta." });
   if (status === "FALTA" && !pode.falta) falhar({ status: 409, erro: "A falta só pode ser registrada depois do horário da consulta." });
   const nova: Consulta = { ...atual, dsStatus: status };
@@ -274,7 +275,7 @@ export async function cancelarConsulta(cdConsulta: number): Promise<Consulta> {
   const s = getStore();
   const atual = s.obterEstado().consultas.find((c) => c.cdConsulta === cdConsulta);
   if (!atual) falhar({ status: 404, erro: "Consulta não encontrada." });
-  if (!podeCancelar(atual, new Date())) falhar({ status: 409, erro: "Esta consulta não pode mais ser cancelada." });
+  if (!podeCancelar(atual, agoraApp())) falhar({ status: 409, erro: "Esta consulta não pode mais ser cancelada." });
   const nova: Consulta = { ...atual, dsStatus: "LIBERADA" };
   // const res = await fetch(`${API_URL}/consultas/${cdConsulta}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(nova) });
   // if (!res.ok) { const erro: ErroResponse = await res.json(); throw new Error(erro.erro); }
@@ -282,8 +283,8 @@ export async function cancelarConsulta(cdConsulta: number): Promise<Consulta> {
   // No protótipo, a mesma regra do prazo de confirmação libera o horário e oferece à lista do dia.
   s.atualizarEstado((e) => {
     const c = e.consultas.find((x) => x.cdConsulta === cdConsulta);
-    if (!c || !podeCancelar(c, new Date())) falhar({ status: 409, erro: "Esta consulta não pode mais ser cancelada." });
-    return liberarConsulta(e, cdConsulta, new Date()).novoEstado;
+    if (!c || !podeCancelar(c, agoraApp())) falhar({ status: 409, erro: "Esta consulta não pode mais ser cancelada." });
+    return liberarConsulta(e, cdConsulta, agoraApp()).novoEstado;
   });
   return nova;
 }
@@ -292,7 +293,7 @@ export async function cancelarConsulta(cdConsulta: number): Promise<Consulta> {
 export async function salvarOrientacao(dados: Omit<Orientacao, "cdOrientacao" | "dtOrientacao">): Promise<Orientacao> {
   await esperar();
   const s = getStore();
-  const nova: Orientacao = { ...dados, cdOrientacao: Math.max(0, ...s.obterEstado().orientacoes.map((o) => o.cdOrientacao)) + 1, dtOrientacao: new Date().toISOString() };
+  const nova: Orientacao = { ...dados, cdOrientacao: Math.max(0, ...s.obterEstado().orientacoes.map((o) => o.cdOrientacao)) + 1, dtOrientacao: agoraApp().toISOString() };
   s.atualizarEstado((e) => {
     return { ...e, orientacoes: [...e.orientacoes, nova] };
   });
@@ -316,7 +317,7 @@ export async function aceitarOfertaPorTelefone(cdOferta: number): Promise<Consul
   const e = getStore().obterEstado();
   const oferta = e.ofertas.find((o) => o.cdOferta === cdOferta && o.status === "PENDENTE");
   const entrada = e.listaDoDia.find((x) => x.cdEntrada === oferta?.cdEntrada);
-  if (!oferta || segundosRestantesOferta(oferta, new Date()) === 0 || !entrada || entrada.cdCidadao === null) falhar({ status: 409, erro: "Oferta indisponível." });
+  if (!oferta || segundosRestantesOferta(oferta, agoraApp()) === 0 || !entrada || entrada.cdCidadao === null) falhar({ status: 409, erro: "Oferta indisponível." });
   const consulta = await agendarConsulta({ cdHorario: oferta.cdHorario, cdCidadao: entrada.cdCidadao, cdOrientacao: entrada.cdOrientacao, cdOferta });
   getStore().atualizarEstado((atual) => ({ ...atual, ofertas: atual.ofertas.map((o) => o.cdOferta === cdOferta ? { ...o, status: "ACEITA" } : o), listaDoDia: atual.listaDoDia.map((x) => x.cdEntrada === entrada.cdEntrada ? { ...x, status: "ENCERRADA" } : x) }));
   return consulta;
@@ -359,11 +360,12 @@ export async function incluirNaListaDoDia(dados: { cdUnidade: number; cdCidadao:
   const e = s.obterEstado();
   const cidadao = e.cidadaos.find((c) => c.cdCidadao === dados.cdCidadao);
   if (!cidadao) falhar({ status: 404, erro: "Cadastro não encontrado." });
+  if (!listaDoDiaAberta(agoraApp())) falhar({ status: 409, erro: MENSAGEM_LISTA_SO_DIA_UTIL });
   if (e.listaDoDia.some((x) => x.cdCidadao === dados.cdCidadao && x.status === "AGUARDANDO")) falhar({ status: 409, erro: "Este cidadão já está na lista do dia." });
   const entrada: EntradaListaDoDia = {
     cdEntrada: Math.max(0, ...e.listaDoDia.map((x) => x.cdEntrada)) + 1,
     cdCidadao: dados.cdCidadao, cdOrientacao: dados.cdOrientacao, cdUnidade: dados.cdUnidade,
-    nmCidadao: cidadao.nmCidadao, dsCor: dados.dsCor, dtEntrada: new Date().toISOString(),
+    nmCidadao: cidadao.nmCidadao, dsCor: dados.dsCor, dtEntrada: agoraApp().toISOString(),
     flPrioridade: false, flCidadao: false, status: "AGUARDANDO",
   };
   s.atualizarEstado((atual) => {

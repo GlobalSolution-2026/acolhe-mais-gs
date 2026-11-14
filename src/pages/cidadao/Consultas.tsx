@@ -9,6 +9,7 @@ import { fmtDiaHora } from "@/lib/datas";
 import { cancelarConsulta, confirmarConsulta, listarConsultas } from "@/services/api";
 import { dispensadaConfirmacao, inicioPedidoConfirmacao, podeCancelar, precisaConfirmar, prazoConfirmacao } from "@/services/regrasAgendamento";
 import type { Consulta } from "@/types";
+import { agora as agoraApp } from "@/lib/relogio";
 
 const ROTULO_STATUS: Record<Consulta["dsStatus"], string> = {
   AGENDADA: "Agendada",
@@ -24,7 +25,7 @@ function CardConsulta({ consulta, onConfirmar, onCancelar, ocupado }: {
   const [cancelando, setCancelando] = useState(false);
   const prazo = prazoConfirmacao(consulta);
   const inicio = inicioPedidoConfirmacao(consulta);
-  const precisa = precisaConfirmar(consulta, new Date());
+  const precisa = precisaConfirmar(consulta, agoraApp());
   return (
     <article className="flex flex-col gap-2 rounded-[12px] border border-borda bg-branco p-4 shadow-leve">
       <div className="flex items-center justify-between gap-2">
@@ -33,7 +34,7 @@ function CardConsulta({ consulta, onConfirmar, onCancelar, ocupado }: {
       <p className="flex items-center gap-2 font-bold"><FiMapPin className="shrink-0" />{consulta.nmUnidade}</p>
       <p className="font-semibold">{fmtDiaHora(consulta.dtHorario)}</p>
       {consulta.dsStatus === "AGENDADA" && dispensadaConfirmacao(consulta) && <p className="text-sm">Não precisa confirmar: consulta marcada com menos de 1 dia útil de antecedência.</p>}
-      {consulta.dsStatus === "AGENDADA" && inicio && prazo && new Date() < inicio && <p className="text-sm">
+      {consulta.dsStatus === "AGENDADA" && inicio && prazo && agoraApp() < inicio && <p className="text-sm">
         Vamos pedir a confirmação em {fmtDiaHora(inicio.toISOString(), false)}. Você terá até {fmtDiaHora(prazo.toISOString(), false)} para confirmar.
       </p>}
       {precisa && prazo && (
@@ -47,7 +48,7 @@ function CardConsulta({ consulta, onConfirmar, onCancelar, ocupado }: {
           </button>
         </>
       )}
-      {podeCancelar(consulta, new Date()) && (cancelando ? (
+      {podeCancelar(consulta, agoraApp()) && (cancelando ? (
         <div className="flex flex-col gap-2 rounded-[12px] border border-borda bg-fundo p-3" role="alert">
           <p className="font-semibold">Tem certeza? O horário será liberado para outra pessoa.</p>
           <button onClick={() => onCancelar(consulta)} disabled={ocupado}

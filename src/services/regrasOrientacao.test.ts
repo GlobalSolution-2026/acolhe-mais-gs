@@ -195,6 +195,19 @@ describe("Instabilidade e prioridade dos alarmes", () => {
       dsDestino: inst === "NAO" ? "PRONTO_SOCORRO" : "SAMU",
     });
   });
+  it.each(["NAO", "SEM_OXIMETRO"])("P5 = %s não é sinal de alarme e segue para a próxima pergunta", (p5) => {
+    const r = perfil({ P0: ["TOSSE", "CORIZA"], P1: "NAO", P2: "NAO", P3: "NAO", P4: N, P5: p5 });
+    expect(proximoPasso("GRIPAL", r)).toMatchObject({ tipo: "PERGUNTA", pergunta: { codigo: "P6" } });
+    const resultado = calcularOrientacao("GRIPAL", { ...r, P6: "NAO", P7: N, P8: "NAO", P9: N });
+    expect(resultado.dsCor).toBe("AZUL");
+    expect(resultado.sinaisMarcados).not.toContain("Saturação abaixo de 95%");
+  });
+  it("P5 tem as três opções do oxímetro; só \"Sim, abaixo de 95%\" é sinal", () => {
+    const p5 = perguntasDaQueixa("GRIPAL").find((p) => p.codigo === "P5");
+    expect(p5?.dsPergunta).toBe("Se {voce} tem oxímetro, a saturação está abaixo de 95%?");
+    expect(p5?.opcoes?.map((o) => o.rotulo)).toEqual(["Sim, abaixo de 95%", "Não, 95% ou mais", "Não tenho oxímetro"]);
+    expect(calcularOrientacao("GRIPAL", perfil({ P5: "SIM", INST: "NAO" })).sinaisMarcados).toContain("Saturação abaixo de 95%");
+  });
   it("P1 prevalece sobre P5 estável", () => {
     expect(calcularOrientacao("GRIPAL", perfil({ P1: "SIM", P5: "SIM", INST: "NAO" })).dsCor).toBe("VERMELHO");
     const codigos = perguntasDaQueixa("GRIPAL").map((p) => p.codigo);
