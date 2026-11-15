@@ -4,12 +4,12 @@ import { EstadoVazio } from "@/components/EstadoVazio";
 import { SeloDemonstracao } from "@/components/SeloDemonstracao";
 import { useSimulador } from "@/context/SimuladorContext";
 import { chaveDia, fmtHora } from "@/lib/datas";
-import { consultaNoDia, posicaoNaFila } from "@/services/regrasAgendamento";
+import { consultaNoDia, entradaDoCidadao, posicaoNaFila } from "@/services/regrasAgendamento";
 import { agora as agoraApp } from "@/lib/relogio";
 
 export function ListaDoDiaCidadao() {
   const { estado } = useSimulador();
-  const minha = estado.listaDoDia.find((e) => e.flCidadao && e.status === "AGUARDANDO");
+  const minha = entradaDoCidadao(estado.listaDoDia, estado.cdCidadaoAtual);
 
   if (!minha) {
     return (

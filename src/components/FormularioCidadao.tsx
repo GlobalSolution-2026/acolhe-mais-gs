@@ -23,12 +23,44 @@ interface Props {
   pedirSenha?: boolean;
   /** Balcão e "Agendar para quem chegou": permite cadastro sem celular ("Não tem telefone"). No app, fica obrigatório. */
   celularOpcional?: boolean;
+  /**
+   * Perfil e agendamento no app (RF27): CNS, nascimento, nome e sexo aparecem só para leitura.
+   * Os valores enviados continuam sendo os de valoresIniciais (o serviço também os protege).
+   */
+  identificacaoSomenteLeitura?: boolean;
   textoBotao: string;
   enviando: boolean;
 }
 
+export const AVISO_IDENTIFICACAO = "Para corrigir o Cartão SUS, a data de nascimento, o nome ou o sexo, procure a recepção da sua UBS.";
+
+const fmtNascimento = (dt?: string) => (dt && /^\d{4}-\d{2}-\d{2}$/.test(dt) ? dt.split("-").reverse().join("/") : dt ?? "");
+const SEXOS: Record<string, string> = { F: "Feminino", M: "Masculino" };
+
+function DadosIdentificacao({ v }: { v: Partial<CidadaoForm> }) {
+  const linhas = [
+    ["Nome completo", v.nmCidadao ?? ""],
+    ["Cartão SUS", v.nrCns ?? ""],
+    ["Data de nascimento", fmtNascimento(v.dtNascimento)],
+    ["Sexo", SEXOS[v.dsSexo ?? ""] ?? ""],
+  ];
+  return (
+    <section aria-label="Dados de identificação" className="flex flex-col gap-3 rounded-[12px] border border-borda bg-branco p-4">
+      <dl className="flex flex-col gap-2">
+        {linhas.map(([rotulo, valor]) => (
+          <div key={rotulo}>
+            <dt className="text-sm text-textoSuave">{rotulo}</dt>
+            <dd className="font-semibold">{valor || "—"}</dd>
+          </div>
+        ))}
+      </dl>
+      <p className="text-sm text-textoSuave">{AVISO_IDENTIFICACAO}</p>
+    </section>
+  );
+}
+
 /** Formulário de cadastro do cidadão (usado no agendamento, no perfil e na recepção). */
-export function FormularioCidadao({ valoresIniciais, nrCep, aoEnviar, textoBotao, enviando, pedirSenha, celularOpcional }: Props) {
+export function FormularioCidadao({ valoresIniciais, nrCep, aoEnviar, textoBotao, enviando, pedirSenha, celularOpcional, identificacaoSomenteLeitura }: Props) {
   const { register, handleSubmit, getValues, control, formState: { errors } } = useForm<CidadaoForm>({
     // Cadastro já conferido sem celular chega com "Não tem telefone" marcado.
     defaultValues: { ...valoresIniciais, semTelefone: Boolean(celularOpcional) && valoresIniciais.nrCelular === "" },
@@ -39,8 +71,8 @@ export function FormularioCidadao({ valoresIniciais, nrCep, aoEnviar, textoBotao
 
   const enviar = handleSubmit((v) => {
     aoEnviar({
-      nmCidadao: v.nmCidadao.trim(),
-      nrCns: v.nrCns.replace(/\D/g, ""),
+      nmCidadao: (v.nmCidadao ?? "").trim(),
+      nrCns: (v.nrCns ?? "").replace(/\D/g, ""),
       nrCelular: semTelefone ? "" : (v.nrCelular ?? "").trim(),
       dtNascimento: v.dtNascimento,
       dsSexo: v.dsSexo,
@@ -52,13 +84,17 @@ export function FormularioCidadao({ valoresIniciais, nrCep, aoEnviar, textoBotao
 
   return (
     <form onSubmit={enviar} className="flex flex-col gap-4" noValidate>
-      <CampoFormulario id="nmCidadao" label="Nome completo" erro={errors.nmCidadao}
-        registro={register("nmCidadao", { required: "Informe o nome completo." })} />
-      <CampoFormulario id="nrCns" label="Cartão SUS (15 números)" placeholder="000000000000000" erro={errors.nrCns}
-        registro={register("nrCns", {
-          required: "Informe o número do cartão SUS.",
-          pattern: { value: /^\d{15}$/, message: "O cartão SUS tem 15 números." },
-        })} />
+      {identificacaoSomenteLeitura ? <DadosIdentificacao v={valoresIniciais} /> : (
+        <>
+          <CampoFormulario id="nmCidadao" label="Nome completo" erro={errors.nmCidadao}
+            registro={register("nmCidadao", { required: "Informe o nome completo." })} />
+          <CampoFormulario id="nrCns" label="Cartão SUS (15 números)" placeholder="000000000000000" erro={errors.nrCns}
+            registro={register("nrCns", {
+              required: "Informe o número do cartão SUS.",
+              pattern: { value: /^\d{15}$/, message: "O cartão SUS tem 15 números." },
+            })} />
+        </>
+      )}
       {celularOpcional && (
         <label className="flex min-h-12 items-center gap-3 font-semibold">
           <input type="checkbox" className="h-5 w-5 accent-primaria" {...register("semTelefone")} />
@@ -75,19 +111,23 @@ export function FormularioCidadao({ valoresIniciais, nrCep, aoEnviar, textoBotao
             },
           })} />
       )}
-      <CampoFormulario id="dtNascimento" label="Data de nascimento" tipo="date" erro={errors.dtNascimento}
-        registro={register("dtNascimento", { required: "Informe a data de nascimento." })} />
-      <div className="flex flex-col gap-1">
-        <label htmlFor="dsSexo" className="font-semibold">Sexo</label>
-        <select id="dsSexo" aria-invalid={!!errors.dsSexo}
-          className={`min-h-12 w-full rounded-[12px] border bg-branco px-4 text-texto outline-none focus:ring-2 focus:ring-primaria ${errors.dsSexo ? "border-gravidade-vermelho" : "border-borda"}`}
-          {...register("dsSexo", { required: "Selecione o sexo." })}>
-          <option value="">Selecione</option>
-          <option value="F">Feminino</option>
-          <option value="M">Masculino</option>
-        </select>
-        {errors.dsSexo && <p className="text-sm font-semibold text-gravidade-vermelho">{errors.dsSexo.message}</p>}
-      </div>
+      {!identificacaoSomenteLeitura && (
+        <>
+          <CampoFormulario id="dtNascimento" label="Data de nascimento" tipo="date" erro={errors.dtNascimento}
+            registro={register("dtNascimento", { required: "Informe a data de nascimento." })} />
+          <div className="flex flex-col gap-1">
+            <label htmlFor="dsSexo" className="font-semibold">Sexo</label>
+            <select id="dsSexo" aria-invalid={!!errors.dsSexo}
+              className={`min-h-12 w-full rounded-[12px] border bg-branco px-4 text-texto outline-none focus:ring-2 focus:ring-primaria ${errors.dsSexo ? "border-gravidade-vermelho" : "border-borda"}`}
+              {...register("dsSexo", { required: "Selecione o sexo." })}>
+              <option value="">Selecione</option>
+              <option value="F">Feminino</option>
+              <option value="M">Masculino</option>
+            </select>
+            {errors.dsSexo && <p className="text-sm font-semibold text-gravidade-vermelho">{errors.dsSexo.message}</p>}
+          </div>
+        </>
+      )}
       <CampoFormulario id="nmContatoRecado" label="Contato de recado (opcional)" placeholder="Nome de alguém próximo" erro={errors.nmContatoRecado}
         registro={register("nmContatoRecado")} />
       <CampoFormulario id="nrContatoRecado" label="Telefone do contato de recado (opcional)" placeholder="(11) 90000-0000" erro={errors.nrContatoRecado}

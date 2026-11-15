@@ -126,15 +126,27 @@ export async function apagarFicha(cdCidadao: number): Promise<void> {
   getStore().atualizarEstado((e) => ({ ...e, fichas: (e.fichas ?? []).filter((f) => f.cdCidadao !== cdCidadao) }));
 }
 
+export interface OpcoesAtualizarCidadao {
+  /**
+   * Perfil e agendamento no app (RF27): o cidadão só altera celular e contato de recado.
+   * CNS, nascimento, nome e sexo ficam como estão no cadastro, mesmo que cheguem valores diferentes.
+   * Sem a opção (criarConta pela RN21, balcão da recepção), o cadastro é atualizado por inteiro.
+   */
+  manterIdentificacao?: boolean;
+}
+
 // PUT /cidadaos/{cdCidadao}
-export async function atualizarCidadao(cdCidadao: number, dados: CidadaoEntrada): Promise<Cidadao> {
+export async function atualizarCidadao(cdCidadao: number, dados: CidadaoEntrada, opcoes: OpcoesAtualizarCidadao = {}): Promise<Cidadao> {
   // const res = await fetch(`${API_URL}/cidadaos/${cdCidadao}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(dados) });
   // if (!res.ok) { const erro: ErroResponse = await res.json(); throw new Error(erro.erro); }
   // return res.json();
   await esperar();
   const s = getStore();
-  if (!s.obterEstado().cidadaos.some((c) => c.cdCidadao === cdCidadao)) falhar({ status: 404, erro: "Cadastro não encontrado." });
-  const atualizado: Cidadao = { ...dados, cdCidadao };
+  const atual = s.obterEstado().cidadaos.find((c) => c.cdCidadao === cdCidadao);
+  if (!atual) falhar({ status: 404, erro: "Cadastro não encontrado." });
+  const atualizado: Cidadao = opcoes.manterIdentificacao
+    ? { ...dados, nrCns: atual.nrCns, dtNascimento: atual.dtNascimento, nmCidadao: atual.nmCidadao, dsSexo: atual.dsSexo, cdCidadao }
+    : { ...dados, cdCidadao };
   s.atualizarEstado((e) => ({
     ...e,
     cidadaos: e.cidadaos.map((c) => (c.cdCidadao === cdCidadao ? atualizado : c)),

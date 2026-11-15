@@ -36,7 +36,7 @@ export function Agendar({ cdHorario, cdOferta }: { cdHorario: number; cdOferta: 
     setEnviando(true);
     setErro(null);
     try {
-      const cidadao = await atualizarCidadao(cadastro.cdCidadao, dados);
+      const cidadao = await atualizarCidadao(cadastro.cdCidadao, dados, { manterIdentificacao: true });
       definirCidadaoAtual(cidadao.cdCidadao);
       const consulta = await agendarConsulta({
         cdHorario,
@@ -66,6 +66,7 @@ export function Agendar({ cdHorario, cdOferta }: { cdHorario: number; cdOferta: 
       <FormularioCidadao
         nrCep={estado.orientacaoAtual?.nrCep ?? cadastro?.nrCep ?? ""}
         valoresIniciais={cadastro}
+        identificacaoSomenteLeitura
         aoEnviar={(d) => void aoEnviar(d)}
         textoBotao={enviando ? "Agendando..." : "Confirmar agendamento"}
         enviando={enviando}

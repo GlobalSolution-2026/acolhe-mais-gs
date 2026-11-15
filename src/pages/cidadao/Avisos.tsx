@@ -47,7 +47,7 @@ export function Avisos() {
   const [confirmando, setConfirmando] = useState(false);
   const agora = agoraApp();
 
-  const ofertas = ofertasDoCidadao(estado.ofertas, estado.listaDoDia);
+  const ofertas = ofertasDoCidadao(estado.ofertas, estado.listaDoDia, estado.cdCidadaoAtual);
   const confirmacoes = estado.consultas.filter(
     (c) => c.cdCidadao === estado.cdCidadaoAtual && precisaConfirmar(c, agora),
   );

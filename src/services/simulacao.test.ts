@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { EstadoSimulador } from "@/context/SimuladorContext";
 import type { EntradaListaDoDia, OfertaVaga } from "@/types";
-import { escolherDestinatarioOferta, listarPendentesConfirmacao, ofertasDoCidadao, prazoVencidoSemContato, segundosRestantesOferta, tempoRestanteOferta } from "./regrasAgendamento";
+import { entradaDoCidadao, escolherDestinatarioOferta, listarPendentesConfirmacao, ofertasDoCidadao, vincularEntradaSemLogin, prazoVencidoSemContato, segundosRestantesOferta, tempoRestanteOferta } from "./regrasAgendamento";
 import { finalizarOferta, liberarConsulta, oferecerHorario, simularPrazo, vencerOfertas } from "./simulacao";
 
 // Hora local: as vagas da lista do dia precisam ser do mesmo dia (qui., 05/11, 08:00; vagas às 12:00).
@@ -33,7 +33,8 @@ describe("destinatário das ofertas", () => {
     expect(proximo.ofertas).toHaveLength(2);
     expect(proximo.ofertas[1]).toMatchObject({ cdHorario: 1, cdEntrada: 3, status: "PENDENTE" });
   });
-  it("exibe e conta apenas as ofertas do próprio cidadão", () => expect(ofertasDoCidadao([oferta(1), oferta(2), oferta(3)], [entrada(1), entrada(2), entrada(3)]).map((o) => o.cdEntrada)).toEqual([3]));
+  it("exibe e conta apenas as ofertas do próprio cidadão", () => expect(ofertasDoCidadao([oferta(1), oferta(2), oferta(3)], [entrada(1), entrada(2), entrada(3)], 3).map((o) => o.cdEntrada)).toEqual([3]));
+  it("não mostra a oferta de uma entrada do app feita por outra conta", () => expect(ofertasDoCidadao([oferta(3)], [entrada(3)], 81)).toEqual([]));
   it("30 minutos duram 300 segundos reais e contador usa tempo simulado", () => {
     expect(segundosRestantesOferta(oferta(1), agora)).toBe(300);
     expect(tempoRestanteOferta(oferta(1), new Date(agora.getTime() + 30_000))).toBe("27:00");
@@ -164,5 +165,22 @@ describe("cadastro sem telefone e sem recado", () => {
     const depois = new Date(agora.getTime() + H);
     expect(listarPendentesConfirmacao(novoEstado.consultas, novoEstado.horarios, novoEstado.cidadaos, 1, depois).map((c) => c.cdConsulta)).toContain(1);
     expect(prazoVencidoSemContato(novoEstado.consultas[0]!, novoEstado.cidadaos[0], depois)).toBe(true);
+  });
+});
+
+describe("entrada do app na lista do dia ao entrar numa conta", () => {
+  const doApp = (cdCidadao: number | null): EntradaListaDoDia => ({ ...entrada(3), cdCidadao, nmCidadao: cdCidadao ? "Maria Silva" : "Você" });
+  it("entrada da conta demo não passa para a conta nova", () => {
+    const fila = vincularEntradaSemLogin([doApp(1)], 81, "Nova Pessoa");
+    expect(fila[0]).toMatchObject({ cdCidadao: 1, nmCidadao: "Maria Silva" });
+    expect(entradaDoCidadao(fila, 81)).toBeUndefined();
+  });
+  it("entrada feita sem login é vinculada à conta que acabou de entrar", () => {
+    const fila = vincularEntradaSemLogin([doApp(null)], 81, "Nova Pessoa");
+    expect(entradaDoCidadao(fila, 81)).toMatchObject({ cdCidadao: 81, nmCidadao: "Nova Pessoa" });
+  });
+  it("não vincula a entrada sem login se a conta já está na lista", () => {
+    const fila = vincularEntradaSemLogin([doApp(81), { ...doApp(null), cdEntrada: 9 }], 81, "Nova Pessoa");
+    expect(fila[1]?.cdCidadao).toBeNull();
   });
 });

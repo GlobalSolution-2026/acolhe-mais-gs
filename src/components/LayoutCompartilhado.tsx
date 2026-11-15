@@ -51,7 +51,7 @@ export function LayoutCompartilhado({ cidadao, barra }: { cidadao: boolean; barr
   const agora = agoraApp();
   const avisos = cidadao
     ? estado.consultas.filter((c) => c.cdCidadao === estado.cdCidadaoAtual && precisaConfirmar(c, agora)).length +
-      ofertasDoCidadao(estado.ofertas, estado.listaDoDia).length
+      ofertasDoCidadao(estado.ofertas, estado.listaDoDia, estado.cdCidadaoAtual).length
     : listarPendentesConfirmacao(estado.consultas, estado.horarios, estado.cidadaos, estado.cdUnidadeRecepcao, agora).length;
   const ubs = estado.unidades.filter((u) => u.tpUnidade === "UBS");
   // DEMONSTRAÇÃO: hoje não é dia útil e o app está simulando o próximo.

@@ -27,7 +27,7 @@ export function EditarPerfil() {
     setEnviando(true);
     setErro(null);
     try {
-      await atualizarCidadao(cadastro.cdCidadao, dados);
+      await atualizarCidadao(cadastro.cdCidadao, dados, { manterIdentificacao: true });
       void navigate({ to: "/cidadao/perfil" });
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Não foi possível salvar.");
@@ -46,6 +46,7 @@ export function EditarPerfil() {
       <FormularioCidadao
         nrCep={cadastro.nrCep}
         valoresIniciais={cadastro}
+        identificacaoSomenteLeitura
         aoEnviar={(d) => void aoEnviar(d)}
         textoBotao="Salvar"
         enviando={enviando}

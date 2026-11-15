@@ -6,7 +6,7 @@ import { gerarHorariosIniciais } from "@/data/horarios";
 import { gerarSemente } from "@/data/consultasIniciais";
 import { conectarStore } from "@/services/api";
 import { oferecerHorario, finalizarOferta, simularPrazo, vencerOfertas, type ResumoSimulacao } from "@/services/simulacao";
-import { listaDoDiaAberta } from "@/services/regrasAgendamento";
+import { entradaDoCidadao, listaDoDiaAberta, vincularEntradaSemLogin } from "@/services/regrasAgendamento";
 import { iniciarQuestionario, responderNoQuestionario, trocarQueixaNoQuestionario, voltarNoQuestionario } from "@/services/regrasOrientacao";
 import { chaveDia } from "@/lib/datas";
 import { credenciaisIniciais, fichasIniciais } from "@/data/contaDemo";
@@ -43,7 +43,8 @@ function estadoInicial(): EstadoSimulador {
     // 4: perguntas de marcar no questionário (respostas antigas em "SIM"/"NAO" deixam de valer).
     // 5: lista do dia com cdOrientacao obrigatório (ACM_LISTA_DIA.id_orientacao).
     // 7: feriados nacionais e relógio da demonstração (próximo dia útil).
-    versaoSemente: 7,
+    // 8: CNS de exemplo começam com 0 (conta nova não herda cadastro da semente).
+    versaoSemente: 8,
     unidades: unidadesIniciais,
     horarios: semente.horarios,
     cidadaos: semente.cidadaos,
@@ -64,7 +65,7 @@ function lerStorage(): EstadoSimulador | null {
     const bruto = localStorage.getItem(CHAVE);
     if (!bruto) return null;
     const { perfil: _perfilAntigo, ...salvo } = JSON.parse(bruto) as Partial<EstadoSimulador> & { perfil?: unknown };
-    if (salvo.versaoSemente !== 7 || salvo.dtSemente !== chaveDia(agoraApp().toISOString())) return null;
+    if (salvo.versaoSemente !== 8 || salvo.dtSemente !== chaveDia(agoraApp().toISOString())) return null;
     return { ...estadoInicial(), ...salvo };
   } catch {
     return null;
@@ -201,14 +202,14 @@ export function SimuladorProvider({ children }: { children: ReactNode }) {
   );
 
   const definirCidadaoAtual = useCallback(
-    (cdCidadao: number) => atualizarEstado((e) => ({ ...e, cdCidadaoAtual: cdCidadao, listaDoDia: e.listaDoDia.map((x) => x.flCidadao ? { ...x, cdCidadao, nmCidadao: e.cidadaos.find((c) => c.cdCidadao === cdCidadao)?.nmCidadao ?? x.nmCidadao } : x) })),
+    (cdCidadao: number) => atualizarEstado((e) => ({ ...e, cdCidadaoAtual: cdCidadao, listaDoDia: vincularEntradaSemLogin(e.listaDoDia, cdCidadao, e.cidadaos.find((c) => c.cdCidadao === cdCidadao)?.nmCidadao) })),
     [atualizarEstado],
   );
 
   const entrarNaListaDoDia = useCallback(
     (cdUnidade: number, dsCor: EntradaListaDoDia["dsCor"], cdOrientacao: number) =>
       atualizarEstado((e) => {
-        if (!listaDoDiaAberta(agoraApp()) || e.listaDoDia.some((x) => x.flCidadao && x.status === "AGUARDANDO")) return e;
+        if (!listaDoDiaAberta(agoraApp()) || entradaDoCidadao(e.listaDoDia, e.cdCidadaoAtual)) return e;
         const nome = e.cidadaos.find((c) => c.cdCidadao === e.cdCidadaoAtual)?.nmCidadao ?? "Você";
         const entrada: EntradaListaDoDia = {
           cdEntrada: Math.max(0, ...e.listaDoDia.map((x) => x.cdEntrada)) + 1,

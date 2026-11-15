@@ -190,8 +190,25 @@ export function tempoRestanteOferta(oferta: OfertaVaga, agora: Date): string {
   return `${String(Math.floor(segundosSimulados / 60)).padStart(2, "0")}:${String(segundosSimulados % 60).padStart(2, "0")}`;
 }
 
-export function ofertasDoCidadao(ofertas: OfertaVaga[], fila: EntradaListaDoDia[]): OfertaVaga[] {
-  return ofertas.filter((o) => o.status === "PENDENTE" && fila.some((e) => e.cdEntrada === o.cdEntrada && e.flCidadao));
+/** Entrada do app que pertence a quem está usando agora (null = sem login, só a entrada feita sem login). */
+const ehDoCidadao = (e: EntradaListaDoDia, cdCidadaoAtual: number | null) => e.flCidadao && e.cdCidadao === cdCidadaoAtual;
+
+/** Entrada AGUARDANDO do cidadão atual na lista do dia; nunca a de outra conta que usou o app antes. */
+export function entradaDoCidadao(fila: EntradaListaDoDia[], cdCidadaoAtual: number | null): EntradaListaDoDia | undefined {
+  return fila.find((e) => ehDoCidadao(e, cdCidadaoAtual) && e.status === "AGUARDANDO");
+}
+
+/**
+ * Ao entrar (login ou conta nova), vincula à conta só a entrada feita sem login antes dele.
+ * Entradas de outras contas continuam delas; se a conta já está na lista, nada muda.
+ */
+export function vincularEntradaSemLogin(fila: EntradaListaDoDia[], cdCidadao: number, nmCidadao: string | undefined): EntradaListaDoDia[] {
+  if (entradaDoCidadao(fila, cdCidadao)) return fila;
+  return fila.map((x) => (x.flCidadao && x.cdCidadao === null ? { ...x, cdCidadao, nmCidadao: nmCidadao ?? x.nmCidadao } : x));
+}
+
+export function ofertasDoCidadao(ofertas: OfertaVaga[], fila: EntradaListaDoDia[], cdCidadaoAtual: number | null): OfertaVaga[] {
+  return ofertas.filter((o) => o.status === "PENDENTE" && fila.some((e) => e.cdEntrada === o.cdEntrada && ehDoCidadao(e, cdCidadaoAtual)));
 }
 
 /** AGENDADA com prazo de confirmação vencido, sem contato válido e que ainda não aconteceu: não é liberada e segue pendente. */

@@ -1,6 +1,7 @@
 import type { Cidadao, Consulta, EntradaListaDoDia, Horario } from "@/types";
 import type { Orientacao } from "@/types/orientacao";
 import { unidadesIniciais } from "./unidades";
+import { CONTA_DEMO } from "./contaDemo";
 import { CONFIRMACAO_RISCO_BAIXO_DIAS_UTEIS, PRAZO_FINAL_CONFIRMACAO_DIAS_UTEIS } from "./configuracoes";
 import { chaveDia, subtrairDiasUteis } from "@/lib/datas";
 import { classificarRiscoFalta, inicioPedidoConfirmacao, prazoConfirmacao } from "@/services/regrasAgendamento";
@@ -31,6 +32,9 @@ export function gerarSemente(horariosBase: Horario[], agora: Date = new Date()):
   const semContatoIds = [3, 27, 29, 33, 37, 39, 43, 47];
   const recadoIds = [7, 9, 11, 13, 15, 17, 31, 35, 41, 45, 49, 51, 55];
   const telefone = (prefixo: string, i: number) => `(11) 9${prefixo}-${String(i + 1).padStart(4, "0")}`;
+  // DEMONSTRAÇÃO: CNS de exemplo começam com 0 (nenhum CNS real começa assim) e não seguem padrão de teclado,
+  // para que uma conta nova não caia por engano num cadastro da semente (RN21) e herde as consultas dele.
+  const cnsExemplo = (i: number) => (i === 0 ? CONTA_DEMO.nrCns : `09${String(i + 1).padStart(13, "0")}`);
   const datasOriginais = ["1958-03-12", "1990-07-01", "1949-11-25", "1985-01-30", "2001-05-14", "1976-09-08"];
   const cidadaos = nomes.map((nmCidadao, i): Cidadao => {
     const idade = 18 + Math.floor(rand() * 68);
@@ -38,7 +42,7 @@ export function gerarSemente(horariosBase: Horario[], agora: Date = new Date()):
     const semContato = semContatoIds.includes(i + 1);
     const recado = recadoIds.includes(i + 1);
     const unidade = unidadesIniciais[i % 3];
-    return { cdCidadao: i + 1, nmCidadao, nrCns: i < 6 ? ["111222233334444", "222333344445555", "333444455556666", "444555566667777", "555666677778888", "666777788889999"][i] ?? "" : String(700000000000000 + i), dtNascimento: datasOriginais[i] ?? chaveDia(nascimento.toISOString()), dsSexo: i % 2 === 0 ? "F" : "M", nrCelular: semContato || recado ? "" : telefone("8888", i), nmContatoRecado: recado || i === 4 ? "Contato da família" : "", nrContatoRecado: recado || i === 4 ? telefone("7777", i) : "", nrCep: unidade?.nrCep ?? "04010-100" };
+    return { cdCidadao: i + 1, nmCidadao, nrCns: cnsExemplo(i), dtNascimento: datasOriginais[i] ?? chaveDia(nascimento.toISOString()), dsSexo: i % 2 === 0 ? "F" : "M", nrCelular: semContato || recado ? "" : telefone("8888", i), nmContatoRecado: recado || i === 4 ? "Contato da família" : "", nrContatoRecado: recado || i === 4 ? telefone("7777", i) : "", nrCep: unidade?.nrCep ?? "04010-100" };
   });
   const consultas: Consulta[] = [], orientacoes: Orientacao[] = [];
   const horarios = horariosBase.map((h) => ({ ...h, flOcupado: false }));
