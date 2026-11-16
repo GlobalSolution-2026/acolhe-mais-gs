@@ -5,6 +5,7 @@ import type { IconType } from "react-icons";
 import { FiThermometer, FiWind, FiDroplet, FiFrown, FiZap } from "react-icons/fi";
 import { queixas } from "@/data/queixas";
 import { CampoFormulario } from "@/components/CampoFormulario";
+import { LegendaCores } from "@/components/LegendaCores";
 import { useSimulador } from "@/context/SimuladorContext";
 import { buscarEndereco } from "@/services/api";
 import { formatarEndereco } from "@/services/cep";
@@ -117,6 +118,7 @@ export function Inicio() {
           );
         })}
       </div>
+      <LegendaCores />
     </div>
   );
 }
