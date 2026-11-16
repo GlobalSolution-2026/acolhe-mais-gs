@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FiAlertCircle, FiCalendar, FiExternalLink, FiHash, FiMapPin, FiPhone, FiPhoneCall } from "react-icons/fi";
 import { Carregando } from "@/components/Carregando";
 import { EstadoVazio } from "@/components/EstadoVazio";
+import { LegendaCores } from "@/components/LegendaCores";
 import { MensagemErro } from "@/components/MensagemErro";
 import { SeloGravidade } from "@/components/SeloGravidade";
 import { useSimulador } from "@/context/SimuladorContext";
@@ -214,6 +215,7 @@ export function Resultado() {
   return (
     <div className="flex flex-col gap-4">
       <SeloGravidade cor={res.dsCor} />
+      <LegendaCores destaque={res.dsCor} />
       {res.dsCor === "VERMELHO" && <Vermelho atual={atual} res={res} />}
       {res.dsCor === "LARANJA" && (
         <>
