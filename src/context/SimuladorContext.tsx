@@ -92,6 +92,8 @@ interface SimuladorValor {
   responder: (codigo: string, valor: Resposta) => void;
   voltarPergunta: () => void;
   definirResultado: (resultado: ResultadoFinal) => void;
+  /** CEP informado depois do Início (Resultado ou UBS próximas), por quem pulou o CEP. */
+  informarCepOrientacao: (nrCep: string) => void;
   definirCidadaoAtual: (cdCidadao: number) => void;
   entrarNaListaDoDia: (cdUnidade: number, dsCor: EntradaListaDoDia["dsCor"], cdOrientacao: number) => void;
   oferecerVaga: (cdHorario: number) => void;
@@ -201,6 +203,11 @@ export function SimuladorProvider({ children }: { children: ReactNode }) {
     [alterarOrientacao],
   );
 
+  const informarCepOrientacao = useCallback(
+    (nrCep: string) => alterarOrientacao((o) => ({ ...o, nrCep })),
+    [alterarOrientacao],
+  );
+
   const definirCidadaoAtual = useCallback(
     (cdCidadao: number) => atualizarEstado((e) => ({ ...e, cdCidadaoAtual: cdCidadao, listaDoDia: vincularEntradaSemLogin(e.listaDoDia, cdCidadao, e.cidadaos.find((c) => c.cdCidadao === cdCidadao)?.nmCidadao) })),
     [atualizarEstado],
@@ -276,7 +283,7 @@ export function SimuladorProvider({ children }: { children: ReactNode }) {
     <SimuladorContext.Provider
       value={{
         estado, obterEstado, atualizarEstado, reiniciarDemonstracao, selecionarUnidadeRecepcao,
-        iniciarOrientacao, trocarQueixa, responder, voltarPergunta, definirResultado,
+        iniciarOrientacao, trocarQueixa, responder, voltarPergunta, definirResultado, informarCepOrientacao,
         definirCidadaoAtual, entrarNaListaDoDia, oferecerVaga, responderOferta, simularPassagemPrazo, vencerPrazoOfertas, encerrarDia,
         simularDiaUtil, alterarSimulacaoDiaUtil,
       }}

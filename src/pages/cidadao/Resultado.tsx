@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FiAlertCircle, FiCalendar, FiExternalLink, FiHash, FiMapPin, FiPhone, FiPhoneCall } from "react-icons/fi";
+import { CampoCepOpcional } from "@/components/CampoCepOpcional";
 import { Carregando } from "@/components/Carregando";
 import { EstadoVazio } from "@/components/EstadoVazio";
 import { LegendaCores } from "@/components/LegendaCores";
@@ -56,7 +57,8 @@ function Vermelho({ atual, res }: { atual: OrientacaoEmAndamento; res: Resultado
   );
 }
 
-function Amarelo({ atual, res }: { atual: OrientacaoEmAndamento; res: ResultadoFinal }) {
+/** UPA mais próxima do CEP (só aparece quando há CEP). */
+function UpaIndicada({ nrCep }: { nrCep: string }) {
   const [upa, setUpa] = useState<Unidade | null>(null);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
@@ -65,24 +67,18 @@ function Amarelo({ atual, res }: { atual: OrientacaoEmAndamento; res: ResultadoF
     setCarregando(true);
     setErro(null);
     try {
-      setUpa(upaMaisProxima(await listarUnidades("UPA"), atual.nrCep));
+      setUpa(upaMaisProxima(await listarUnidades("UPA"), nrCep));
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Não foi possível carregar as UPAs.");
     } finally {
       setCarregando(false);
     }
-  }, [atual.nrCep]);
+  }, [nrCep]);
 
   useEffect(() => { void carregar(); }, [carregar]);
 
   return (
     <>
-      <h1 className="text-2xl font-extrabold">Procure uma UPA</h1>
-      {res.flElevadaModelo && (
-        <p className="flex items-start gap-2 rounded-[12px] bg-mentaSuave p-3 font-semibold">
-          <FiAlertCircle className="mt-1 shrink-0" /> A verificação adicional indicou atenção: procure a UPA.
-        </p>
-      )}
       {carregando && <Carregando texto="Buscando a UPA mais próxima..." />}
       {erro && <MensagemErro mensagem={erro} onTentarNovamente={carregar} />}
       {!carregando && !erro && !upa && <EstadoVazio mensagem="Nenhuma UPA encontrada." />}
@@ -95,14 +91,51 @@ function Amarelo({ atual, res }: { atual: OrientacaoEmAndamento; res: ResultadoF
           </a>
         </section>
       )}
+    </>
+  );
+}
+
+function Amarelo({ atual, res }: { atual: OrientacaoEmAndamento; res: ResultadoFinal }) {
+  const { informarCepOrientacao } = useSimulador();
+  return (
+    <>
+      <h1 className="text-2xl font-extrabold">Procure uma UPA</h1>
+      {res.flElevadaModelo && (
+        <p className="flex items-start gap-2 rounded-[12px] bg-mentaSuave p-3 font-semibold">
+          <FiAlertCircle className="mt-1 shrink-0" /> A verificação adicional indicou atenção: procure a UPA.
+        </p>
+      )}
+      {/* Sem CEP: a orientação aparece igual e o CEP é pedido no fim (a "mais próxima" seria um palpite). */}
+      {atual.nrCep ? <UpaIndicada nrCep={atual.nrCep} /> : <p className="font-semibold">Procure a UPA mais perto de você.</p>}
       <ListaSinais sinais={res.sinaisMarcados} />
       <p className="font-bold">Se piorar, ligue 192.</p>
+      {!atual.nrCep && <CampoCepOpcional mensagem="Informe seu CEP para ver a UPA mais próxima." onInformar={informarCepOrientacao} />}
     </>
   );
 }
 
 /** Código para apresentar na recepção (vale só hoje; funciona sem login) + UBS indicada pelo CEP. */
 function CodigoParaUbs({ atual, cdOrientacao }: { atual: OrientacaoEmAndamento; cdOrientacao: number }) {
+  const { informarCepOrientacao } = useSimulador();
+  return (
+    <section className="flex flex-col gap-3 rounded-[12px] border-2 border-primaria bg-branco p-4" aria-live="polite">
+      <h2 className="text-lg font-extrabold text-primaria">Mostre este código na recepção</h2>
+      <p className="flex items-center gap-2 text-4xl font-extrabold tracking-wider">
+        <FiHash aria-hidden /> <span aria-label={`Código ${cdOrientacao}`}>{cdOrientacao}</span>
+      </p>
+      <p className="text-base text-textoSuave">O código vale só para hoje. Leve o Cartão SUS.</p>
+      {/* Sem CEP: não indica UBS (seria um palpite) e pede o CEP. */}
+      {atual.nrCep ? (
+        <UbsIndicada nrCep={atual.nrCep} />
+      ) : (
+        <CampoCepOpcional mensagem="Informe seu CEP para ver a UBS indicada." onInformar={informarCepOrientacao} />
+      )}
+    </section>
+  );
+}
+
+/** UBS indicada pelo CEP (só aparece quando há CEP). */
+function UbsIndicada({ nrCep }: { nrCep: string }) {
   const [ubs, setUbs] = useState<Unidade | null>(null);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
@@ -111,23 +144,18 @@ function CodigoParaUbs({ atual, cdOrientacao }: { atual: OrientacaoEmAndamento; 
     setCarregando(true);
     setErro(null);
     try {
-      setUbs(ordenarUbsPorCep(await listarUnidades("UBS"), atual.nrCep)[0] ?? null);
+      setUbs(ordenarUbsPorCep(await listarUnidades("UBS"), nrCep)[0] ?? null);
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Não foi possível carregar as UBS.");
     } finally {
       setCarregando(false);
     }
-  }, [atual.nrCep]);
+  }, [nrCep]);
 
   useEffect(() => { void carregar(); }, [carregar]);
 
   return (
-    <section className="flex flex-col gap-3 rounded-[12px] border-2 border-primaria bg-branco p-4" aria-live="polite">
-      <h2 className="text-lg font-extrabold text-primaria">Mostre este código na recepção</h2>
-      <p className="flex items-center gap-2 text-4xl font-extrabold tracking-wider">
-        <FiHash aria-hidden /> <span aria-label={`Código ${cdOrientacao}`}>{cdOrientacao}</span>
-      </p>
-      <p className="text-base text-textoSuave">O código vale só para hoje. Leve o Cartão SUS.</p>
+    <>
       {carregando && <Carregando texto="Buscando a UBS indicada..." />}
       {erro && <MensagemErro mensagem={erro} onTentarNovamente={carregar} />}
       {!carregando && !erro && !ubs && <EstadoVazio mensagem="Nenhuma UBS encontrada." />}
@@ -140,7 +168,7 @@ function CodigoParaUbs({ atual, cdOrientacao }: { atual: OrientacaoEmAndamento; 
           </a>
         </div>
       )}
-    </section>
+    </>
   );
 }
 

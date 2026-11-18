@@ -15,7 +15,7 @@ vi.mock("@/context/SimuladorContext", () => ({
   useSimulador: () => ({ estado, definirResultado: vi.fn() }),
 }));
 
-function preparar(dsCor: Cor) {
+function preparar(dsCor: Cor, nrCep = "04012-000") {
   estado = {
     dtSemente: "2026-11-11",
     unidades: [
@@ -26,7 +26,7 @@ function preparar(dsCor: Cor) {
     horarios: [], cidadaos: [], consultas: [], cdUnidadeRecepcao: 1, orientacoes: [], listaDoDia: [], ofertas: [],
     cdCidadaoAtual: null,
     orientacaoAtual: {
-      cdQueixa: "GARGANTA", nrCep: "04012-000", respostas: {}, ordem: [],
+      cdQueixa: "GARGANTA", nrCep, respostas: {}, ordem: [],
       resultado: { cdOrientacao: 37, dsCor, dsDestino: dsCor === "AMARELO" ? "UPA" : "UBS", sinaisMarcados: [], nrDor: 2, flElevadaModelo: false },
     },
   };
@@ -65,5 +65,31 @@ describe("Resultado LARANJA", () => {
     expect(link).toHaveAttribute("rel", "noopener noreferrer");
     expect(screen.getByText(/Se não tiver como chegar com segurança/)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Ligar para o 192/ })).toHaveAttribute("href", "tel:192");
+  });
+});
+
+describe("Resultado sem CEP (CEP opcional no Início)", () => {
+  it("AMARELO mostra a orientação e pede o CEP em vez de indicar uma UPA", () => {
+    preparar("AMARELO", "");
+    render(<Resultado />);
+    expect(screen.getByText("Procure a UPA mais perto de você.")).toBeInTheDocument();
+    expect(screen.getByText("Informe seu CEP para ver a UPA mais próxima.")).toBeInTheDocument();
+    expect(screen.queryByText("UPA Centro")).not.toBeInTheDocument();
+  });
+
+  it("AMARELO com CEP indica a UPA e não pede o CEP", async () => {
+    preparar("AMARELO");
+    render(<Resultado />);
+    expect(await screen.findByText("UPA Centro")).toBeInTheDocument();
+    expect(screen.queryByText("Informe seu CEP para ver a UPA mais próxima.")).not.toBeInTheDocument();
+  });
+
+  it("VERDE: Prefiro ir à UBS mostra o código e pede o CEP, sem UBS indicada", () => {
+    preparar("VERDE", "");
+    render(<Resultado />);
+    fireEvent.click(screen.getByRole("button", { name: "Prefiro ir à UBS" }));
+    expect(screen.getByLabelText("Código 37")).toBeInTheDocument();
+    expect(screen.getByText("Informe seu CEP para ver a UBS indicada.")).toBeInTheDocument();
+    expect(screen.queryByText(/UBS indicada:/)).not.toBeInTheDocument();
   });
 });
