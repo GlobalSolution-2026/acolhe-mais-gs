@@ -8,7 +8,7 @@ import { CampoFormulario } from "@/components/CampoFormulario";
 import { LegendaCores } from "@/components/LegendaCores";
 import { useSimulador } from "@/context/SimuladorContext";
 import { buscarEndereco } from "@/services/api";
-import { formatarEndereco } from "@/services/cep";
+import { formatarEndereco, mascararCep } from "@/services/cep";
 import type { CodigoQueixa, EnderecoCep } from "@/types/orientacao";
 
 type BuscaCep = { cep: string; status: "OK" | "NAO_ENCONTRADO" | "FALHA"; endereco: EnderecoCep | null };
@@ -20,11 +20,6 @@ const ICONES: Record<CodigoQueixa, IconType> = {
   CABECA: FiFrown,
   URINA: FiZap,
 };
-
-function mascararCep(v: string) {
-  const d = v.replace(/\D/g, "").slice(0, 8);
-  return d.length > 5 ? `${d.slice(0, 5)}-${d.slice(5)}` : d;
-}
 
 export function Inicio() {
   const { estado, iniciarOrientacao } = useSimulador();
@@ -71,8 +66,8 @@ export function Inicio() {
       void navigate({ to: "/cidadao/orientacao" });
     })();
 
+  // CEP opcional: a orientação nunca trava (pode ser urgência). Se digitado, precisa ter 8 números.
   const registroCep = register("cep", {
-    required: "Informe o CEP para continuar.",
     pattern: { value: /^\d{5}-\d{3}$/, message: "O CEP tem 8 números." },
     onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
       setValue("cep", mascararCep(e.target.value), { shouldValidate: isSubmitted });
@@ -82,7 +77,7 @@ export function Inicio() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-3">
-        <CampoFormulario id="cep" label="Seu CEP" placeholder="00000-000" tipo="text" registro={registroCep} erro={errors.cep} />
+        <CampoFormulario id="cep" label="Seu CEP (opcional)" placeholder="00000-000" tipo="text" registro={registroCep} erro={errors.cep} />
         {cepOk && (
           <p className="text-sm text-textoSuave" aria-live="polite">
             {!buscaAtual && "Buscando endereço..."}
@@ -98,7 +93,9 @@ export function Inicio() {
       </div>
       <div>
         <h1 className="mb-1 text-2xl font-extrabold text-primaria">O que você está sentindo?</h1>
-        {!cepOk && <p className="text-base text-textoSuave">Preencha o CEP para escolher.</p>}
+        {!cepOk && (
+          <p className="text-base text-textoSuave">Sem o CEP, a orientação funciona igual, mas não indicamos a unidade mais próxima.</p>
+        )}
       </div>
       <div className="grid gap-3">
         {queixas.map((q) => {
@@ -107,8 +104,7 @@ export function Inicio() {
             <button
               key={q.codigo}
               onClick={() => escolher(q.codigo)}
-              aria-disabled={!cepOk}
-              className={`flex min-h-20 items-center gap-4 rounded-[12px] border border-borda bg-branco p-4 text-left text-lg font-bold shadow-leve transition ${cepOk ? "hover:border-primaria" : "opacity-50"}`}
+              className="flex min-h-20 items-center gap-4 rounded-[12px] border border-borda bg-branco p-4 text-left text-lg font-bold shadow-leve transition hover:border-primaria"
             >
               <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-mentaSuave text-primaria">
                 <Icone size={26} />

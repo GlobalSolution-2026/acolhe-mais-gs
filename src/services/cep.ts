@@ -8,6 +8,12 @@ interface RespostaViaCep {
   erro?: boolean | string;
 }
 
+/** Máscara do CEP enquanto digita: "04010100" → "04010-100" (Início e CampoCepOpcional). */
+export function mascararCep(v: string): string {
+  const d = v.replace(/\D/g, "").slice(0, 8);
+  return d.length > 5 ? `${d.slice(0, 5)}-${d.slice(5)}` : d;
+}
+
 /** Consulta o ViaCEP. null = CEP não encontrado; lança erro em falha de rede ou HTTP. */
 export async function buscarEndereco(cep: string, signal?: AbortSignal): Promise<EnderecoCep | null> {
   const digitos = cep.replace(/\D/g, "");
@@ -36,5 +42,7 @@ export function formatarEndereco(
 export function enderecoParaLigacao(nrCep: string, local: LocalOrientacao): string {
   const { endereco, nrEndereco, dsComplemento } = local;
   if (endereco) return formatarEndereco(endereco, { nrEndereco, dsComplemento, nrCep });
+  // CEP opcional no Início: sem ele, orienta a pessoa a dizer o endereço na ligação.
+  if (!nrCep) return "diga a rua, o número, o bairro e a cidade.";
   return [`CEP ${nrCep}`, nrEndereco ? `nº ${nrEndereco}` : "", dsComplemento].filter(Boolean).join(", ");
 }
