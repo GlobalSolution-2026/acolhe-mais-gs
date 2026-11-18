@@ -68,6 +68,9 @@ describe("enderecoParaLigacao", () => {
   it("sem ViaCEP, só com número", () => {
     expect(enderecoParaLigacao("01001-000", { endereco: null, nrEndereco: "123", dsComplemento: "" })).toBe("CEP 01001-000, nº 123");
   });
+  it("sem CEP (opcional no Início), pede para dizer o endereço", () => {
+    expect(enderecoParaLigacao("", { endereco: null, nrEndereco: "", dsComplemento: "" })).toBe("diga a rua, o número, o bairro e a cidade.");
+  });
   it("sem ViaCEP, sem número nem complemento: só o CEP", () => {
     expect(enderecoParaLigacao("01001-000", { endereco: null, nrEndereco: "", dsComplemento: "" })).toBe("CEP 01001-000");
     expect(enderecoParaLigacao("01001-000", {})).toBe("CEP 01001-000");
